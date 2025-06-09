@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "scripts": {
     "prisma": "npx prisma",
-    "prepare": "npx prisma generate",
+    "prepare": "chmod +x ./node_modules/.bin/prisma && npx prisma generate",
     "start": "node src/index.js",
     "dev": "nodemon src/index.js",
     "migrate": "npx prisma migrate dev",
