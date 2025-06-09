@@ -76,4 +76,21 @@ router.patch('/:token/accept', authenticateToken, async (req, res) => {
   }
 });
 
+// Get invitations received by the current user
+router.get('/', authenticateToken, async (req, res) => {
+  try {
+    const invitations = await prisma.invitation.findMany({
+      where: { email: req.user.email },
+      include: {
+        event: { select: { title: true, id: true } },
+        invitedBy: { select: { name: true, email: true } }
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+    res.json(invitations);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 module.exports = router;
