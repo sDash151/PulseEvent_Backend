@@ -2,8 +2,8 @@
   "name": "eventpulse-backend",
   "version": "1.0.0",
   "scripts": {
-    "prisma": "prisma",
-    "postinstall": "node -e \"require('child_process').execSync('npx prisma generate', { stdio: 'inherit' })\"",
+    "prisma": "npx prisma",
+    "prepare": "npx prisma generate",
     "start": "node src/index.js",
     "dev": "nodemon src/index.js",
     "migrate": "prisma migrate dev",
@@ -25,5 +25,10 @@
     "nodemon": "^3.1.0",
     "prisma": "^6.9.0",
     "supertest": "^7.1.1"
-  }
+  },
+
+  "engines": {
+  "node": "18.x"
+}
+
 }
