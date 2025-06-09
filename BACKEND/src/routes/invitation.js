@@ -82,6 +82,19 @@ router.patch('/:token/accept', authenticateToken, async (req, res) => {
   }
 });
 
+// Decline invitation
+router.patch('/:token/decline', authenticateToken, async (req, res) => {
+  try {
+    await prisma.invitation.update({
+      where: { token: req.params.token },
+      data: { status: 'declined', invitedUserId: req.user.id }
+    });
+    res.json({ message: 'Invitation declined' });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
 // Get invitations received by the current user
 router.get('/', authenticateToken, async (req, res) => {
   try {
