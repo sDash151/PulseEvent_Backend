@@ -2,11 +2,12 @@
   "name": "eventpulse-backend",
   "version": "1.0.0",
   "scripts": {
+    "prisma": "prisma",
     "start": "node src/index.js",
     "dev": "nodemon src/index.js",
     "migrate": "prisma migrate dev",
     "generate": "prisma generate",
-    "postinstall": "prisma generate",
+    "postinstall": "npx prisma generate",
     "test": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js"
   },
   "dependencies": {
