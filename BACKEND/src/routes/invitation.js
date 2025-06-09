@@ -2,8 +2,14 @@ const express = require('express');
 const { PrismaClient } = require('@prisma/client');
 const { authenticateToken } = require('../middleware/auth');
 
+// Use a singleton Prisma client to avoid multiple instances in serverless/deployment
+let prisma;
+if (!global.prisma) {
+  global.prisma = new PrismaClient();
+}
+prisma = global.prisma;
+
 const router = express.Router();
-const prisma = new PrismaClient();
 
 // Create invitation
 router.post('/', authenticateToken, async (req, res) => {
@@ -32,7 +38,7 @@ router.post('/', authenticateToken, async (req, res) => {
 
     res.status(201).json(invitations);
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    res.status(500).json({ error: error.message });
   }
 });
 
@@ -72,7 +78,7 @@ router.patch('/:token/accept', authenticateToken, async (req, res) => {
 
     res.json({ message: 'Invitation accepted' });
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    res.status(500).json({ error: error.message });
   }
 });
 
