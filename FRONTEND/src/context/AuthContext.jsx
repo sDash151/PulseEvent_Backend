@@ -14,15 +14,26 @@ export const AuthProvider = ({ children }) => {
     if (token) {
       try {
         const decoded = jwtDecode(token)
-        console.log("decoded user", decoded); 
-        setCurrentUser({ 
-          userId: decoded.id, 
-          email: decoded.email, 
-          name: decoded.name 
-        })  
+        // Check for required fields
+        if (decoded && decoded.id && decoded.email && decoded.name) {
+          setCurrentUser({ 
+            id: decoded.id, 
+            email: decoded.email, 
+            name: decoded.name,
+            role: decoded.role // add role if present
+          })
+        } else {
+          console.error('JWT missing required fields:', decoded)
+          setCurrentUser(null)
+          localStorage.removeItem('token')
+        }
       } catch (error) {
+        console.error('JWT decode error:', error)
+        setCurrentUser(null)
         localStorage.removeItem('token')
       }
+    } else {
+      setCurrentUser(null)
     }
     setLoading(false)
   }, [])
@@ -31,9 +42,10 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem('token', token)
     const decoded = jwtDecode(token)
     setCurrentUser({ 
-      userId: decoded.id, 
+      id: decoded.id, 
       email: decoded.email, 
-      name: decoded.name 
+      name: decoded.name,
+      role: decoded.role // add role if present
     })
   }
 

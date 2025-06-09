@@ -1,9 +1,20 @@
 // frontend/src/pages/HomePage.jsx
 import { Link } from 'react-router-dom'
 import Button from '../components/ui/Button'
+import { useAuth } from '../hooks/useAuth'
+import { useNavigate } from 'react-router-dom'
+import { useEffect } from 'react'
 
 const HomePage = () => {
-    console.log('🏠 HomePage rendered'); 
+  const { currentUser } = useAuth()
+  const navigate = useNavigate()
+  useEffect(() => {
+    if (currentUser) {
+      // Optionally, you can redirect to dashboard automatically
+      // navigate('/dashboard')
+    }
+  }, [currentUser, navigate])
+
   return (
     <div className="gradient-bg min-h-[calc(100vh-4rem)] flex items-center">
       <div className="container mx-auto px-4 py-16">
@@ -16,7 +27,14 @@ const HomePage = () => {
           </p>
           <div className="flex flex-col sm:flex-row justify-center gap-4">
             <Button as={Link} to="/register" size="lg">Get Started Free</Button>
-            <Button as={Link} to="/login" variant="outline" size="lg">Demo Dashboard</Button>
+            <Button
+              as={Link}
+              to={currentUser ? "/dashboard" : "/login"}
+              variant="outline"
+              size="lg"
+            >
+              Demo Dashboard
+            </Button>
           </div>
         </div>
         

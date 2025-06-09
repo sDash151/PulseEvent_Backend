@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { useParams } from 'react-router-dom'
+import { useParams, Link } from 'react-router-dom'
 import { format, isBefore, isAfter } from 'date-fns'
 import Button from '../components/ui/Button'
 import Card from '../components/ui/Card'
@@ -30,7 +30,7 @@ const EventDetailPage = () => {
         setFeedbackList(eventData.feedbacks || [])
         
         // Fetch invitations if user is host
-        if (currentUser && eventData.hostId === currentUser.userId) {
+        if (currentUser && eventData.hostId === currentUser.id) {
           const invites = await getEventInvitations(id)
           console.log('Invitations response:', invites)
           setInvitations(invites.data)
@@ -70,7 +70,7 @@ const EventDetailPage = () => {
       // Update event state to reflect new RSVP
       setEvent(prev => ({
         ...prev,
-        rsvps: [...prev.rsvps, { userId: currentUser.userId, user: { name: currentUser.name } }]
+        rsvps: [...prev.rsvps, { userId: currentUser.id, user: { name: currentUser.name } }]
       }))
     } catch (err) {
       setError(err.message || 'Failed to RSVP')
@@ -84,7 +84,7 @@ const EventDetailPage = () => {
       setEvent(prev => ({
         ...prev,
         rsvps: prev.rsvps.map(rsvp => 
-          rsvp.userId === currentUser.userId ? { ...rsvp, checkedIn: true } : rsvp
+          rsvp.userId === currentUser.id ? { ...rsvp, checkedIn: true } : rsvp
         )
       }))
     } catch (err) {
@@ -94,7 +94,7 @@ const EventDetailPage = () => {
 
   const handleSendFeedback = (content, emoji) => {
     if (!currentUser) return
-    sendFeedback(id, content, emoji, currentUser.userId)
+    sendFeedback(id, content, emoji, currentUser.id)
   }
 
   const handleInvitationsUpdate = async () => {
@@ -124,8 +124,8 @@ const EventDetailPage = () => {
     )
   }
 
-  const isHost = currentUser && event.hostId === currentUser.userId
-  const userRSVP = event.rsvps.find(rsvp => rsvp.userId === currentUser?.userId)
+  const isHost = currentUser && event.hostId === currentUser.id
+  const userRSVP = event.rsvps.find(rsvp => rsvp.userId === currentUser?.id)
   const isCheckedIn = userRSVP?.checkedIn
   const now = new Date()
   const startTime = new Date(event.startTime)
@@ -153,11 +153,11 @@ const EventDetailPage = () => {
           </div>
           <div className="flex gap-2">
             {isHost && (
-              <Button as="a" href={`/events/${event.id}/edit`} variant="outline">
+              <Button as={Link} to={`/events/${event.id}/edit`} variant="outline">
                 Edit Event
               </Button>
             )}
-            <Button as="a" href="/dashboard" variant="ghost">
+            <Button as={Link} to="/dashboard" variant="ghost">
               Back to Dashboard
             </Button>
           </div>
@@ -264,7 +264,7 @@ const EventDetailPage = () => {
               
               {isHost && (
                 <div className="space-y-3">
-                  <Button as="a" href={`/analytics/${event.id}`} className="w-full">
+                  <Button as={Link} to={`/analytics/${event.id}`} className="w-full">
                     View Analytics
                   </Button>
                   <div className="bg-indigo-50 p-4 rounded-lg">

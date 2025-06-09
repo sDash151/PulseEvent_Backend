@@ -18,7 +18,7 @@ const CreateEventPage = () => {
     try {
       await createEvent({
         ...formData,
-        hostId: currentUser.userId,
+        hostId: currentUser.id,
       })
       navigate('/dashboard')
     } catch (err) {

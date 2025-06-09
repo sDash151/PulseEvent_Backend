@@ -18,7 +18,7 @@ const EditEventPage = () => {
     const loadEvent = async () => {
       try {
         const eventData = await fetchEventById(id)
-        if (eventData.hostId !== currentUser.userId) {
+        if (eventData.hostId !== currentUser.id) {
           navigate('/dashboard')
           return
         }

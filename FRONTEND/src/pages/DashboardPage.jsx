@@ -51,7 +51,7 @@ const DashboardPage = () => {
           <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Your Events</h1>
           <p className="text-gray-600 mt-1">Manage and track your upcoming and past events</p>
         </div>
-        <Button as={ Link } href="/events/create">Create Event</Button>
+        <Button as={Link} to="/events/create">Create Event</Button>
       </div>
 
       {/* ✅ Pending Invitations Alert */}

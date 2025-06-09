@@ -1,5 +1,5 @@
 // frontend/src/pages/RegisterPage.jsx
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import Button from '../components/ui/Button'
 import { registerUser } from '../services/auth'
@@ -12,8 +12,14 @@ const RegisterPage = () => {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
-  const { login } = useAuth()
+  const { login, currentUser } = useAuth()
   const navigate = useNavigate()
+
+  useEffect(() => {
+    if (currentUser) {
+      navigate('/dashboard')
+    }
+  }, [currentUser, navigate])
 
   const handleSubmit = async (e) => {
     e.preventDefault()

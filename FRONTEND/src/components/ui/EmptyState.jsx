@@ -1,5 +1,6 @@
 // frontend/src/components/ui/EmptyState.jsx
 import Button from './Button'
+import { Link } from 'react-router-dom'
 
 const EmptyState = ({ title, description, actionText, actionLink }) => {
   return (
@@ -12,7 +13,7 @@ const EmptyState = ({ title, description, actionText, actionLink }) => {
       <h3 className="mt-4 text-lg font-medium text-gray-900">{title}</h3>
       <p className="mt-1 text-gray-500 max-w-md mx-auto">{description}</p>
       <div className="mt-6">
-        <Button as="a" href={actionLink}>
+        <Button as={Link} to={actionLink}>
           {actionText}
         </Button>
       </div>
