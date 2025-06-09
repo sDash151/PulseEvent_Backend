@@ -6,8 +6,8 @@
     "prepare": "npx prisma generate",
     "start": "node src/index.js",
     "dev": "nodemon src/index.js",
-    "migrate": "prisma migrate dev",
-    "generate": "prisma generate",
+    "migrate": "npx prisma migrate dev",
+    "generate": "npx prisma generate",
     "test": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js"
   },
   "dependencies": {
