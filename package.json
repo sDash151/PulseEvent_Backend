@@ -6,6 +6,7 @@
     "dev": "nodemon src/index.js",
     "migrate": "prisma migrate dev",
     "generate": "prisma generate",
+    "postinstall": "prisma generate",
     "test": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js"
   },
   "dependencies": {
