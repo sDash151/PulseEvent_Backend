@@ -85,13 +85,16 @@ router.patch('/:token/accept', authenticateToken, async (req, res) => {
 // Decline invitation
 router.patch('/:token/decline', authenticateToken, async (req, res) => {
   try {
-    await prisma.invitation.update({
+    const invitation = await prisma.invitation.update({
       where: { token: req.params.token },
-      data: { status: 'declined', invitedUserId: req.user.id }
+      data: {
+        status: 'declined',
+        invitedUserId: req.user.id
+      }
     });
     res.json({ message: 'Invitation declined' });
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    res.status(500).json({ error: error.message });
   }
 });
 
@@ -99,7 +102,12 @@ router.patch('/:token/decline', authenticateToken, async (req, res) => {
 router.get('/', authenticateToken, async (req, res) => {
   try {
     const invitations = await prisma.invitation.findMany({
-      where: { email: req.user.email },
+      where: {
+        OR: [
+          { email: req.user.email },
+          { invitedUserId: req.user.id }
+        ]
+      },
       include: {
         event: { select: { title: true, id: true } },
         invitedBy: { select: { name: true, email: true } }
