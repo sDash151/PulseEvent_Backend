@@ -23,6 +23,7 @@ router.post('/', authenticateToken, async (req, res) => {
       return res.status(403).json({ error: 'Unauthorized' });
     }
 
+    let emailErrors = [];
     const invitations = await Promise.all(
       emails.map(async (email) => {
         const user = await prisma.user.findUnique({ where: { email } });
@@ -46,15 +47,24 @@ router.post('/', authenticateToken, async (req, res) => {
             });
           } catch (err) {
             console.error('Failed to send invitation email:', err);
+            emailErrors.push({ email, error: err.message, stack: err.stack });
           }
         }
         return invitation;
       })
     );
 
+    if (emailErrors.length > 0) {
+      return res.status(500).json({ error: 'Some invitations failed to send', details: emailErrors });
+    }
+
     res.status(201).json(invitations);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error('Invitation route error:', error); // Improved error logging
+    res.status(500).json({ 
+      error: error.message || 'Internal server error', 
+      stack: error.stack 
+    });
   }
 });
 
