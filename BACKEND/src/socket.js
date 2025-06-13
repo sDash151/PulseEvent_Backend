@@ -35,6 +35,7 @@ const initSocket = (server, prisma) => {
     // Join event room
     socket.on('joinEvent', async (eventId) => {
       try {
+        console.log(`[SOCKET] joinEvent: user=${socket.user.userId}, eventId=${eventId}`);
         // Verify user has access to event
         const event = await prisma.event.findUnique({
           where: { id: parseInt(eventId) },
@@ -46,21 +47,23 @@ const initSocket = (server, prisma) => {
         });
         
         if (!event) {
+          console.warn(`[SOCKET] joinEvent: Event not found (eventId=${eventId})`);
           socket.emit('error', 'Event not found');
           return;
         }
         
         // Check if user is host or attendee
         if (event.hostId !== socket.user.userId && event.rsvps.length === 0) {
+          console.warn(`[SOCKET] joinEvent: Unauthorized access (user=${socket.user.userId}, eventId=${eventId})`);
           socket.emit('error', 'Unauthorized access to event');
           return;
         }
         
         // Join the event room
         socket.join(`event_${eventId}`);
-        console.log(`User ${socket.user.userId} joined event_${eventId}`);
+        console.log(`[SOCKET] User ${socket.user.userId} joined event_${eventId}`);
       } catch (error) {
-        console.error('Join event error:', error);
+        console.error('[SOCKET] Join event error:', error);
         socket.emit('error', 'Failed to join event');
       }
     });
@@ -68,11 +71,13 @@ const initSocket = (server, prisma) => {
     // Handle feedback submission
     socket.on('sendFeedback', async ({ eventId, content, emoji }) => {
       try {
+        console.log(`[SOCKET] sendFeedback: user=${socket.user.userId}, eventId=${eventId}, content=${content}, emoji=${emoji}`);
         // Use authenticated user ID
         const userId = socket.user.userId;
         
         // Verify user is in the event room
         if (!socket.rooms.has(`event_${eventId}`)) {
+          console.warn(`[SOCKET] sendFeedback: Not in event room (user=${userId}, eventId=${eventId})`);
           socket.emit('error', 'Not in event room');
           return;
         }
@@ -91,11 +96,12 @@ const initSocket = (server, prisma) => {
             }
           }
         });
+        console.log(`[SOCKET] Feedback created: id=${feedback.id}, eventId=${eventId}, userId=${userId}`);
         
         // Broadcast to everyone in the event room
         io.to(`event_${eventId}`).emit('newFeedback', feedback);
       } catch (error) {
-        console.error('Send feedback error:', error);
+        console.error('[SOCKET] Send feedback error:', error);
         socket.emit('error', 'Failed to send feedback');
       }
     });
