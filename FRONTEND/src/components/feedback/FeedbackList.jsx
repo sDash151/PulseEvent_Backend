@@ -37,14 +37,24 @@ const FeedbackList = ({ feedbacks, isHost }) => {
           {regularFeedback.slice(0, visibleCount).map(feedback => (
             <FeedbackItem key={feedback.id} feedback={feedback} isHost={isHost} />
           ))}
-          {visibleCount < regularFeedback.length && (
-            <div className="flex justify-center mt-2">
-              <button
-                className="px-4 py-2 rounded bg-gray-100 text-gray-700 hover:bg-gray-200 text-sm"
-                onClick={() => setVisibleCount(c => c + 10)}
-              >
-                View 10 more
-              </button>
+          {(visibleCount < regularFeedback.length || visibleCount > 10) && (
+            <div className="flex justify-center mt-2 gap-2">
+              {visibleCount < regularFeedback.length && (
+                <button
+                  className="px-4 py-2 rounded bg-gray-100 text-gray-700 hover:bg-gray-200 text-sm"
+                  onClick={() => setVisibleCount(c => c + 10)}
+                >
+                  View 10 more
+                </button>
+              )}
+              {visibleCount > 10 && (
+                <button
+                  className="px-4 py-2 rounded bg-gray-100 text-gray-700 hover:bg-gray-200 text-sm"
+                  onClick={() => setVisibleCount(c => Math.max(10, c - 10))}
+                >
+                  View less
+                </button>
+              )}
             </div>
           )}
         </div>
