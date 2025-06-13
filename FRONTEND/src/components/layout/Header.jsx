@@ -2,14 +2,25 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../hooks/useAuth'
 import Button from '../ui/Button'
+import React, { useState } from 'react'
 
 const Header = () => {
   const { currentUser, logout } = useAuth()
   const navigate = useNavigate()
+  const [showConfirm, setShowConfirm] = useState(false)
 
   const handleLogout = () => {
+    setShowConfirm(true)
+  }
+
+  const confirmLogout = () => {
+    setShowConfirm(false)
     logout()
     navigate('/')
+  }
+
+  const cancelLogout = () => {
+    setShowConfirm(false)
   }
 
   return (
@@ -52,6 +63,19 @@ const Header = () => {
           )}
         </div>
       </div>
+      {/* Logout Confirmation Dialog */}
+      {showConfirm && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
+          <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-xs text-center">
+            <div className="mb-4 text-lg font-semibold text-gray-800">Confirm Logout</div>
+            <div className="mb-6 text-gray-600">Are you sure you want to log out?</div>
+            <div className="flex justify-center gap-3">
+              <Button onClick={confirmLogout} variant="danger" size="sm">Yes, Logout</Button>
+              <Button onClick={cancelLogout} variant="outline" size="sm">Cancel</Button>
+            </div>
+          </div>
+        </div>
+      )}
     </header>
   )
 }
