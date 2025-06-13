@@ -30,7 +30,7 @@ const initSocket = (server, prisma) => {
   });
 
   io.on('connection', (socket) => {
-    console.log(`Socket connected: ${socket.id} (User: ${socket.user.userId})`);
+    console.log(`Socket connected: ${socket.id} (User: ${socket.user.id})`);
     
     // Join event room
     socket.on('joinEvent', async (eventId) => {
@@ -40,7 +40,7 @@ const initSocket = (server, prisma) => {
           where: { id: parseInt(eventId) },
           include: {
             rsvps: {
-              where: { userId: socket.user.userId }
+              where: { userId: socket.user.id }
             }
           }
         });
@@ -51,14 +51,14 @@ const initSocket = (server, prisma) => {
         }
         
         // Check if user is host or attendee
-        if (event.hostId !== socket.user.userId && event.rsvps.length === 0) {
+        if (event.hostId !== socket.user.id && event.rsvps.length === 0) {
           socket.emit('error', 'Unauthorized access to event');
           return;
         }
         
         // Join the event room
         socket.join(`event_${eventId}`);
-        console.log(`User ${socket.user.userId} joined event_${eventId}`);
+        console.log(`User ${socket.user.id} joined event_${eventId}`);
       } catch (error) {
         console.error('Join event error:', error);
         socket.emit('error', 'Failed to join event');
@@ -69,7 +69,7 @@ const initSocket = (server, prisma) => {
     socket.on('sendFeedback', async ({ eventId, content, emoji }) => {
       try {
         // Use authenticated user ID
-        const userId = socket.user.userId;
+        const userId = socket.user.id;
         
         // Verify user is in the event room
         if (!socket.rooms.has(`event_${eventId}`)) {
