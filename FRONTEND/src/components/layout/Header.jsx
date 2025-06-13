@@ -28,6 +28,7 @@ const Header = () => {
             <>
               <Link to="/dashboard" className="text-gray-700 hover:text-indigo-600 transition-colors">Dashboard</Link>
               <Link to="/events/create" className="text-gray-700 hover:text-indigo-600 transition-colors">Create Event</Link>
+              <Link to="/invitations" className="text-gray-700 hover:text-indigo-600 transition-colors">Invitations</Link>
             </>
           )}
         </nav>

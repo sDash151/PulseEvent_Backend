@@ -20,6 +20,7 @@ import EditEventPage from './pages/EditEventPage';
 import EventDetailPage from './pages/EventDetailPage';
 import AnalyticsPage from './pages/AnalyticsPage';
 import InvitationPage from './pages/InvitationPage'; // ✅ Import this
+import InvitationsPage from './pages/InvitationsPage';
 
 export const router = createBrowserRouter(
   createRoutesFromElements(
@@ -28,7 +29,9 @@ export const router = createBrowserRouter(
       <Route path="login" element={<LoginPage />} />
       <Route path="register" element={<RegisterPage />} />
 
-      {/* ✅ Public invitation route */}
+      {/* Permanent invitation page for all users */}
+      <Route path="invitations" element={<InvitationsPage />} />
+      {/* Public invitation token route */}
       <Route path="invitation/:token" element={<InvitationPage />} />
 
       {/* ✅ Protected Routes */}

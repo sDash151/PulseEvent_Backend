@@ -4,10 +4,16 @@ import { format } from 'date-fns'
 import { CalendarIcon, UserIcon, LocationMarkerIcon } from '@heroicons/react/outline'
 
 const EventCard = ({ event }) => {
-  const status = () => {
+  const getStatusString = () => {
     const now = new Date()
     if (now < new Date(event.startTime)) return 'Scheduled'
-    if (now >= new Date(event.startTime) && now <= new Date(event.endTime)) {
+    if (now >= new Date(event.startTime) && now <= new Date(event.endTime)) return 'Live'
+    return 'Completed'
+  }
+
+  const renderStatus = () => {
+    const status = getStatusString()
+    if (status === 'Live') {
       return (
         <span className="flex items-center gap-1">
           <span className="live-pulse flex h-2 w-2 rounded-full bg-red-500"></span>
@@ -15,7 +21,7 @@ const EventCard = ({ event }) => {
         </span>
       )
     }
-    return 'Completed'
+    return status
   }
   
   const rsvpCount = event.rsvps?.length || 0
@@ -30,13 +36,13 @@ const EventCard = ({ event }) => {
               {event.title}
             </h3>
             <span className={`px-2 py-1 text-xs rounded-full ${
-              status().includes('Live') 
+              getStatusString() === 'Live'
                 ? 'bg-red-100 text-red-800' 
-                : status() === 'Scheduled' 
+                : getStatusString() === 'Scheduled' 
                   ? 'bg-blue-100 text-blue-800' 
                   : 'bg-gray-100 text-gray-800'
             }`}>
-              {status()}
+              {renderStatus()}
             </span>
           </div>
           

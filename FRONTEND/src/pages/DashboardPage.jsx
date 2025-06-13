@@ -7,17 +7,15 @@ import { fetchEvents } from '../services/events'
 import CalendarView from '../components/events/CalenderView'
 import TabGroup from '../components/ui/TabGroup'
 import { AuthContext } from '../context/AuthContext'  // <-- Adjust if named differently
+import api from '../services/api'
 
 const DashboardPage = () => {
-  const { user } = useContext(AuthContext)  // <-- get logged-in user
+  const { currentUser } = useContext(AuthContext)
   const [events, setEvents] = useState([])
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('list')
   const [filter, setFilter] = useState('all')
-
-  const pendingInvites = user?.receivedInvitations?.filter(
-    invite => invite.status === 'pending'
-  ).length || 0
+  const [pendingInvites, setPendingInvites] = useState(0)
 
   useEffect(() => {
     const loadEvents = async () => {
@@ -32,6 +30,30 @@ const DashboardPage = () => {
     }
     loadEvents()
   }, [])
+
+  useEffect(() => {
+    const fetchInvites = async () => {
+      if (!currentUser) return
+      try {
+        const res = await getUserInvitations()
+        // Match invitations by email or invitedUserId for robustness
+        const userInvites = res.data.filter(
+          invite => (
+            (invite.email?.toLowerCase() === currentUser.email?.toLowerCase()) ||
+            (invite.invitedUserId === currentUser.id)
+          ) && invite.status === 'pending'
+        )
+        setPendingInvites(userInvites.length)
+      } catch (err) {
+        setPendingInvites(0)
+      }
+    }
+    fetchInvites()
+  }, [currentUser])
+
+  const getUserInvitations = async () => {
+    return api.get('/api/invitations');
+  };
 
   const filteredEvents = events.filter(event => {
     const now = new Date()

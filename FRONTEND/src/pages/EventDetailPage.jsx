@@ -45,10 +45,10 @@ const EventDetailPage = () => {
   }, [id, currentUser])
 
   useEffect(() => {
-    // Initialize socket connection
-    initSocket()
-    if (currentUser) {
-      connectSocket(localStorage.getItem('token'))
+    // Initialize socket connection with token
+    if (currentUser && currentUser.token) {
+      initSocket(currentUser.token)
+      connectSocket()
       joinEventRoom(id)
 
       const handleNewFeedback = (newFeedback) => {
@@ -304,7 +304,7 @@ const EventDetailPage = () => {
                       )}
                     </div>
                   ))
-                )}
+                ) }
               </div>
             </div>
           </Card>

@@ -32,18 +32,25 @@ const AnalyticsPage = () => {
 
   const [loading, setLoading] = useState(true)
 
+  // Live polling for analytics
   useEffect(() => {
+    let isMounted = true;
     const loadAnalytics = async () => {
       try {
         const data = await fetchAnalytics(eventId)
-        setAnalytics(data)
+        if (isMounted) setAnalytics(data)
       } catch (error) {
-        console.error('Failed to load analytics:', error)
+        if (isMounted) console.error('Failed to load analytics:', error)
       } finally {
-        setLoading(false)
+        if (isMounted) setLoading(false)
       }
     }
     loadAnalytics()
+    const interval = setInterval(loadAnalytics, 5000) // Poll every 5 seconds
+    return () => {
+      isMounted = false;
+      clearInterval(interval)
+    }
   }, [eventId])
 
   if (loading) {
