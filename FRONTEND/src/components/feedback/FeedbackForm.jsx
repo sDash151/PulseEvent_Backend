@@ -2,7 +2,7 @@
 import React, { useState } from 'react'
 import Button from '../ui/Button'
 
-const emojis = ['😀', '😍', '👍', '👎', '❤️', '🔥', '👏', '🎉', '🤔', '😕', '😠', '💩']
+const emojis = ['😀', '😍', '👍', '👎', '❤️', '🔥', '👏', '🎉', '🤔', '😢', '😠', '💩','🤣']
 
 const FeedbackForm = ({ onSubmit }) => {
   const [content, setContent] = useState('')
