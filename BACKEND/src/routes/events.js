@@ -174,9 +174,10 @@ router.delete('/:id', authenticateToken, authorizeHost, async (req, res) => {
   }
 
   try {
+    // Delete invitations first to avoid foreign key constraint errors
+    await prisma.invitation.deleteMany({ where: { eventId } });
     await prisma.feedback.deleteMany({ where: { eventId } });
     await prisma.rsvp.deleteMany({ where: { eventId } });
-    await prisma.invitation.deleteMany({ where: { eventId } }); // <-- Fix: delete invitations before event
     await prisma.event.delete({ where: { id: eventId } });
 
     res.status(204).send();

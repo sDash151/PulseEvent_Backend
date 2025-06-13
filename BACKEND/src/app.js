@@ -37,9 +37,9 @@ app.get('/health', (req, res) => {
 })
 
 // Catch-all route for client-side routing (after all API routes, before error handler)
-app.get('*', (req, res) => {
-  res.sendFile(path.join(process.cwd(), 'public', 'index.html'));
-});
+// app.get('*', (req, res) => {
+//   res.sendFile(path.join(process.cwd(), 'public', 'index.html'));
+// });
 
 // Error handling middleware
 app.use((err, req, res, next) => {
