@@ -141,17 +141,36 @@ router.get('/:eventId', authenticateToken, authorizeHost, async (req, res) => {
       ? Math.round((totalCheckIns / totalRsvps) * 100) 
       : 0
     
+    // Calculate feedback types (optional, for frontend)
+    const feedbackTypes = [];
+    if (event.feedbacks.length > 0) {
+      const withEmoji = event.feedbacks.filter(f => f.emoji).length;
+      const withText = event.feedbacks.filter(f => f.content && f.content.trim().length > 0).length;
+      feedbackTypes.push({ type: 'Emoji', count: withEmoji, percentage: Math.round((withEmoji / event.feedbacks.length) * 100) });
+      feedbackTypes.push({ type: 'Text', count: withText, percentage: Math.round((withText / event.feedbacks.length) * 100) });
+    }
+
+    // Dummy change values for now (could be improved with historical data)
+    const rsvpChange = 0;
+    const feedbackChange = 0;
+    const engagementChange = 0;
+
     // Prepare response
     const analytics = {
       eventId: event.id,
       eventTitle: event.title,
       totalRsvps,
+      rsvpChange,
       totalCheckIns,
+      checkinRate: 0, // Not implemented, but expected by frontend
       feedbackCount,
+      feedbackChange,
       engagementRate,
+      engagementChange,
       feedbackPerHour,
       topEmojis,
       topKeywords,
+      feedbackTypes,
       sentiment,
       createdAt: new Date().toISOString()
     }
