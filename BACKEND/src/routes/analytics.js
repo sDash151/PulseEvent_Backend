@@ -108,8 +108,8 @@ router.get('/:eventId', authenticateToken, authorizeHost, async (req, res) => {
       .map(([word, count]) => ({ word, count }))
     
     // Calculate sentiment (simple version)
-    const positiveWords = ['good', 'great', 'excellent', 'awesome', 'love', 'like', 'fun', 'happy', 'amazing', 'best']
-    const negativeWords = ['bad', 'terrible', 'awful', 'hate', 'dislike', 'boring', 'sad', 'worst', 'poor']
+    const positiveWords = ['good', 'great', 'excellent', 'awesome', 'love', 'like', 'fun', 'happy', 'amazing', 'best','😀', '😍', '👍','❤️', '🔥', '👏', '🎉','🤣']
+    const negativeWords = ['bad', 'terrible', 'awful', 'hate', 'dislike', 'boring', 'sad', 'worst', 'poor', 'angry', 'frustrated', '😡', '😞', '👎', '💔', '😢', '😭', '😠', '😤','💩']
     
     let positive = 0
     let negative = 0
