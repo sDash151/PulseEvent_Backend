@@ -63,19 +63,24 @@ const EventDetailPage = () => {
       if (socket.connected) {
         setSocketConnected(true)
         joinEventRoom(id)
+        console.log('[Socket] Already connected, joining event room', id)
       } else {
         setSocketConnected(false)
+        console.log('[Socket] Not connected yet')
       }
       // Set up listeners
       socket.on('connect', () => {
         setSocketConnected(true)
         joinEventRoom(id)
+        console.log('[Socket] Connected, joined event room', id)
       })
       socket.on('disconnect', () => {
         setSocketConnected(false)
+        console.log('[Socket] Disconnected')
       })
       socket.on('error', (err) => {
         setFeedbackError(typeof err === 'string' ? err : (err?.message || 'Socket error'))
+        console.error('[Socket] Error:', err)
       })
       // Feedback handler
       if (feedbackHandlerRef.current) {
@@ -83,10 +88,12 @@ const EventDetailPage = () => {
       }
       feedbackHandlerRef.current = (newFeedback) => {
         setFeedbackList(prev => [newFeedback, ...prev])
+        console.log('[Socket] Received new feedback:', newFeedback)
       }
       socket.on('newFeedback', feedbackHandlerRef.current)
       // Always join event room on mount or id change
       joinEventRoom(id)
+      console.log('[Socket] joinEventRoom called', id)
       return () => {
         // Clean up listeners on unmount
         socket.off('connect')
@@ -95,9 +102,11 @@ const EventDetailPage = () => {
         if (feedbackHandlerRef.current) {
           socket.off('newFeedback', feedbackHandlerRef.current)
         }
+        console.log('[Socket] Cleaned up listeners')
       }
     } else {
       setSocketConnected(false)
+      console.log('[Socket] No currentUser or token, not connecting')
     }
   }, [id, currentUser])
 
