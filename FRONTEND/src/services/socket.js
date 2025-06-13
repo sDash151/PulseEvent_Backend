@@ -6,16 +6,21 @@ const SOCKET_URL = import.meta.env.VITE_API_BASE_URL
 let socket
 
 export const initSocket = (token) => {
-  socket = io(SOCKET_URL, {
-    withCredentials: true,
-    autoConnect: false,
-    auth: { token }, // Ensure token is set before connect
-  })
+  if (!socket) {
+    socket = io(SOCKET_URL, {
+      withCredentials: true,
+      autoConnect: false,
+      auth: { token },
+    })
+  } else {
+    // Update token if user changes
+    socket.auth = { token }
+  }
   return socket
 }
 
 export const connectSocket = () => {
-  if (socket) {
+  if (socket && !socket.connected) {
     socket.connect()
   }
 }

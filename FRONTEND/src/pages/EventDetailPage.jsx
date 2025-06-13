@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { format, isBefore, isAfter } from 'date-fns'
 import Button from '../components/ui/Button'
@@ -20,7 +20,11 @@ const EventDetailPage = () => {
   const [invitations, setInvitations] = useState([])
   const [error, setError] = useState('')
   const [feedbackList, setFeedbackList] = useState([])
+  const [socketConnected, setSocketConnected] = useState(false)
+  const [feedbackError, setFeedbackError] = useState('')
   const { currentUser } = useAuth()
+  const socketRef = useRef(null)
+  const feedbackHandlerRef = useRef(null)
 
   useEffect(() => {
     const loadEvent = async () => {
@@ -45,22 +49,55 @@ const EventDetailPage = () => {
   }, [id, currentUser])
 
   useEffect(() => {
-    // Initialize socket connection with token
     if (currentUser && currentUser.token) {
-      initSocket(currentUser.token)
+      // Always use singleton socket
+      const socket = initSocket(currentUser.token)
+      socketRef.current = socket
       connectSocket()
-      joinEventRoom(id)
-
-      const handleNewFeedback = (newFeedback) => {
+      // Remove all listeners to avoid duplicates
+      socket.off('connect')
+      socket.off('disconnect')
+      socket.off('error')
+      socket.off('newFeedback')
+      // Set connection state immediately if already connected
+      if (socket.connected) {
+        setSocketConnected(true)
+        joinEventRoom(id)
+      } else {
+        setSocketConnected(false)
+      }
+      // Set up listeners
+      socket.on('connect', () => {
+        setSocketConnected(true)
+        joinEventRoom(id)
+      })
+      socket.on('disconnect', () => {
+        setSocketConnected(false)
+      })
+      socket.on('error', (err) => {
+        setFeedbackError(typeof err === 'string' ? err : (err?.message || 'Socket error'))
+      })
+      // Feedback handler
+      if (feedbackHandlerRef.current) {
+        socket.off('newFeedback', feedbackHandlerRef.current)
+      }
+      feedbackHandlerRef.current = (newFeedback) => {
         setFeedbackList(prev => [newFeedback, ...prev])
       }
-
-      subscribeToFeedback(handleNewFeedback)
-
+      socket.on('newFeedback', feedbackHandlerRef.current)
+      // Always join event room on mount or id change
+      joinEventRoom(id)
       return () => {
-        // Clean up: disconnect socket when component unmounts
-        disconnectSocket()
+        // Clean up listeners on unmount
+        socket.off('connect')
+        socket.off('disconnect')
+        socket.off('error')
+        if (feedbackHandlerRef.current) {
+          socket.off('newFeedback', feedbackHandlerRef.current)
+        }
       }
+    } else {
+      setSocketConnected(false)
     }
   }, [id, currentUser])
 
@@ -93,7 +130,19 @@ const EventDetailPage = () => {
   }
 
   const handleSendFeedback = (content, emoji) => {
-    if (!currentUser) return
+    setFeedbackError('')
+    if (!currentUser) {
+      setFeedbackError('You must be logged in to send feedback.')
+      return
+    }
+    if (!socketRef.current || !socketRef.current.connected) {
+      setFeedbackError('Not connected to event. Please wait for connection.')
+      return
+    }
+    if (!isEventLive) {
+      setFeedbackError('Feedback can only be submitted while the event is live.')
+      return
+    }
     sendFeedback(id, content, emoji, currentUser.id)
   }
 
@@ -137,6 +186,13 @@ const EventDetailPage = () => {
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
+      {/* Socket connection status */}
+      <div className="mb-2 text-sm">
+        <span className={socketConnected ? 'text-green-600' : 'text-red-600'}>
+          {socketConnected ? 'Connected to event chat' : 'Not connected to event chat'}
+        </span>
+      </div>
+      
       <div className="mb-8">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
@@ -223,6 +279,10 @@ const EventDetailPage = () => {
           
           {isEventLive && (
             <Card title="Live Feedback">
+              {/* Feedback error message */}
+              {feedbackError && (
+                <div className="mb-2 p-2 bg-red-100 text-red-700 rounded">{feedbackError}</div>
+              )}
               <FeedbackForm onSubmit={handleSendFeedback} />
               <FeedbackList feedbacks={feedbackList} isHost={isHost} />
             </Card>
