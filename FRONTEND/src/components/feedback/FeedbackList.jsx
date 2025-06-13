@@ -1,7 +1,10 @@
 // frontend/src/components/feedback/FeedbackList.jsx
+import React, { useState } from 'react'
 import FeedbackItem from './FeedbackItem'
 
 const FeedbackList = ({ feedbacks, isHost }) => {
+  const [visibleCount, setVisibleCount] = useState(10)
+
   if (feedbacks.length === 0) {
     return (
       <div className="text-center py-8">
@@ -28,12 +31,22 @@ const FeedbackList = ({ feedbacks, isHost }) => {
         </div>
       )}
       
-      {/* Regular feedback */}
+      {/* Regular feedback with pagination */}
       {regularFeedback.length > 0 && (
         <div className="space-y-4">
-          {regularFeedback.map(feedback => (
+          {regularFeedback.slice(0, visibleCount).map(feedback => (
             <FeedbackItem key={feedback.id} feedback={feedback} isHost={isHost} />
           ))}
+          {visibleCount < regularFeedback.length && (
+            <div className="flex justify-center mt-2">
+              <button
+                className="px-4 py-2 rounded bg-gray-100 text-gray-700 hover:bg-gray-200 text-sm"
+                onClick={() => setVisibleCount(c => c + 10)}
+              >
+                View 10 more
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>
