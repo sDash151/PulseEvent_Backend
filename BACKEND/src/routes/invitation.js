@@ -1,6 +1,7 @@
 const express = require('express');
 const { PrismaClient } = require('@prisma/client');
 const { authenticateToken } = require('../middleware/auth');
+const { sendInvitationEmail } = require('../utils/email');
 
 // Use a singleton Prisma client to avoid multiple instances in serverless/deployment
 let prisma;
@@ -25,7 +26,7 @@ router.post('/', authenticateToken, async (req, res) => {
     const invitations = await Promise.all(
       emails.map(async (email) => {
         const user = await prisma.user.findUnique({ where: { email } });
-        return prisma.invitation.create({
+        const invitation = await prisma.invitation.create({
           data: {
             eventId,
             email,
@@ -33,6 +34,21 @@ router.post('/', authenticateToken, async (req, res) => {
             invitedUserId: user?.id || null
           }
         });
+        // Send email if user is not registered
+        if (!user) {
+          try {
+            await sendInvitationEmail({
+              to: email,
+              eventTitle: event.title,
+              eventId: event.id,
+              hostName: req.user.name || 'Event Host',
+              invitationToken: invitation.token // Pass the unique token
+            });
+          } catch (err) {
+            console.error('Failed to send invitation email:', err);
+          }
+        }
+        return invitation;
       })
     );
 

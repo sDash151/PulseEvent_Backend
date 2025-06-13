@@ -1,6 +1,6 @@
 // frontend/src/pages/RegisterPage.jsx
 import { useState, useEffect } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
 import Button from '../components/ui/Button'
 import { registerUser } from '../services/auth'
 import { useAuth } from '../hooks/useAuth'
@@ -12,10 +12,18 @@ const RegisterPage = () => {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [pendingInvite, setPendingInvite] = useState(null)
   const { login, currentUser } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
 
   useEffect(() => {
+    // Check if redirected from invitation onboarding
+    const inviteInfo = localStorage.getItem('pendingInviteInfo')
+    if (inviteInfo) {
+      setPendingInvite(JSON.parse(inviteInfo))
+      localStorage.removeItem('pendingInviteInfo')
+    }
     if (currentUser) {
       navigate('/dashboard')
     }
@@ -44,6 +52,19 @@ const RegisterPage = () => {
   return (
     <div className="min-h-[calc(100vh-4rem)] flex items-center gradient-bg">
       <div className="container mx-auto px-4 py-8 max-w-md">
+        {/* Invitation Banner */}
+        {pendingInvite && (
+          <div className="mb-6 p-4 bg-indigo-50 border-l-4 border-indigo-400 rounded-xl shadow animate-fade-in">
+            <div className="flex items-center gap-3">
+              <span className="text-2xl">🎉</span>
+              <div>
+                <div className="font-semibold text-indigo-800">You've been invited to <b>{pendingInvite.eventTitle}</b> by <b>{pendingInvite.hostName}</b>!</div>
+                <div className="text-sm text-gray-600 mt-1">After creating your account, <a href={`/invitation/${pendingInvite.token}`} className="underline text-indigo-700 font-medium">click here to accept your invitation</a>.</div>
+              </div>
+            </div>
+          </div>
+        )}
+        
         <div className="text-center mb-8">
           <h2 className="text-3xl font-bold text-gray-900">Create Your Account</h2>
           <p className="text-gray-600 mt-2">Join thousands of event organizers using EventPulse</p>
