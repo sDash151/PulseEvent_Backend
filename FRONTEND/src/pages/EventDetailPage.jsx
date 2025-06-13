@@ -155,6 +155,13 @@ const EventDetailPage = () => {
       setFeedbackError('Feedback can only be submitted while the event is live.')
       return
     }
+    console.log('[Feedback][Debug] Sending feedback:', {
+      eventId: id,
+      content,
+      emoji,
+      userId: currentUser.id,
+      user: currentUser
+    })
     sendFeedback(id, content, emoji, currentUser.id)
   }
 
