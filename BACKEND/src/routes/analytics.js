@@ -116,17 +116,13 @@ router.get('/:eventId', authenticateToken, authorizeHost, async (req, res) => {
     let neutral = 0
     
     event.feedbacks.forEach(f => {
-      if (f.content) {
-        const content = f.content.toLowerCase()
-        const hasPositive = positiveWords.some(word => content.includes(word))
-        const hasNegative = negativeWords.some(word => content.includes(word))
-        
-        if (hasPositive && !hasNegative) positive++
-        else if (hasNegative && !hasPositive) negative++
-        else neutral++
-      } else {
-        neutral++
-      }
+      // Combine content and emoji for sentiment analysis
+      const content = (f.content ? f.content.toLowerCase() : '') + (f.emoji ? ` ${f.emoji}` : '')
+      const hasPositive = positiveWords.some(word => content.includes(word))
+      const hasNegative = negativeWords.some(word => content.includes(word))
+      if (hasPositive && !hasNegative) positive++
+      else if (hasNegative && !hasPositive) negative++
+      else neutral++
     })
     
     const totalSentiment = positive + negative + neutral
