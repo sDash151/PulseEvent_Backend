@@ -22,7 +22,8 @@ const EventDetailPage = () => {
   const [feedbackList, setFeedbackList] = useState([])
   const [socketConnected, setSocketConnected] = useState(false)
   const [feedbackError, setFeedbackError] = useState('')
-  const { currentUser } = useAuth()
+  const { currentUser, loading: authLoading } = useAuth();
+  const [eventLoading, setEventLoading] = useState(true);
   const socketRef = useRef(null)
   const feedbackHandlerRef = useRef(null)
 
@@ -42,13 +43,15 @@ const EventDetailPage = () => {
       } catch (err) {
         setError(err.message || 'Failed to load event')
       } finally {
-        setLoading(false)
+        setEventLoading(false)
       }
     }
     loadEvent()
   }, [id, currentUser])
 
   useEffect(() => {
+    console.log('[Socket][Debug] Effect run. currentUser:', currentUser, 'authLoading:', authLoading, 'token:', currentUser?.token)
+    if (authLoading) return; // Wait for auth to finish
     if (currentUser && currentUser.token) {
       // Always use singleton socket
       const socket = initSocket(currentUser.token)
@@ -108,7 +111,7 @@ const EventDetailPage = () => {
       setSocketConnected(false)
       console.log('[Socket] No currentUser or token, not connecting')
     }
-  }, [id, currentUser])
+  }, [id, currentUser, authLoading])
 
   const handleRSVP = async () => {
     try {
@@ -164,7 +167,7 @@ const EventDetailPage = () => {
     }
   }
 
-  if (loading) {
+  if (eventLoading || authLoading) {
     return (
       <div className="container mx-auto px-4 py-8 max-w-4xl flex justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-600"></div>

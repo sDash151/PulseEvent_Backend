@@ -14,14 +14,17 @@ export const AuthProvider = ({ children }) => {
     if (token) {
       try {
         const decoded = jwtDecode(token)
+        console.log('[AuthContext][Debug] Decoded JWT:', decoded)
         // Check for required fields
         if (decoded && decoded.id && decoded.email && decoded.name) {
           setCurrentUser({ 
             id: decoded.id, 
             email: decoded.email, 
             name: decoded.name,
-            role: decoded.role // add role if present
+            role: decoded.role, // add role if present
+            token // <-- include token
           })
+          console.log('[AuthContext][Debug] Set currentUser with id:', decoded.id)
         } else {
           console.error('JWT missing required fields:', decoded)
           setCurrentUser(null)
@@ -41,12 +44,15 @@ export const AuthProvider = ({ children }) => {
   const login = (token) => {
     localStorage.setItem('token', token)
     const decoded = jwtDecode(token)
+    console.log('[AuthContext][Debug] Decoded JWT on login:', decoded)
     setCurrentUser({ 
       id: decoded.id, 
       email: decoded.email, 
       name: decoded.name,
-      role: decoded.role // add role if present
+      role: decoded.role, // add role if present
+      token // <-- include token
     })
+    console.log('[AuthContext][Debug] Set currentUser with id (login):', decoded.id)
   }
 
   const logout = () => {
