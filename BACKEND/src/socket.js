@@ -35,6 +35,7 @@ const initSocket = (server, prisma) => {
     // Join event room
     socket.on('joinEvent', async (eventId) => {
       try {
+        console.log('[SOCKET][Debug] joinEvent called with:', { eventId, user: socket.user });
         console.log(`[SOCKET] joinEvent: user=${socket.user.userId}, eventId=${eventId}`);
         // Verify user has access to event
         const event = await prisma.event.findUnique({
@@ -71,6 +72,7 @@ const initSocket = (server, prisma) => {
     // Handle feedback submission
     socket.on('sendFeedback', async ({ eventId, content, emoji }) => {
       try {
+        console.log('[SOCKET][Debug] sendFeedback called with:', { eventId, content, emoji, user: socket.user });
         console.log(`[SOCKET] sendFeedback: user=${socket.user.userId}, eventId=${eventId}, content=${content}, emoji=${emoji}`);
         // Use authenticated user ID
         const userId = socket.user.userId;
