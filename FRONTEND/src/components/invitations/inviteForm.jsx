@@ -1,11 +1,25 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { sendInvitations } from '../../services/invitations';
 import { useLocation } from 'react-router-dom';
+import { fetchEventById } from '../../services/events';
 
 export default function InviteForm({ eventId }) {
   const [emails, setEmails] = useState('');
   const [message, setMessage] = useState('');
+  const [eventName, setEventName] = useState('');
   const location = useLocation();
+
+  useEffect(() => {
+    async function getEventName() {
+      try {
+        const event = await fetchEventById(eventId);
+        setEventName(event.title || 'this event');
+      } catch {
+        setEventName('this event');
+      }
+    }
+    getEventName();
+  }, [eventId]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -20,7 +34,7 @@ export default function InviteForm({ eventId }) {
 
   // Generate event link and message for sharing
   const eventUrl = `${window.location.origin}/events/${eventId}`;
-  const invitingMsg = `Hey! 🎉\nI'm hosting an event on EventPulse and would love for you to join.\nClick the link to see details and RSVP: ${eventUrl}`;
+  const invitingMsg = `Hey! 🎉\nI'm inviting you to join the event: "${eventName}" on EventPulse.\nClick the link to see details and RSVP: ${eventUrl}`;
   const shareMessage = encodeURIComponent(invitingMsg);
 
   const handleWhatsAppShare = () => {
