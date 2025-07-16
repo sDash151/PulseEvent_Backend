@@ -1,4 +1,3 @@
-// frontend/src/components/analytics/AttendanceChart.jsx
 import { Line } from 'react-chartjs-2'
 import {
   Chart as ChartJS,
@@ -25,19 +24,21 @@ ChartJS.register(
 
 const AttendanceChart = ({ data }) => {
   const chartData = {
-    labels: data.map(item => new Date(item.hour).toLocaleTimeString([], { hour: '2-digit' })),
+    labels: data.map(item =>
+      new Date(item.hour).toLocaleTimeString([], { hour: '2-digit' })
+    ),
     datasets: [
       {
         label: 'Feedback Activity',
         data: data.map(item => item.count),
-        borderColor: 'rgb(99, 102, 241)',
-        backgroundColor: 'rgba(99, 102, 241, 0.1)',
+        borderColor: '#facc15', // amber-400
+        backgroundColor: 'rgba(250, 204, 21, 0.15)',
         borderWidth: 2,
-        pointBackgroundColor: 'rgb(99, 102, 241)',
-        pointBorderColor: '#fff',
+        pointBackgroundColor: '#facc15',
+        pointBorderColor: '#0f0c29',
         pointBorderWidth: 2,
-        pointRadius: 4,
-        tension: 0.3,
+        pointRadius: 5,
+        tension: 0.35,
         fill: true
       }
     ]
@@ -51,18 +52,16 @@ const AttendanceChart = ({ data }) => {
         display: false
       },
       tooltip: {
-        backgroundColor: 'white',
-        titleColor: '#1F2937',
-        bodyColor: '#1F2937',
-        borderColor: '#E5E7EB',
+        backgroundColor: '#1c1c2b',
+        titleColor: '#facc15',
+        bodyColor: '#e5e7eb',
+        borderColor: '#facc15',
         borderWidth: 1,
-        padding: 12,
-        boxPadding: 8,
+        padding: 10,
+        boxPadding: 6,
         usePointStyle: true,
         callbacks: {
-          title: (tooltipItems) => {
-            return `Hour: ${tooltipItems[0].label}`
-          }
+          title: (tooltipItems) => `Hour: ${tooltipItems[0].label}`
         }
       }
     },
@@ -72,23 +71,27 @@ const AttendanceChart = ({ data }) => {
           display: false
         },
         ticks: {
-          color: '#6B7280'
+          color: '#a1a1aa' // gray-400
         }
       },
       y: {
         beginAtZero: true,
         grid: {
-          color: 'rgba(229, 231, 235, 0.5)'
+          color: 'rgba(255,255,255,0.1)' // subtle glassy lines
         },
         ticks: {
-          color: '#6B7280',
+          color: '#a1a1aa',
           precision: 0
         }
       }
     }
   }
 
-  return <div className="h-80"><Line data={chartData} options={options} /></div>
+  return (
+    <div className="h-80 rounded-xl bg-white/5 backdrop-blur-lg p-4">
+      <Line data={chartData} options={options} />
+    </div>
+  )
 }
 
 export default AttendanceChart

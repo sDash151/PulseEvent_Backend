@@ -1,9 +1,9 @@
-// frontend/src/components/events/CalendarView.jsx
-import { Calendar, momentLocalizer } from 'react-big-calendar'
-import moment from 'moment'
-import 'react-big-calendar/lib/css/react-big-calendar.css'
+import { Calendar, momentLocalizer } from 'react-big-calendar';
+import moment from 'moment';
+import 'react-big-calendar/lib/css/react-big-calendar.css';
+import './calendar-dark.css'; // Custom styles
 
-const localizer = momentLocalizer(moment)
+const localizer = momentLocalizer(moment);
 
 const CalendarView = ({ events }) => {
   const formattedEvents = events.map(event => ({
@@ -12,44 +12,44 @@ const CalendarView = ({ events }) => {
     start: new Date(event.startTime),
     end: new Date(event.endTime),
     allDay: false
-  }))
+  }));
 
   const eventStyleGetter = (event) => {
-    const now = new Date()
-    let backgroundColor = '#6366F1' // Default: indigo
-    
-    if (event.end < now) {
-      backgroundColor = '#9CA3AF' // Gray for past events
-    } else if (event.start <= now && event.end >= now) {
-      backgroundColor = '#EF4444' // Red for live events
-    }
-    
+    const now = new Date();
+    let backgroundColor = '#6366F1'; // indigo
+    if (event.end < now) backgroundColor = '#9CA3AF';
+    else if (event.start <= now && event.end >= now) backgroundColor = '#EF4444';
+
     return {
       style: {
         backgroundColor,
-        borderRadius: '4px',
-        border: 'none',
+        borderRadius: '6px',
         color: 'white',
-        padding: '2px 8px'
+        fontWeight: '500',
+        border: 'none',
+        padding: '4px 8px',
+        boxShadow: '0 0 6px rgba(255,255,255,0.1)'
       }
-    }
-  }
+    };
+  };
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 h-[600px]">
-      <Calendar
-        localizer={localizer}
-        events={formattedEvents}
-        startAccessor="start"
-        endAccessor="end"
-        style={{ height: '100%' }}
-        eventPropGetter={eventStyleGetter}
-        views={['month', 'week', 'day']}
-        defaultView="month"
-        popup
-      />
+    <div className="w-full overflow-auto">
+      <div className="min-h-[calc(100vh-16rem)] bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl shadow-[0_0_25px_rgba(255,255,255,0.06)] p-4">
+        <Calendar
+          localizer={localizer}
+          events={formattedEvents}
+          startAccessor="start"
+          endAccessor="end"
+          defaultView="month"
+          views={['month', 'week', 'day']}
+          popup
+          eventPropGetter={eventStyleGetter}
+          style={{ height: 'auto', minHeight: '650px' }}
+        />
+      </div>
     </div>
-  )
-}
+  );
+};
 
-export default CalendarView
+export default CalendarView;

@@ -35,20 +35,19 @@ router.post('/', authenticateToken, async (req, res) => {
             invitedUserId: user?.id || null
           }
         });
-        // Send email if user is not registered
-        if (!user) {
-          try {
-            await sendInvitationEmail({
-              to: email,
-              eventTitle: event.title,
-              eventId: event.id,
-              hostName: req.user.name || 'Event Host',
-              invitationToken: invitation.token // Pass the unique token
-            });
-          } catch (err) {
-            console.error('Failed to send invitation email:', err);
-            emailErrors.push({ email, error: err.message, stack: err.stack });
-          }
+        // Always send email, even to registered users
+        try {
+          await sendInvitationEmail({
+            to: email,
+            eventTitle: event.title,
+            eventId: event.id,
+            hostName: req.user.name || 'Event Host',
+            invitationToken: invitation.token,
+            isRegistered: !!user // pass flag to template
+          });
+        } catch (err) {
+          console.error('Failed to send invitation email:', err);
+          emailErrors.push({ email, error: err.message, stack: err.stack });
         }
         return invitation;
       })

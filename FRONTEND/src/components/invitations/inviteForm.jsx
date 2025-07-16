@@ -32,7 +32,6 @@ export default function InviteForm({ eventId }) {
     }
   };
 
-  // Generate event link and message for sharing
   const eventUrl = `${window.location.origin}/events/${eventId}`;
   const invitingMsg = `Hey! 🎉\nI'm inviting you to join the event: "${eventName}" on EventPulse.\nClick the link to see details and RSVP: ${eventUrl}`;
   const shareMessage = encodeURIComponent(invitingMsg);
@@ -46,43 +45,47 @@ export default function InviteForm({ eventId }) {
   };
 
   return (
-    <div className="card p-4 mb-4">
-      <h3 className="text-lg font-semibold mb-2">Invite Attendees</h3>
-      <div className="mb-2 text-gray-700 text-sm bg-indigo-50 rounded p-2">
-        <span className="font-medium">Invitation message:</span>
-        <div className="mt-1 whitespace-pre-line">{invitingMsg}</div>
+    <div className="bg-white/5 backdrop-blur-md rounded-2xl border border-white/10 shadow-xl p-6 text-white">
+      <h3 className="text-xl font-semibold mb-4">Invite Attendees</h3>
+
+      <div className="mb-4 bg-white/10 p-4 rounded-lg text-sm text-amber-100 border border-white/10">
+        <span className="font-medium text-amber-300">Invitation message:</span>
+        <div className="mt-2 whitespace-pre-line">{invitingMsg}</div>
       </div>
+
       <form onSubmit={handleSubmit}>
         <textarea
           value={emails}
           onChange={(e) => setEmails(e.target.value)}
           placeholder="Enter emails, separated by commas"
-          className="w-full p-2 border rounded mb-2"
+          className="w-full p-3 rounded-lg bg-white/10 border border-white/10 placeholder-gray-300 text-white focus:outline-none focus:ring-2 focus:ring-amber-500 mb-4"
           rows="3"
         />
-        <div className="flex flex-wrap gap-2 mb-2">
+        <div className="flex flex-wrap gap-3 mb-4">
           <button 
             type="submit" 
-            className="bg-blue-500 text-white px-4 py-2 rounded"
+            className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-5 py-2 rounded-lg hover:brightness-110 transition"
           >
             Send Invites
           </button>
           <button
             type="button"
-            className="bg-green-500 text-white px-4 py-2 rounded"
+            className="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-5 py-2 rounded-lg hover:brightness-110 transition"
             onClick={handleWhatsAppShare}
           >
             Send via WhatsApp
           </button>
           <button
             type="button"
-            className="bg-yellow-500 text-white px-4 py-2 rounded"
+            className="bg-gradient-to-r from-yellow-500 to-amber-500 text-white px-5 py-2 rounded-lg hover:brightness-110 transition"
             onClick={handleSMSShare}
           >
             Send via SMS
           </button>
         </div>
-        {message && <p className="mt-2 text-green-600">{message}</p>}
+        {message && (
+          <p className="mt-2 text-emerald-400 font-medium">{message}</p>
+        )}
       </form>
     </div>
   );

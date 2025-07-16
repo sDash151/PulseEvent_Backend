@@ -10,6 +10,8 @@ import {
 import ProtectedRoute from './components/ui/ProtectedRoute';
 import Layout from './components/layout/Layout';
 
+import ComingSoonPage from './pages/ComingSoonPage';
+
 // Pages
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
@@ -33,6 +35,20 @@ export const router = createBrowserRouter(
       <Route path="invitations" element={<InvitationsPage />} />
       {/* Public invitation token route */}
       <Route path="invitation/:token" element={<InvitationPage />} />
+
+      {/* Coming Soon routes */}
+      <Route path="features" element={<ComingSoonPage />} />
+      <Route path="pricing" element={<ComingSoonPage />} />
+      <Route path="blog" element={<ComingSoonPage />} />
+      <Route path="about" element={<ComingSoonPage />} />
+      <Route path="contact" element={<ComingSoonPage />} />
+      <Route path="documentation" element={<ComingSoonPage />} />
+      <Route path="help-center" element={<ComingSoonPage />} />
+      <Route path="community" element={<ComingSoonPage />} />
+      <Route path="webinars" element={<ComingSoonPage />} />
+      <Route path="terms" element={<ComingSoonPage />} />
+      <Route path="privacy" element={<ComingSoonPage />} />
+      <Route path="cookies" element={<ComingSoonPage />} />
 
       {/* ✅ Protected Routes */}
       <Route element={<ProtectedRoute />}>

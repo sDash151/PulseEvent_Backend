@@ -1,55 +1,75 @@
-// frontend/src/components/feedback/FeedbackItem.jsx
 import React from 'react'
 import Button from '../ui/Button'
 import { format } from 'date-fns'
+import { pinFeedback, flagFeedback } from '../../services/feedback'
 
-const FeedbackItem = ({ feedback, isHost }) => {
+const FeedbackItem = ({ feedback, isHost, onAction }) => {
+  // Pin/Unpin handler
+  const handlePin = async () => {
+    await pinFeedback(feedback.id)
+    if (onAction) onAction()
+  }
+  // Flag/Unflag handler
+  const handleFlag = async () => {
+    await flagFeedback(feedback.id)
+    if (onAction) onAction()
+  }
+  const getStateStyles = () => {
+    if (feedback.isPinned) {
+      return 'border-amber-400 bg-amber-400/10'
+    } else if (feedback.isFlagged) {
+      return 'border-red-500 bg-red-500/10'
+    } else {
+      return 'border-white/10 bg-white/5'
+    }
+  }
+
   return (
-    <div className={`p-4 rounded-lg border ${
-      feedback.isPinned 
-        ? 'border-yellow-400 bg-yellow-50' 
-        : feedback.isFlagged
-          ? 'border-red-200 bg-red-50'
-          : 'border-gray-200'
-    }`}>
-      <div className="flex justify-between">
-        <div className="flex items-start">
-          <div className="text-3xl mr-3">{feedback.emoji}</div>
+    <div className={`p-4 md:p-5 rounded-xl border shadow-md backdrop-blur-md transition-all ${getStateStyles()}`}>
+      <div className="flex justify-between items-start">
+        {/* Left Side: Emoji + Content */}
+        <div className="flex items-start gap-3">
+          <div className="text-3xl">{feedback.emoji}</div>
           <div>
-            <div className="flex items-center">
-              <span className="font-medium text-gray-900">{feedback.user.name}</span>
+            <div className="flex items-center gap-2 text-sm font-medium text-white">
+              <span>{feedback.user.name}</span>
               {feedback.isPinned && (
-                <span className="ml-2 px-2 py-0.5 bg-yellow-100 text-yellow-800 text-xs rounded-full">
-                  Pinned
+                <span className="px-2 py-0.5 text-xs rounded-full bg-amber-400/20 text-amber-300 border border-amber-300">
+                  📌 Pinned
                 </span>
               )}
               {feedback.isFlagged && (
-                <span className="ml-2 px-2 py-0.5 bg-red-100 text-red-800 text-xs rounded-full">
-                  Flagged
+                <span className="px-2 py-0.5 text-xs rounded-full bg-red-500/20 text-red-300 border border-red-400">
+                  🚩 Flagged
                 </span>
               )}
             </div>
-            <p className="text-gray-700 mt-1">{feedback.content}</p>
+            <p className="mt-1 text-gray-300 text-sm whitespace-pre-line">
+              {feedback.content}
+            </p>
           </div>
         </div>
-        <div className="text-sm text-gray-500 whitespace-nowrap">
+
+        {/* Time */}
+        <div className="text-xs text-gray-400 whitespace-nowrap mt-1">
           {format(new Date(feedback.createdAt), 'h:mm a')}
         </div>
       </div>
-      
+
+      {/* Host Controls */}
       {isHost && (
-        <div className="flex gap-2 mt-3">
+        <div className="flex gap-2 mt-4">
           <Button 
             size="sm" 
             variant={feedback.isPinned ? 'primary' : 'outline'}
-            onClick={() => {}} // TODO: Implement pin
+            onClick={handlePin}
           >
             {feedback.isPinned ? 'Unpin' : 'Pin'}
           </Button>
           <Button 
             size="sm" 
             variant={feedback.isFlagged ? 'danger' : 'outline'}
-            onClick={() => {}} // TODO: Implement flag
+            onClick={handleFlag}
           >
             {feedback.isFlagged ? 'Unflag' : 'Flag'}
           </Button>

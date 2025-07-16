@@ -14,10 +14,10 @@ const transporter = nodemailer.createTransport({
 
 async function sendInvitationEmail({ to, eventTitle, eventId, hostName, invitationToken }) {
   const siteUrl = process.env.CLIENT_URL || 'https://your-eventpulse-site.com'
-  // Use personalized link if token is provided
-  const invitationLink = invitationToken
-    ? `${siteUrl}/invite/${invitationToken}`
-    : `${siteUrl}/events/${eventId}`
+  // Always direct to login with redirect to invitation page
+  const loginLink = invitationToken
+    ? `${siteUrl}/login?redirect=/invitation/${invitationToken}`
+    : `${siteUrl}/login`
   const mailOptions = {
     from: process.env.SMTP_FROM || 'noreply@eventpulse.com',
     to,
@@ -29,9 +29,9 @@ async function sendInvitationEmail({ to, eventTitle, eventId, hostName, invitati
         <p style="font-size: 16px; color: #222;">
           <b>${hostName}</b> has invited you to join the event <b>${eventTitle}</b> on <b>EventPulse</b>.
         </p>
-        <p style="font-size: 16px; color: #222;">Click the button below to view the event and RSVP:</p>
+        <p style="font-size: 16px; color: #222;">Click the button below to log in and view your invitation:</p>
         <div style="text-align: center; margin: 24px 0;">
-          <a href="${invitationLink}" target="_blank" style="background: #4f46e5; color: #fff; padding: 12px 28px; border-radius: 6px; text-decoration: none; font-size: 16px; font-weight: bold;">View Event & RSVP</a>
+          <a href="${loginLink}" target="_blank" style="background: #4f46e5; color: #fff; padding: 12px 28px; border-radius: 6px; text-decoration: none; font-size: 16px; font-weight: bold;">Log In & View Invitation</a>
         </div>
         <p style="font-size: 15px; color: #444;">If you don't have an account, you can sign up after clicking the link above. It's quick and free!</p>
         <hr style="margin: 24px 0; border: none; border-top: 1px solid #eee;" />

@@ -1,0 +1,145 @@
+/* calendar-dark.css */
+
+/* === GENERAL LAYOUT === */
+.rbc-calendar {
+  background: transparent;
+  color: #e5e7eb; /* Tailwind slate-200 */
+  border: none;
+}
+
+/* Remove default borders */
+.rbc-time-view,
+.rbc-month-view,
+.rbc-row,
+.rbc-time-content,
+.rbc-time-header {
+  border: none;
+}
+
+/* Light grid lines for week/day view */
+.rbc-time-content,
+.rbc-time-header,
+.rbc-month-row {
+  border-top: 1px solid rgba(255, 255, 255, 0.04);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.rbc-time-gutter,
+.rbc-day-slot,
+.rbc-timeslot-group {
+  border-color: rgba(255, 255, 255, 0.05) !important;
+}
+
+/* Slightly dim background for current day */
+.rbc-today {
+  background-color: rgba(255, 255, 255, 0.02);
+}
+
+/* === HEADER / DATE CELLS === */
+.rbc-header {
+  background: transparent;
+  color: #fbbf24; /* Tailwind amber-400 */
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  padding: 0.5rem 0;
+  font-weight: 500;
+  font-size: 0.95rem;
+}
+
+.rbc-date-cell {
+  color: #a1a1aa; /* Tailwind zinc-400 */
+}
+
+.rbc-date-cell.rbc-now {
+  background-color: rgba(251, 191, 36, 0.1);
+  color: #fbbf24;
+  font-weight: bold;
+}
+
+/* === TOOLBAR === */
+.rbc-toolbar {
+  background: transparent;
+  color: white;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.rbc-toolbar-label {
+  color: #fbbf24;
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+/* Toolbar buttons */
+.rbc-btn-group button {
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: white;
+  padding: 0.25rem 0.75rem;
+  border-radius: 0.5rem;
+  margin: 0 2px;
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+}
+
+.rbc-btn-group button:hover {
+  background-color: rgba(251, 191, 36, 0.15);
+  color: #fcd34d;
+}
+
+/* === EVENTS === */
+.rbc-event {
+  font-size: 0.85rem;
+  padding: 3px 6px;
+  border-radius: 0.5rem;
+  background-color: #6366f1 !important; /* Tailwind indigo-500 fallback */
+  color: white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+  border: none;
+}
+
+.rbc-event-content {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Off-range days in month view */
+.rbc-off-range-bg {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+/* "Show more" link */
+.rbc-show-more {
+  color: #fbbf24;
+  font-weight: 500;
+  font-size: 0.85rem;
+}
+
+/* === TIME GUTTER & SLOTS === */
+.rbc-time-gutter {
+  color: #9ca3af; /* Tailwind gray-400 */
+  font-size: 0.75rem;
+}
+
+/* Current time indicator (red line) */
+.rbc-current-time-indicator {
+  background-color: #f87171 !important; /* Tailwind red-400 */
+  height: 2px;
+}
+
+/* === SCROLLBAR === */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+}

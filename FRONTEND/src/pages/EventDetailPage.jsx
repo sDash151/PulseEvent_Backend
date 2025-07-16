@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { format, isBefore, isAfter } from 'date-fns'
 import Button from '../components/ui/Button'
+import AnalyticsPanel from '../components/analytics/AnalyticsPanel'
 import Card from '../components/ui/Card'
 import FeedbackList from '../components/feedback/FeedbackList'
 import FeedbackForm from '../components/feedback/FeedbackForm'
@@ -22,8 +23,8 @@ const EventDetailPage = () => {
   const [feedbackList, setFeedbackList] = useState([])
   const [socketConnected, setSocketConnected] = useState(false)
   const [feedbackError, setFeedbackError] = useState('')
-  const { currentUser, loading: authLoading } = useAuth();
-  const [eventLoading, setEventLoading] = useState(true);
+  const { currentUser, loading: authLoading } = useAuth()
+  const [eventLoading, setEventLoading] = useState(true)
   const socketRef = useRef(null)
   const feedbackHandlerRef = useRef(null)
 
@@ -33,11 +34,9 @@ const EventDetailPage = () => {
         const eventData = await fetchEventById(id)
         setEvent(eventData)
         setFeedbackList(eventData.feedbacks || [])
-        
-        // Fetch invitations if user is host
+
         if (currentUser && eventData.hostId === currentUser.id) {
           const invites = await getEventInvitations(id)
-          console.log('Invitations response:', invites)
           setInvitations(invites.data)
         }
       } catch (err) {
@@ -50,73 +49,43 @@ const EventDetailPage = () => {
   }, [id, currentUser])
 
   useEffect(() => {
-    console.log('[Socket][Debug] Effect run. currentUser:', currentUser, 'authLoading:', authLoading, 'token:', currentUser?.token)
-    if (authLoading) return; // Wait for auth to finish
+    if (authLoading) return
     if (currentUser && currentUser.token) {
-      // Always use singleton socket
       const socket = initSocket(currentUser.token)
       socketRef.current = socket
       connectSocket()
-      // Remove all listeners to avoid duplicates
-      socket.off('connect')
-      socket.off('disconnect')
-      socket.off('error')
+
       socket.off('newFeedback')
-      // Set connection state immediately if already connected
-      if (socket.connected) {
-        setSocketConnected(true)
-        joinEventRoom(id)
-        console.log('[Socket] Already connected, joining event room', id)
-      } else {
-        setSocketConnected(false)
-        console.log('[Socket] Not connected yet')
-      }
-      // Set up listeners
-      socket.on('connect', () => {
-        setSocketConnected(true)
-        joinEventRoom(id)
-        console.log('[Socket] Connected, joined event room', id)
-      })
-      socket.on('disconnect', () => {
-        setSocketConnected(false)
-        console.log('[Socket] Disconnected')
-      })
-      socket.on('error', (err) => {
-        setFeedbackError(typeof err === 'string' ? err : (err?.message || 'Socket error'))
-        console.error('[Socket] Error:', err)
-      })
-      // Feedback handler
       if (feedbackHandlerRef.current) {
         socket.off('newFeedback', feedbackHandlerRef.current)
       }
+
       feedbackHandlerRef.current = (newFeedback) => {
         setFeedbackList(prev => [newFeedback, ...prev])
-        console.log('[Socket] Received new feedback:', newFeedback)
       }
+
+      socket.on('connect', () => {
+        setSocketConnected(true)
+        joinEventRoom(id)
+      })
+      socket.on('disconnect', () => setSocketConnected(false))
       socket.on('newFeedback', feedbackHandlerRef.current)
-      // Always join event room on mount or id change
-      joinEventRoom(id)
-      console.log('[Socket] joinEventRoom called', id)
+
       return () => {
-        // Clean up listeners on unmount
         socket.off('connect')
         socket.off('disconnect')
-        socket.off('error')
         if (feedbackHandlerRef.current) {
           socket.off('newFeedback', feedbackHandlerRef.current)
         }
-        console.log('[Socket] Cleaned up listeners')
       }
     } else {
       setSocketConnected(false)
-      console.log('[Socket] No currentUser or token, not connecting')
     }
   }, [id, currentUser, authLoading])
 
   const handleRSVP = async () => {
     try {
       await rsvpToEvent(id)
-      // Update event state to reflect new RSVP
       setEvent(prev => ({
         ...prev,
         rsvps: [...prev.rsvps, { userId: currentUser.id, user: { name: currentUser.name } }]
@@ -129,10 +98,9 @@ const EventDetailPage = () => {
   const handleCheckIn = async () => {
     try {
       await checkInToEvent(id)
-      // Update event state to reflect check-in
       setEvent(prev => ({
         ...prev,
-        rsvps: prev.rsvps.map(rsvp => 
+        rsvps: prev.rsvps.map(rsvp =>
           rsvp.userId === currentUser.id ? { ...rsvp, checkedIn: true } : rsvp
         )
       }))
@@ -143,25 +111,10 @@ const EventDetailPage = () => {
 
   const handleSendFeedback = (content, emoji) => {
     setFeedbackError('')
-    if (!currentUser) {
-      setFeedbackError('You must be logged in to send feedback.')
+    if (!currentUser || !socketRef.current?.connected || !isEventLive) {
+      setFeedbackError('Feedback can only be sent during a live event with a valid connection.')
       return
     }
-    if (!socketRef.current || !socketRef.current.connected) {
-      setFeedbackError('Not connected to event. Please wait for connection.')
-      return
-    }
-    if (!isEventLive) {
-      setFeedbackError('Feedback can only be submitted while the event is live.')
-      return
-    }
-    console.log('[Feedback][Debug] Sending feedback:', {
-      eventId: id,
-      content,
-      emoji,
-      userId: currentUser.id,
-      user: currentUser
-    })
     sendFeedback(id, content, emoji, currentUser.id)
   }
 
@@ -169,225 +122,124 @@ const EventDetailPage = () => {
     try {
       const invites = await getEventInvitations(id)
       setInvitations(invites.data)
-    } catch (err) {
+    } catch {
       setError('Failed to refresh invitations')
     }
   }
 
+  const isHost = currentUser && event?.hostId === currentUser.id
+  const userRSVP = event?.rsvps?.find(rsvp => rsvp.userId === currentUser?.id)
+  const isCheckedIn = userRSVP?.checkedIn
+  const now = new Date()
+  const startTime = new Date(event?.startTime)
+  const endTime = new Date(event?.endTime)
+  const rsvpDeadline = new Date(event?.rsvpDeadline)
+  const isEventLive = isBefore(now, endTime) && isAfter(now, startTime)
+  const canCheckIn = isBefore(now, endTime) && isAfter(now, new Date(startTime.getTime() - 3600000))
+  const canRSVP = isBefore(now, rsvpDeadline) && event?.rsvps?.length < event?.maxAttendees
+
   if (eventLoading || authLoading) {
     return (
-      <div className="container mx-auto px-4 py-8 max-w-4xl flex justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-600"></div>
+      <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-[#0f0c29] via-[#302b63] to-[#24243e]">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-amber-400"></div>
       </div>
     )
   }
 
   if (error) {
     return (
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
-        <div className="bg-red-50 text-red-700 p-6 rounded-xl">
-          {error}
-        </div>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0f0c29] via-[#302b63] to-[#24243e] text-red-400 text-xl">
+        {error}
       </div>
     )
   }
 
-  const isHost = currentUser && event.hostId === currentUser.id
-  const userRSVP = event.rsvps.find(rsvp => rsvp.userId === currentUser?.id)
-  const isCheckedIn = userRSVP?.checkedIn
-  const now = new Date()
-  const startTime = new Date(event.startTime)
-  const endTime = new Date(event.endTime)
-  const rsvpDeadline = new Date(event.rsvpDeadline)
-  const isEventLive = isBefore(now, endTime) && isAfter(now, startTime)
-  const canCheckIn = isBefore(now, endTime) && isAfter(now, new Date(startTime.getTime() - 60 * 60 * 1000))
-  const canRSVP = isBefore(now, rsvpDeadline) && event.rsvps.length < event.maxAttendees
-
   return (
-    <div className="container mx-auto px-4 py-8 max-w-4xl">
-      {/* Socket connection status */}
-      <div className="mb-2 text-sm">
-        <span className={socketConnected ? 'text-green-600' : 'text-red-600'}>
-          {socketConnected ? 'Connected to event chat' : 'Not connected to event chat'}
-        </span>
-      </div>
-      
-      <div className="mb-8">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-          <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 flex items-center gap-3">
-              {event.title}
-              {isEventLive && (
-                <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">
-                  <span className="live-pulse flex h-2 w-2 rounded-full bg-red-500 mr-2"></span>
-                  Live
-                </span>
-              )}
-            </h1>
-            <p className="text-gray-600 mt-1">{event.location}</p>
-          </div>
-          <div className="flex gap-2">
-            {isHost && (
-              <Button as={Link} to={`/events/${event.id}/edit`} variant="outline">
-                Edit Event
-              </Button>
-            )}
-            <Button as={Link} to="/dashboard" variant="ghost">
-              Back to Dashboard
-            </Button>
-          </div>
-        </div>
-      </div>
+    <div className="relative min-h-screen px-4 pt-28 pb-10 bg-gradient-to-br from-[#0f0c29] via-[#302b63] to-[#24243e] text-white">
+      {/* Ambient Glow Effects */}
+      <div className="absolute top-0 left-[20%] w-96 h-96 bg-pink-500/10 rounded-full blur-[120px] z-0" />
+      <div className="absolute bottom-10 right-[15%] w-72 h-72 bg-amber-400/10 rounded-full blur-[100px] z-0" />
+      <div className="absolute bottom-0 left-[10%] w-60 h-60 bg-blue-400/10 rounded-full blur-[100px] z-0" />
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2 space-y-6">
-          <Card>
-            <div className="prose max-w-none">
-              <p className="text-gray-700">{event.description}</p>
-              
-              <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <h3 className="text-sm font-medium text-gray-900 uppercase tracking-wider">Date & Time</h3>
-                  <p className="mt-1 text-gray-700">
-                    {format(startTime, 'EEEE, MMMM d, yyyy')}
-                    <br />
-                    {format(startTime, 'h:mm a')} - {format(endTime, 'h:mm a')}
-                  </p>
-                </div>
-                
-                <div>
-                  <h3 className="text-sm font-medium text-gray-900 uppercase tracking-wider">RSVP Deadline</h3>
-                  <p className="mt-1 text-gray-700">
-                    {format(rsvpDeadline, 'MMM d, h:mm a')}
-                  </p>
-                </div>
-                
-                <div>
-                  <h3 className="text-sm font-medium text-gray-900 uppercase tracking-wider">Attendees</h3>
-                  <p className="mt-1 text-gray-700">
-                    {event.rsvps.length} of {event.maxAttendees} registered
-                  </p>
-                </div>
-                
-                <div>
-                  <h3 className="text-sm font-medium text-gray-900 uppercase tracking-wider">Host</h3>
-                  <div className="mt-1 flex items-center">
-                    <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-medium">
-                      {event.host.name.charAt(0)}
-                    </div>
-                    <span className="ml-2 text-gray-700">{event.host.name}</span>
-                  </div>
-                </div>
-              </div>
+      {/* Main Content */}
+      <div className="relative z-10 max-w-6xl mx-auto space-y-6">
+        <div className="flex justify-between items-start md:items-center">
+          <div>
+            <h1 className="text-3xl font-bold">{event.title}</h1>
+            <p className="text-gray-300">{event.location}</p>
+          </div>
+          <div className="flex gap-3">
+            {isHost && (
+              <Link to={`/events/${event.id}/edit`} className="text-sm px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-amber-400 font-semibold">
+                Edit Event
+              </Link>
+            )}
+            <Link to="/dashboard" className="text-sm px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-gray-300">
+              Back to Dashboard
+            </Link>
+          </div>
+        </div>
+
+        {/* Glassmorphic Card */}
+        <div className="bg-white/5 backdrop-blur-md p-6 rounded-2xl border border-white/10 shadow-[0_0_25px_rgba(255,255,255,0.05)] space-y-6">
+          <p className="text-gray-300">{event.description}</p>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <h3 className="text-sm font-semibold text-amber-400">Date & Time</h3>
+              <p className="text-white">{format(startTime, 'PPP')} | {format(startTime, 'p')} - {format(endTime, 'p')}</p>
             </div>
-          </Card>
-          
-          {/* Invitation Management Section - Only for Host */}
-          {isHost && (
-            <Card title="Invitation Management">
-              <InviteForm 
-                eventId={event.id} 
-                onInviteSent={handleInvitationsUpdate} 
-              />
-              <InvitationList 
-                invitations={invitations} 
-                onRefresh={handleInvitationsUpdate} 
-              />
-            </Card>
+            <div>
+              <h3 className="text-sm font-semibold text-amber-400">RSVP Deadline</h3>
+              <p className="text-white">{format(rsvpDeadline, 'PPPp')}</p>
+            </div>
+            <div>
+              <h3 className="text-sm font-semibold text-amber-400">Attendees</h3>
+              <p className="text-white">{event.rsvps.length} / {event.maxAttendees}</p>
+            </div>
+            <div>
+              <h3 className="text-sm font-semibold text-amber-400">Host</h3>
+              <p className="text-white">{event.host.name}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* RSVP/Check-in Actions */}
+        <div className="flex flex-col sm:flex-row gap-4">
+          {!isHost && canRSVP && !userRSVP && (
+            <Button className="bg-amber-500 hover:bg-amber-600 text-white" onClick={handleRSVP}>
+              RSVP Now
+            </Button>
           )}
-          
-          {isEventLive && (
-            <Card title="Live Feedback">
-              {/* Feedback error message */}
-              {feedbackError && (
-                <div className="mb-2 p-2 bg-red-100 text-red-700 rounded">{feedbackError}</div>
-              )}
-              <FeedbackForm onSubmit={handleSendFeedback} />
-              <FeedbackList feedbacks={feedbackList} isHost={isHost} />
-            </Card>
+          {!isHost && userRSVP && canCheckIn && !isCheckedIn && (
+            <Button className="bg-green-500 hover:bg-green-600 text-white" onClick={handleCheckIn}>
+              Check In
+            </Button>
           )}
         </div>
-        
-        <div className="space-y-6">
-          <Card title="Event Actions">
-            <div className="space-y-4">
-              {!isHost && (
-                <>
-                  {canRSVP && !userRSVP && (
-                    <Button className="w-full" onClick={handleRSVP}>
-                      RSVP to Event
-                    </Button>
-                  )}
-                  
-                  {userRSVP && !isCheckedIn && canCheckIn && (
-                    <Button className="w-full" onClick={handleCheckIn}>
-                      Check In Now
-                    </Button>
-                  )}
-                  
-                  {userRSVP && isCheckedIn && (
-                    <div className="p-3 bg-green-50 text-green-700 rounded-lg text-center">
-                      <p className="font-medium">You're checked in!</p>
-                      <p className="text-sm mt-1">Enjoy the event</p>
-                    </div>
-                  )}
-                  
-                  {userRSVP && !canCheckIn && !isCheckedIn && (
-                    <div className="p-3 bg-yellow-50 text-yellow-700 rounded-lg">
-                      <p className="font-medium">Check-in closed</p>
-                      <p className="text-sm mt-1">Check-in period has ended</p>
-                    </div>
-                  )}
-                </>
-              )}
-              
-              {isHost && (
-                <div className="space-y-3">
-                  <Button as={Link} to={`/analytics/${event.id}`} className="w-full">
-                    View Analytics
-                  </Button>
-                  <div className="bg-indigo-50 p-4 rounded-lg">
-                    <h4 className="font-medium text-indigo-700">Host Controls</h4>
-                    <p className="text-sm text-indigo-600 mt-1">
-                      You have special privileges to manage this event
-                    </p>
-                  </div>
-                </div>
-              )}
-            </div>
-          </Card>
-          
-          <Card title="Attendees">
-            <div className="space-y-3">
-              <div className="flex justify-between text-sm text-gray-500">
-                <span>Attendees ({event.rsvps.length})</span>
-                <span>Checked In: {event.rsvps.filter(r => r.checkedIn).length}</span>
-              </div>
-              
-              <div className="space-y-2 max-h-96 overflow-y-auto">
-                {event.rsvps.length === 0 ? (
-                  <p className="text-gray-500 text-center py-4">No attendees yet</p>
-                ) : (
-                  event.rsvps.map(rsvp => (
-                    <div key={rsvp.id} className="flex items-center justify-between p-2 hover:bg-gray-50 rounded-lg">
-                      <div className="flex items-center">
-                        <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 text-sm">
-                          {rsvp.user.name.charAt(0)}
-                        </div>
-                        <span className="ml-2 text-gray-700">{rsvp.user.name}</span>
-                      </div>
-                      {rsvp.checkedIn ? (
-                        <span className="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">Checked In</span>
-                      ) : (
-                        <span className="px-2 py-1 text-xs rounded-full bg-yellow-100 text-yellow-800">Registered</span>
-                      )}
-                    </div>
-                  ))
-                ) }
-              </div>
-            </div>
-          </Card>
-        </div>
+        {/* Host Analytics & Attendees Panel */}
+        {isHost && (
+          <AnalyticsPanel eventId={event.id} rsvps={event.rsvps} />
+        )}
+
+        {/* Invitations (Host Only) */}
+        {isHost && (
+          <div className="bg-white/5 backdrop-blur-md p-6 rounded-2xl border border-white/10">
+            <h2 className="text-xl font-bold text-amber-400 mb-4">Manage Invitations</h2>
+            <InviteForm eventId={event.id} onInviteSent={handleInvitationsUpdate} />
+            <InvitationList invitations={invitations} onRefresh={handleInvitationsUpdate} />
+          </div>
+        )}
+
+        {/* Feedback */}
+        {isEventLive && (
+          <div className="bg-white/5 backdrop-blur-md p-6 rounded-2xl border border-white/10">
+            <h2 className="text-xl font-bold text-amber-400 mb-4">Live Feedback</h2>
+            {feedbackError && <div className="text-red-400 mb-2">{feedbackError}</div>}
+            <FeedbackForm onSubmit={handleSendFeedback} />
+            <FeedbackList feedbacks={feedbackList} isHost={isHost} />
+          </div>
+        )}
       </div>
     </div>
   )
