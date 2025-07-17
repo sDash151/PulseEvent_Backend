@@ -39,18 +39,11 @@ const Header = () => {
 
   return (
     <header className={`fixed w-full top-0 z-50 transition-all duration-300 ${scrolled ? 'bg-gray-900/90 backdrop-blur-md py-2 shadow-xl' : 'bg-transparent py-3'}`}>
-      {/* Stage curtain effect */}
-      <div className="absolute inset-y-0 left-0 w-16 bg-gradient-to-r from-red-900 to-transparent"></div>
-      <div className="absolute inset-y-0 right-0 w-16 bg-gradient-to-l from-red-900 to-transparent"></div>
       
-      <div className="container relative mx-auto px-4 flex justify-between items-center">
+      <div className="container mx-auto px-4 flex justify-between items-center relative">
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2 z-10">
-          <div className="w-10 h-10 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 flex items-center justify-center shadow-lg">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
-            </svg>
-          </div>
+          <img src={import.meta.env.BASE_URL + 'assets/logo2.png'} alt="EventPulse Logo" className="w-10 h-10 rounded-full shadow-lg object-cover" />
           <span className="text-xl font-bold bg-gradient-to-r from-amber-300 to-orange-400 bg-clip-text text-transparent">
             EventPulse
           </span>
@@ -301,8 +294,6 @@ const Header = () => {
         </div>
       )}
       
-      {/* Stage Spotlight Effect */}
-      <div className="absolute top-0 left-1/4 w-40 h-40 bg-amber-500 rounded-full mix-blend-screen filter blur-[80px] opacity-30 animate-pulse"></div>
     </header>
   )
 }

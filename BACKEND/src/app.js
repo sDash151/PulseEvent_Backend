@@ -30,6 +30,7 @@ app.use('/api/rsvp', authenticateToken, rsvpRoutes)
 app.use('/api/feedback', authenticateToken, feedbackRoutes)
 app.use('/api/analytics', authenticateToken, analyticsRoutes)
 app.use('/api/invitations', invitationRouter);
+app.use('/api/user', require('./routes/user.js'));
 
 // Health check endpoint
 app.get('/health', (req, res) => {

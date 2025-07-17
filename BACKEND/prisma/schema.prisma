@@ -14,6 +14,7 @@ model User {
   email              String         @unique
   password           String
   role               String         @default("attendee")
+  avatar             String?        // Profile image URL
   events             Event[]        // Hosted events
   rsvps              Rsvp[]         // RSVP confirmations
   feedbacks          Feedback[]     // Submitted feedback

@@ -1,4 +1,3 @@
-// backend/prisma/schema.prisma
 generator client {
   provider = "prisma-client-js"
 }
@@ -9,49 +8,49 @@ datasource db {
 }
 
 model User {
-  id                 Int            @id @default(autoincrement())
-  name               String
-  email              String         @unique
-  password           String
-  role               String         @default("attendee")
-  events             Event[]        // Hosted events
-  rsvps              Rsvp[]         // RSVP confirmations
-  feedbacks          Feedback[]     // Submitted feedback
-  sentInvitations    Invitation[]   @relation("SentInvitations") // Invitations sent by user
-  receivedInvitations Invitation[]   @relation("ReceivedInvitations") // Fixed: Invitations received by user
-  createdAt          DateTime       @default(now())
-  updatedAt          DateTime       @updatedAt
+  id                  Int          @id @default(autoincrement())
+  name                String
+  email               String       @unique
+  password            String
+  createdAt           DateTime     @default(now())
+  updatedAt           DateTime     @updatedAt
+  role                String       @default("attendee")
+  events              Event[]
+  feedbacks           Feedback[]
+  sentInvitations     Invitation[] @relation("SentInvitations")
+  receivedInvitations Invitation[] @relation("ReceivedInvitations")
+  rsvps               Rsvp[]
 }
 
 model Event {
-  id            Int            @id @default(autoincrement())
-  title         String
-  description   String?
-  location      String
-  startTime     DateTime
-  endTime       DateTime
-  rsvpDeadline  DateTime
-  maxAttendees  Int
-  host          User           @relation(fields: [hostId], references: [id])
-  hostId        Int
-  rsvps         Rsvp[]
-  feedbacks     Feedback[]
-  invitations   Invitation[]   // All invitations for this event
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
+  id           Int          @id @default(autoincrement())
+  title        String
+  description  String?
+  location     String
+  startTime    DateTime
+  endTime      DateTime
+  rsvpDeadline DateTime
+  maxAttendees Int
+  hostId       Int
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  host         User         @relation(fields: [hostId], references: [id])
+  feedbacks    Feedback[]
+  invitations  Invitation[]
+  rsvps        Rsvp[]
 
   @@index([hostId])
 }
 
 model Rsvp {
   id        Int      @id @default(autoincrement())
-  event     Event    @relation(fields: [eventId], references: [id])
   eventId   Int
-  user      User     @relation(fields: [userId], references: [id])
   userId    Int
   checkedIn Boolean  @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  event     Event    @relation(fields: [eventId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
 
   @@unique([eventId, userId])
   @@index([eventId])
@@ -62,36 +61,36 @@ model Feedback {
   id        Int      @id @default(autoincrement())
   content   String   @db.VarChar(250)
   emoji     String?
-  event     Event    @relation(fields: [eventId], references: [id])
   eventId   Int
-  user      User     @relation(fields: [userId], references: [id])
   userId    Int
   isPinned  Boolean  @default(false)
   isFlagged Boolean  @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  event     Event    @relation(fields: [eventId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
 
   @@index([eventId])
   @@index([userId])
 }
 
 model Invitation {
-  id            Int       @id @default(autoincrement())
-  event         Event     @relation(fields: [eventId], references: [id])
+  id            Int      @id @default(autoincrement())
   eventId       Int
-  email         String    // Invited user's email
-  invitedBy     User      @relation("SentInvitations", fields: [invitedById], references: [id])
+  email         String
   invitedById   Int
-  invitedUser   User?     @relation("ReceivedInvitations", fields: [invitedUserId], references: [id])
-  invitedUserId Int?      // Optional link to registered user
-  status        String    @default("pending") // "pending", "accepted", "declined"
-  token         String    @unique @default(uuid()) // Added for secure invitation links
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  invitedUserId Int?
+  status        String   @default("pending")
+  token         String   @unique @default(uuid())
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  event         Event    @relation(fields: [eventId], references: [id])
+  invitedBy     User     @relation("SentInvitations", fields: [invitedById], references: [id])
+  invitedUser   User?    @relation("ReceivedInvitations", fields: [invitedUserId], references: [id])
 
+  @@unique([eventId, email])
   @@index([eventId])
   @@index([email])
   @@index([invitedById])
   @@index([invitedUserId])
-  @@unique([eventId, email]) // Prevent duplicate invites
 }
