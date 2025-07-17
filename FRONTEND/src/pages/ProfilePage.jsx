@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '../hooks/useAuth'
 import Button from '../components/ui/Button'
 import Lottie from 'lottie-react';
-import avatarAnimation from '/assets/BOY2.json';
+import avatarAnimation from '../assets/BOY2.json';
 
 const ProfilePage = () => {
   const { currentUser } = useAuth()
