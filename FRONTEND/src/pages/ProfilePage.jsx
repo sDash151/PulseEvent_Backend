@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '../hooks/useAuth'
 import Button from '../components/ui/Button'
+import Lottie from 'lottie-react';
+import avatarAnimation from '/assets/BOY2.json';
 
 const ProfilePage = () => {
   const { currentUser } = useAuth()
@@ -56,12 +58,16 @@ const ProfilePage = () => {
           <h2 className="text-3xl font-bold text-white text-center">Your Profile</h2>
           {/* Avatar */}
           <div className="flex justify-center">
-            <div className="relative group">
-              <img
-                src={avatar ? URL.createObjectURL(avatar) : "/avatar.png"}
-                alt="User Avatar"
-                className="w-24 h-24 rounded-full border-4 border-amber-400 object-cover"
-              />
+            <div className="relative group w-24 h-24">
+              {avatar ? (
+                <img
+                  src={URL.createObjectURL(avatar)}
+                  alt="User Avatar"
+                  className="w-24 h-24 rounded-full border-4 border-amber-400 object-cover"
+                />
+              ) : (
+                <Lottie animationData={avatarAnimation} loop={true} style={{ width: '100%', height: '100%' }} />
+              )}
               <label className="absolute bottom-0 right-0 bg-amber-500 text-white rounded-full p-1 text-xs cursor-pointer opacity-0 group-hover:opacity-100 transition">
                 ✏️
                 <input type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />

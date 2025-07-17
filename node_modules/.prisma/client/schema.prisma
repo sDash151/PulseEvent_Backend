@@ -15,6 +15,7 @@ model User {
   createdAt           DateTime     @default(now())
   updatedAt           DateTime     @updatedAt
   role                String       @default("attendee")
+  avatar              String?
   events              Event[]
   feedbacks           Feedback[]
   sentInvitations     Invitation[] @relation("SentInvitations")

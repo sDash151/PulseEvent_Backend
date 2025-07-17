@@ -104,9 +104,13 @@ const Header = () => {
           {currentUser ? (
             <>
               <div className="hidden sm:flex items-center">
-                <div className="w-9 h-9 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 flex items-center justify-center text-white font-bold shadow">
-                  {currentUser.name.charAt(0)}
-                </div>
+                <Link to="/profile" className="w-9 h-9 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 flex items-center justify-center text-white font-bold shadow hover:scale-105 transition-all" title="Profile">
+                  {currentUser.avatar ? (
+                    <img src={currentUser.avatar} alt="Profile" className="w-9 h-9 rounded-full object-cover" />
+                  ) : (
+                    currentUser.name.charAt(0)
+                  )}
+                </Link>
                 <span className="ml-2 text-sm font-medium text-gray-200">Hi, {currentUser.name.split(' ')[0]}</span>
               </div>
               <Button 
