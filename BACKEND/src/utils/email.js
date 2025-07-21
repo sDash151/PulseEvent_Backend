@@ -43,8 +43,8 @@ async function sendInvitationEmail({ to, eventTitle, eventId, hostName, invitati
 }
 
 async function sendVerificationEmail({ to, name, verificationToken }) {
-  const siteUrl = process.env.CLIENT_URL || 'https://eventpulse1.netlify.app';
-  const verifyLink = `${siteUrl}/verify-email?token=${verificationToken}`;
+  const backendUrl = process.env.BACKEND_URL || 'https://pulseevent-backend.onrender.com';
+  const verifyLink = `${backendUrl}/api/auth/verify-email?token=${verificationToken}`;
   const mailOptions = {
     from: process.env.SMTP_FROM || 'noreply@eventpulse.com',
     to,
