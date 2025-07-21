@@ -19,12 +19,14 @@ ChartJS.register(
 )
 
 const EmojiChart = ({ emojis }) => {
+  // Defensive: ensure emojis is always an array
+  const safeEmojis = Array.isArray(emojis) ? emojis : [];
   const chartData = {
-    labels: emojis.map(e => e.emoji),
+    labels: safeEmojis.map(e => e.emoji),
     datasets: [
       {
         label: 'Usage Count',
-        data: emojis.map(e => e.count),
+        data: safeEmojis.map(e => e.count),
         backgroundColor: 'rgba(253, 224, 71, 0.35)', // soft golden yellow (amber-300)
         borderColor: '#fbbf24', // richer amber (amber-400)
         borderWidth: 2,

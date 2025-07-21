@@ -8,6 +8,8 @@ import {
 } from 'react-router-dom';
 
 import ProtectedRoute from './components/ui/ProtectedRoute';
+import HostOnlyRoute from './components/ui/HostOnlyRoute';
+import EventHostRoute from './components/ui/EventHostRoute';
 import Layout from './components/layout/Layout';
 
 import ComingSoonPage from './pages/ComingSoonPage';
@@ -20,10 +22,16 @@ import DashboardPage from './pages/DashboardPage';
 import CreateEventPage from './pages/CreateEventPage';
 import EditEventPage from './pages/EditEventPage';
 import EventDetailPage from './pages/EventDetailPage';
+import SubEventDetailPage from './pages/SubEventDetailPage';
+import SubEventDetailsPage from './pages/SubEventDetailsPage';
 import AnalyticsPage from './pages/AnalyticsPage';
 import InvitationPage from './pages/InvitationPage';
 import InvitationsPage from './pages/InvitationsPage';
 import ProfilePage from './pages/ProfilePage';
+import DynamicRegistrationForm from './pages/DynamicRegistrationForm.jsx';
+import HostReviewRegistrationsPage from './pages/HostReviewRegistrationsPage';
+import HelpCenterPage from './pages/HelpCenterPage';
+import FeaturesPage from './pages/FeaturesPage';
 
 export const router = createBrowserRouter(
   createRoutesFromElements(
@@ -40,13 +48,13 @@ export const router = createBrowserRouter(
       <Route path="profile" element={<ProfilePage />} />
 
       {/* Coming Soon routes */}
-      <Route path="features" element={<ComingSoonPage />} />
+      <Route path="features" element={<FeaturesPage />} />
       <Route path="pricing" element={<ComingSoonPage />} />
       <Route path="blog" element={<ComingSoonPage />} />
       <Route path="about" element={<ComingSoonPage />} />
       <Route path="contact" element={<ComingSoonPage />} />
       <Route path="documentation" element={<ComingSoonPage />} />
-      <Route path="help-center" element={<ComingSoonPage />} />
+      <Route path="help-center" element={<HelpCenterPage />} />
       <Route path="community" element={<ComingSoonPage />} />
       <Route path="webinars" element={<ComingSoonPage />} />
       <Route path="terms" element={<ComingSoonPage />} />
@@ -57,9 +65,26 @@ export const router = createBrowserRouter(
       <Route element={<ProtectedRoute />}>
         <Route path="dashboard" element={<DashboardPage />} />
         <Route path="events/create" element={<CreateEventPage />} />
-        <Route path="events/:id/edit" element={<EditEventPage />} />
+        <Route path="events/:parentId/sub/:subId/register" element={<DynamicRegistrationForm />} />
+        <Route path="events/:parentId/sub/:subId/details" element={<SubEventDetailsPage />} />
         <Route path="events/:id" element={<EventDetailPage />} />
-        <Route path="analytics/:eventId" element={<AnalyticsPage />} />
+        <Route path="sub-events/:id" element={<SubEventDetailPage />} />
+        <Route path="events/:parentId/sub/:subId" element={<SubEventDetailPage />} />
+      </Route>
+
+      {/* 🔐 Host-Only Routes */}
+      <Route element={<ProtectedRoute />}>
+        <Route element={<HostOnlyRoute />}>
+          <Route path="analytics/:eventId" element={<AnalyticsPage />} />
+        </Route>
+      </Route>
+
+      {/* 🔐 Event Host-Only Routes (specific event ownership) */}
+      <Route element={<ProtectedRoute />}>
+        <Route element={<EventHostRoute />}>
+          <Route path="events/:id/edit" element={<EditEventPage />} />
+          <Route path="events/:parentId/sub/:subId/registrations/review" element={<HostReviewRegistrationsPage />} />
+        </Route>
       </Route>
 
       {/* ✅ Catch-all redirect */}

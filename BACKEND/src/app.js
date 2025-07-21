@@ -4,7 +4,7 @@ const express = require('express')
 const cors = require('cors')
 const prisma = require('./utils/db.js')
 const authRoutes = require('./routes/auth.js')
-const eventRoutes = require('./routes/events.js')
+const { router: eventRoutes, getFeaturedEventsHandler } = require('./routes/events.js');
 const rsvpRoutes = require('./routes/rsvp.js')
 const feedbackRoutes = require('./routes/feedback.js')
 const analyticsRoutes = require('./routes/analytics.js')
@@ -23,18 +23,50 @@ app.use(cors({
 }))
 app.use(express.json())
 
-// Routes
+// Debug: Test route to check if routing is working
+app.get('/test', (req, res) => {
+  res.json({ message: 'Test route working', timestamp: new Date().toISOString() })
+})
+
+// Debug: Log route loading
+console.log('Loading routes...')
+
+// Public routes (no authentication required)
 app.use('/api/auth', authRoutes)
+// Register the featured events handler as a public route
+app.get('/api/events/featured', getFeaturedEventsHandler);
+console.log('✓ Featured events route loaded at /api/events/featured (PUBLIC)')
+console.log('✓ Auth routes loaded at /api/auth')
+
+// Protected routes (authentication required)
 app.use('/api/events', authenticateToken, eventRoutes)
+console.log('✓ Event routes loaded at /api/events (PROTECTED)')
+
 app.use('/api/rsvp', authenticateToken, rsvpRoutes)
 app.use('/api/feedback', authenticateToken, feedbackRoutes)
 app.use('/api/analytics', authenticateToken, analyticsRoutes)
-app.use('/api/invitations', invitationRouter);
+console.log('✓ RSVP, Feedback, Analytics routes loaded (PROTECTED)')
+
+app.use('/api/invitations', authenticateToken, invitationRouter);
+console.log('✓ Invitation routes loaded at /api/invitations (PROTECTED)')
+
 app.use('/api/user', authenticateToken, require('./routes/user.js'));
+app.use('/api', authenticateToken, require('./routes/registration.js'));
+app.use('/api/waiting-list', authenticateToken, require('./routes/waitingList.js'));
+app.use('/api', authenticateToken, require('./routes/upload.js'));
+app.use('/api', authenticateToken, require('./routes/whatsappNotifications.js'));
+console.log('✓ User, Registration, WaitingList, Upload, WhatsApp routes loaded (PROTECTED)')
 
 // Health check endpoint
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'ok' })
+})
+
+// Debug: List all registered routes
+app._router.stack.forEach(function(r){
+  if (r.route && r.route.path){
+    console.log(`Route: ${Object.keys(r.route.methods)} ${r.route.path}`)
+  }
 })
 
 // Catch-all route for client-side routing (after all API routes, before error handler)

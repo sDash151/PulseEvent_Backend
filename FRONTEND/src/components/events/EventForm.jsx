@@ -1,29 +1,32 @@
 import React, { useState } from 'react'
 import Button from '../ui/Button'
 
-const EventForm = ({ event, onSubmit, loading }) => {
+const EventForm = ({ event, initialData, onSubmit, loading, submitText = 'Save Event' }) => {
+  // Use either event or initialData prop
+  const eventData = event || initialData;
+  
   const [formData, setFormData] = useState({
-    title: event?.title || '',
-    description: event?.description || '',
-    location: event?.location || '',
-    startTime: event ? new Date(event.startTime).toISOString().slice(0, 16) : '',
-    endTime: event ? new Date(event.endTime).toISOString().slice(0, 16) : '',
-    rsvpDeadline: event ? new Date(event.rsvpDeadline).toISOString().slice(0, 16) : '',
-    maxAttendees: event?.maxAttendees || 50,
+    title: eventData?.title || '',
+    description: eventData?.description || '',
+    location: eventData?.location || '',
+    startTime: eventData ? new Date(eventData.startTime).toISOString().slice(0, 16) : '',
+    endTime: eventData ? new Date(eventData.endTime).toISOString().slice(0, 16) : '',
+    rsvpDeadline: eventData ? new Date(eventData.rsvpDeadline).toISOString().slice(0, 16) : '',
+    maxAttendees: eventData?.maxAttendees || 50,
   })
 
   // Reset form data when event prop changes
   React.useEffect(() => {
     setFormData({
-      title: event?.title || '',
-      description: event?.description || '',
-      location: event?.location || '',
-      startTime: event ? new Date(event.startTime).toISOString().slice(0, 16) : '',
-      endTime: event ? new Date(event.endTime).toISOString().slice(0, 16) : '',
-      rsvpDeadline: event ? new Date(event.rsvpDeadline).toISOString().slice(0, 16) : '',
-      maxAttendees: event?.maxAttendees || 50,
+      title: eventData?.title || '',
+      description: eventData?.description || '',
+      location: eventData?.location || '',
+      startTime: eventData ? new Date(eventData.startTime).toISOString().slice(0, 16) : '',
+      endTime: eventData ? new Date(eventData.endTime).toISOString().slice(0, 16) : '',
+      rsvpDeadline: eventData ? new Date(eventData.rsvpDeadline).toISOString().slice(0, 16) : '',
+      maxAttendees: eventData?.maxAttendees || 50,
     })
-  }, [event])
+  }, [eventData])
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -152,7 +155,7 @@ const EventForm = ({ event, onSubmit, loading }) => {
 
       <div className="flex justify-end pt-4">
         <Button type="submit" disabled={loading}>
-          {loading ? 'Saving...' : 'Save Event'}
+          {loading ? 'Saving...' : submitText}
         </Button>
       </div>
     </form>

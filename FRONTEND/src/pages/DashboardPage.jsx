@@ -2,6 +2,9 @@ import { useState, useEffect, useContext } from 'react';
 import { Link } from 'react-router-dom';
 import EventList from '../components/events/EventList';
 import Button from '../components/ui/Button';
+import Card from '../components/ui/Card';
+import PageContainer from '../components/ui/PageContainer';
+import BackButton from '../components/ui/BackButton';
 import { fetchEvents } from '../services/events';
 import CalendarView from '../components/events/CalenderView';
 import TabGroup from '../components/ui/TabGroup';
@@ -76,9 +79,12 @@ const DashboardPage = () => {
       <div className="relative z-10 w-full max-w-6xl bg-white/5 backdrop-blur-md border border-white/10 shadow-[0_0_25px_rgba(255,255,255,0.06)] rounded-2xl p-8">
         
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-          <div>
-            <h1 className="text-3xl font-bold text-white">Your Events</h1>
-            <p className="text-gray-300 mt-1">Manage and track your upcoming and past events</p>
+          <div className="flex items-center gap-4">
+            <BackButton to="/" variant="subtle" label="Home" />
+            <div>
+              <h1 className="text-3xl font-bold text-white">Your Events</h1>
+              <p className="text-gray-300 mt-1">Manage and track your upcoming and past events</p>
+            </div>
           </div>
           <Button as={Link} to="/events/create">Create Event</Button>
         </div>

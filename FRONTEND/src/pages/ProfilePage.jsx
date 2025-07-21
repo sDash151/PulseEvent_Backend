@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '../hooks/useAuth'
 import Button from '../components/ui/Button'
+import BackButton from '../components/ui/BackButton'
 import Lottie from 'lottie-react';
 import avatarAnimation from '../assets/BOY2.json';
 
@@ -55,7 +56,11 @@ const ProfilePage = () => {
         <div className="absolute top-0 left-[25%] w-80 h-80 bg-amber-400/20 rounded-full blur-[150px] z-0"></div>
         <div className="absolute bottom-0 right-[20%] w-72 h-72 bg-blue-400/10 rounded-full blur-[120px] z-0"></div>
         <div className="relative z-10 space-y-8">
-          <h2 className="text-3xl font-bold text-white text-center">Your Profile</h2>
+          <div className="flex items-center justify-between">
+            <BackButton to="/dashboard" variant="subtle" label="Dashboard" />
+            <h2 className="text-3xl font-bold text-white">Your Profile</h2>
+            <div className="w-20"></div> {/* Spacer for centering */}
+          </div>
           {/* Avatar */}
           <div className="flex justify-center">
             <div className="relative group w-24 h-24">

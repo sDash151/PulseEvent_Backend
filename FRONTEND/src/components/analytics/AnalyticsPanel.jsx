@@ -1,8 +1,17 @@
 // components/analytics/AnalyticsPanel.jsx
 import { Link } from 'react-router-dom';
+import { useRoleCheck } from '../../hooks/useRoleCheck';
 
-const AnalyticsPanel = ({ eventId, rsvps }) => {
-  const checkedInCount = rsvps.filter(r => r.checkedIn).length;
+const AnalyticsPanel = ({ eventId, rsvps = [] }) => {
+  const { isHost, canAccessHostFeatures } = useRoleCheck();
+  
+  console.log('AnalyticsPanel received rsvps:', rsvps);
+  const checkedInCount = (rsvps || []).filter(r => r.checkedIn).length;
+
+  // 🔐 Only show analytics panel to hosts
+  if (!canAccessHostFeatures()) {
+    return null;
+  }
 
   return (
     <div className="space-y-6">
@@ -28,37 +37,19 @@ const AnalyticsPanel = ({ eventId, rsvps }) => {
         <h2 className="text-xl font-semibold text-white mb-4">Attendees</h2>
 
         <div className="flex justify-between text-sm text-gray-400 mb-2">
-          <span>Attendees ({rsvps.length})</span>
+          <span>Attendees ({(rsvps || []).length})</span>
           <span>Checked In: {checkedInCount}</span>
         </div>
 
-        <div className="space-y-2 max-h-96 overflow-y-auto scrollbar-thin scrollbar-thumb-amber-600 scrollbar-track-transparent pr-1">
-          {rsvps.length === 0 ? (
-            <p className="text-gray-500 text-center py-4">No attendees yet</p>
-          ) : (
-            rsvps.map(rsvp => (
-              <div
-                key={rsvp.id}
-                className="flex items-center justify-between p-2 hover:bg-white/10 rounded-lg"
-              >
-                <div className="flex items-center">
-                  <div className="w-8 h-8 rounded-full bg-amber-100/10 text-amber-400 flex items-center justify-center text-sm">
-                    {rsvp.user.name.charAt(0)}
-                  </div>
-                  <span className="ml-2 text-white">{rsvp.user.name}</span>
-                </div>
-                {rsvp.checkedIn ? (
-                  <span className="px-2 py-1 text-xs rounded-full bg-green-400/10 text-green-300">
-                    Checked In
-                  </span>
-                ) : (
-                  <span className="px-2 py-1 text-xs rounded-full bg-yellow-400/10 text-yellow-300">
-                    Registered
-                  </span>
-                )}
-              </div>
-            ))
-          )}
+        <div className="w-full bg-gray-700 rounded-full h-2">
+          <div 
+            className="bg-amber-400 h-2 rounded-full transition-all duration-300"
+            style={{ width: `${rsvps.length > 0 ? (checkedInCount / rsvps.length) * 100 : 0}%` }}
+          ></div>
+        </div>
+
+        <div className="mt-4 text-sm text-gray-300">
+          <p>Check-in Rate: {rsvps.length > 0 ? Math.round((checkedInCount / rsvps.length) * 100) : 0}%</p>
         </div>
       </div>
     </div>

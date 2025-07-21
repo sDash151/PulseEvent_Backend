@@ -1,53 +1,102 @@
 import React from 'react'
-import Button from '../ui/Button'
 import { format } from 'date-fns'
-import { pinFeedback, flagFeedback } from '../../services/feedback'
+import Button from '../ui/Button'
+import { useRoleCheck } from '../../hooks/useRoleCheck'
+import api from '../../services/api'
+import { logSecurityEvent } from '../../utils/securityUtils'
 
 const FeedbackItem = ({ feedback, isHost, onAction }) => {
-  // Pin/Unpin handler
+  const { isEventHost, checkEventHost } = useRoleCheck();
+
   const handlePin = async () => {
-    await pinFeedback(feedback.id)
-    if (onAction) onAction()
+    if (!isEventHost) {
+      console.warn('Access denied: User is not the event host');
+      logSecurityEvent('FEEDBACK_ACTION_DENIED', {
+        action: 'pin_feedback',
+        feedbackId: feedback.id,
+        reason: 'not_event_host'
+      });
+      return;
+    }
+    
+    try {
+      await api.put(`/api/feedback/${feedback.id}/pin`, {
+        isPinned: !feedback.isPinned
+      });
+      
+      logSecurityEvent('FEEDBACK_ACTION_SUCCESS', {
+        action: 'pin_feedback',
+        feedbackId: feedback.id,
+        isPinned: !feedback.isPinned
+      });
+      
+      onAction();
+    } catch (error) {
+      console.error('Error pinning feedback:', error);
+      logSecurityEvent('FEEDBACK_ACTION_FAILED', {
+        action: 'pin_feedback',
+        feedbackId: feedback.id,
+        error: error.message
+      });
+    }
   }
-  // Flag/Unflag handler
+
   const handleFlag = async () => {
-    await flagFeedback(feedback.id)
-    if (onAction) onAction()
-  }
-  const getStateStyles = () => {
-    if (feedback.isPinned) {
-      return 'border-amber-400 bg-amber-400/10'
-    } else if (feedback.isFlagged) {
-      return 'border-red-500 bg-red-500/10'
-    } else {
-      return 'border-white/10 bg-white/5'
+    if (!isEventHost) {
+      console.warn('Access denied: User is not the event host');
+      logSecurityEvent('FEEDBACK_ACTION_DENIED', {
+        action: 'flag_feedback',
+        feedbackId: feedback.id,
+        reason: 'not_event_host'
+      });
+      return;
+    }
+    
+    try {
+      await api.put(`/api/feedback/${feedback.id}/flag`, {
+        isFlagged: !feedback.isFlagged
+      });
+      
+      logSecurityEvent('FEEDBACK_ACTION_SUCCESS', {
+        action: 'flag_feedback',
+        feedbackId: feedback.id,
+        isFlagged: !feedback.isFlagged
+      });
+      
+      onAction();
+    } catch (error) {
+      console.error('Error flagging feedback:', error);
+      logSecurityEvent('FEEDBACK_ACTION_FAILED', {
+        action: 'flag_feedback',
+        feedbackId: feedback.id,
+        error: error.message
+      });
     }
   }
 
   return (
-    <div className={`p-4 md:p-5 rounded-xl border shadow-md backdrop-blur-md transition-all ${getStateStyles()}`}>
-      <div className="flex justify-between items-start">
-        {/* Left Side: Emoji + Content */}
-        <div className="flex items-start gap-3">
-          <div className="text-3xl">{feedback.emoji}</div>
-          <div>
-            <div className="flex items-center gap-2 text-sm font-medium text-white">
-              <span>{feedback.user.name}</span>
-              {feedback.isPinned && (
-                <span className="px-2 py-0.5 text-xs rounded-full bg-amber-400/20 text-amber-300 border border-amber-300">
-                  📌 Pinned
-                </span>
-              )}
-              {feedback.isFlagged && (
-                <span className="px-2 py-0.5 text-xs rounded-full bg-red-500/20 text-red-300 border border-red-400">
-                  🚩 Flagged
-                </span>
-              )}
-            </div>
-            <p className="mt-1 text-gray-300 text-sm whitespace-pre-line">
-              {feedback.content}
-            </p>
+    <div className={`p-4 rounded-lg border ${
+      feedback.isPinned ? 'bg-amber-500/10 border-amber-500/30' :
+      feedback.isFlagged ? 'bg-red-500/10 border-red-500/30' :
+      'bg-white/5 border-white/10'
+    }`}>
+      <div className="flex items-start justify-between">
+        <div className="flex-1">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="text-2xl">{feedback.emoji}</span>
+            <span className="text-white font-medium">{feedback.user?.name || 'Anonymous'}</span>
+            {feedback.isPinned && (
+              <span className="px-2 py-1 text-xs bg-amber-500/20 text-amber-300 rounded-full">
+                📌 Pinned
+              </span>
+            )}
+            {feedback.isFlagged && (
+              <span className="px-2 py-1 text-xs bg-red-500/20 text-red-300 rounded-full">
+                ⚠️ Flagged
+              </span>
+            )}
           </div>
+          <p className="text-gray-300 mb-3">{feedback.content}</p>
         </div>
 
         {/* Time */}
@@ -56,8 +105,8 @@ const FeedbackItem = ({ feedback, isHost, onAction }) => {
         </div>
       </div>
 
-      {/* Host Controls */}
-      {isHost && (
+      {/* Host Controls - Only show if user is the event host */}
+      {isHost && isEventHost && (
         <div className="flex gap-2 mt-4">
           <Button 
             size="sm" 

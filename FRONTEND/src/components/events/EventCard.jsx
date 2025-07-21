@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import { format } from 'date-fns'
-import { CalendarIcon, UserIcon, LocationMarkerIcon } from '@heroicons/react/outline'
+import { CalendarIcon, UserIcon, MapPinIcon } from '@heroicons/react/24/outline';
 
 const EventCard = ({ event }) => {
   const getStatusString = () => {
@@ -11,7 +11,7 @@ const EventCard = ({ event }) => {
   }
 
   const renderStatus = () => {
-    const status = getStatusString()
+    const status = getStatusString()  
     if (status === 'Live') {
       return (
         <span className="flex items-center gap-1">
@@ -39,7 +39,6 @@ const EventCard = ({ event }) => {
   return (
     <Link to={`/events/${event.id}`} className="group transition-all duration-300">
       <div className="h-full bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl shadow-[0_0_15px_rgba(255,255,255,0.05)] overflow-hidden transition-all duration-300 group-hover:shadow-lg group-hover:border-amber-400/30">
-        
         <div className="p-5">
           <div className="flex justify-between items-start mb-2">
             <h3 className="text-lg font-semibold text-white truncate group-hover:text-amber-300 transition-colors">
@@ -62,10 +61,35 @@ const EventCard = ({ event }) => {
             </div>
 
             <div className="flex items-center col-span-2">
-              <LocationMarkerIcon className="h-4 w-4 mr-1 text-amber-400" />
+              <MapPinIcon className="h-4 w-4 mr-1 text-amber-400" />
               <span className="truncate">{event.location}</span>
             </div>
           </div>
+
+          {/* Show sub-events for MEGA events (only real sub-events added by host) */}
+          {event.type === 'MEGA' && Array.isArray(event.subEvents) && event.subEvents.length > 0 && (
+            <div className="mt-6">
+              <h4 className="text-amber-300 font-semibold mb-2">Sub-Events:</h4>
+              <ul className="space-y-1">
+                {event.subEvents.slice(0, 2).map(sub => (
+                  <li key={sub.id} className="bg-white/10 rounded px-2 py-1 text-white text-sm">
+                    <span className="cursor-pointer hover:text-amber-300 transition-colors" onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      window.location.href = `/events/${sub.id}`;
+                    }}>
+                      {sub.title}
+                    </span>
+                  </li>
+                ))}
+                {event.subEvents.length > 2 && (
+                  <li className="bg-white/10 rounded px-2 py-1 text-amber-300 text-sm font-semibold cursor-pointer">
+                    and {event.subEvents.length - 2} More...
+                  </li>
+                )}
+              </ul>
+            </div>
+          )}
         </div>
 
         <div className="bg-white/5 border-t border-white/10 px-5 py-3 text-xs text-gray-300 flex justify-between items-center">

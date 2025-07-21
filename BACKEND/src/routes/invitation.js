@@ -126,10 +126,11 @@ router.patch('/:token/decline', authenticateToken, async (req, res) => {
 // Get invitations received by the current user
 router.get('/', authenticateToken, async (req, res) => {
   try {
+    console.log('🔍 [INVITATION DEBUG] Fetching invitations for user:', req.user.id, req.user.email);
     const invitations = await prisma.invitation.findMany({
       where: {
         OR: [
-          { email: req.user.email },
+          { email: { equals: req.user.email, mode: 'insensitive' } },
           { invitedUserId: req.user.id }
         ]
       },
@@ -139,6 +140,7 @@ router.get('/', authenticateToken, async (req, res) => {
       },
       orderBy: { createdAt: 'desc' }
     });
+    console.log('🔍 [INVITATION DEBUG] Invitations found:', invitations);
     res.json(invitations);
   } catch (error) {
     res.status(500).json({ error: error.message });

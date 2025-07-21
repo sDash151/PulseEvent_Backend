@@ -1,3 +1,23 @@
+/*
+Example usage in a React component:
+
+import { handleJoinSubeventRoom } from '../services/socket';
+
+const SubeventJoinButton = ({ parentEventId, subeventId }) => (
+  <button onClick={() => handleJoinSubeventRoom(parentEventId, subeventId)}>
+    Join Subevent
+  </button>
+);
+
+// Usage:
+// <SubeventJoinButton parentEventId={mainEventId} subeventId={subId} />
+*/
+// Helper for subevent join button: emits joinSubEvent with both eventId and subeventId
+// Usage example in a React component:
+//   handleJoinSubeventRoom(parentEventId, subeventId)
+export const handleJoinSubeventRoom = (parentEventId, subeventId) => {
+  joinSubEventRoom(parentEventId, subeventId);
+}
 // frontend/src/services/socket.js
 import io from 'socket.io-client'
 
@@ -29,12 +49,18 @@ export const disconnectSocket = () => {
   if (socket) socket.disconnect()
 }
 
-export const joinEventRoom = (eventId) => {
-  if (socket) socket.emit('joinEvent', eventId)
+// Join a mega event room (only eventId)
+export const joinMegaEventRoom = (eventId) => {
+  if (socket) socket.emit('joinMegaEvent', eventId)
 }
 
-export const sendFeedback = (eventId, content, emoji, userId) => {
-  if (socket) socket.emit('sendFeedback', { eventId, content, emoji, userId })
+// Join a subevent room (requires both eventId and subeventId)
+export const joinSubEventRoom = (eventId, subeventId) => {
+  if (socket) socket.emit('joinSubEvent', { eventId, subeventId })
+}
+
+export const sendFeedback = (eventId, content, emoji, userId, subeventId) => {
+  if (socket) socket.emit('sendFeedback', { eventId, subeventId, content, emoji, userId });
 }
 
 export const subscribeToFeedback = (callback) => {

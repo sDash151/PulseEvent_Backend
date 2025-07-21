@@ -1,4 +1,9 @@
-// backend/prisma/schema.prisma
+enum EventType {
+  STANDALONE
+  MEGA
+  SUB
+}
+
 generator client {
   provider = "prisma-client-js"
 }
@@ -9,23 +14,26 @@ datasource db {
 }
 
 model User {
-  id                 Int            @id @default(autoincrement())
-  name               String
-  email              String         @unique
-  password           String
-  role               String         @default("attendee")
-  avatar             String?        // Profile image URL
-  events             Event[]        // Hosted events
-  rsvps              Rsvp[]         // RSVP confirmations
-  feedbacks          Feedback[]     // Submitted feedback
-  sentInvitations    Invitation[]   @relation("SentInvitations") // Invitations sent by user
-  receivedInvitations Invitation[]   @relation("ReceivedInvitations") // Fixed: Invitations received by user
-  createdAt          DateTime       @default(now())
-  updatedAt          DateTime       @updatedAt
+  id                  Int          @id @default(autoincrement())
+  name                String
+  email               String       @unique
+  password            String
+  createdAt           DateTime     @default(now())
+  updatedAt           DateTime     @updatedAt
+  role                String       @default("attendee")
+  avatar              String?
+  events              Event[]
+  feedbacks           Feedback[]
+  sentInvitations     Invitation[] @relation("SentInvitations")
+  receivedInvitations Invitation[] @relation("ReceivedInvitations")
+  rsvps               Rsvp[]
+  registrations       Registration[]
+  waitingList         WaitingList[]
+  whatsAppNotifications WhatsAppNotification[]
 }
 
 model Event {
-  id            Int            @id @default(autoincrement())
+  id            Int          @id @default(autoincrement())
   title         String
   description   String?
   location      String
@@ -33,26 +41,44 @@ model Event {
   endTime       DateTime
   rsvpDeadline  DateTime
   maxAttendees  Int
-  host          User           @relation(fields: [hostId], references: [id])
   hostId        Int
-  rsvps         Rsvp[]
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  host          User         @relation(fields: [hostId], references: [id])
   feedbacks     Feedback[]
-  invitations   Invitation[]   // All invitations for this event
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
+  invitations   Invitation[]
+  rsvps         Rsvp[]
+  parentEventId Int?
+  parentEvent   Event?       @relation("MegaEventToSubEvents", fields: [parentEventId], references: [id])
+  subEvents     Event[]      @relation("MegaEventToSubEvents")
+  registrations Registration[]
+  waitingList   WaitingList[]
+  whatsAppNotifications WhatsAppNotification[]
+
+  type           EventType @default(STANDALONE)
+  paymentEnabled Boolean   @default(false) // Optional: for future payment integration
+  qrCode         String?   // URL to QR code image for payment
+  customFields   Json?
+  teamSize       Int?      // Optional: maximum team size for team events
+  teamSizeMin    Int?      // Optional: minimum team size for flexible team events
+  teamSizeMax    Int?      // Optional: maximum team size for flexible team events
+  flexibleTeamSize Boolean @default(false) // Whether team size is flexible
+  whatsappGroupEnabled Boolean @default(false) // Whether WhatsApp group is enabled
+  whatsappGroupLink String? // WhatsApp group invite link
 
   @@index([hostId])
+  @@index([parentEventId])
 }
 
 model Rsvp {
   id        Int      @id @default(autoincrement())
-  event     Event    @relation(fields: [eventId], references: [id])
   eventId   Int
-  user      User     @relation(fields: [userId], references: [id])
   userId    Int
   checkedIn Boolean  @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  event     Event    @relation(fields: [eventId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
 
   @@unique([eventId, userId])
   @@index([eventId])
@@ -63,36 +89,99 @@ model Feedback {
   id        Int      @id @default(autoincrement())
   content   String   @db.VarChar(250)
   emoji     String?
-  event     Event    @relation(fields: [eventId], references: [id])
   eventId   Int
-  user      User     @relation(fields: [userId], references: [id])
   userId    Int
   isPinned  Boolean  @default(false)
   isFlagged Boolean  @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  event     Event    @relation(fields: [eventId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
 
   @@index([eventId])
   @@index([userId])
 }
 
 model Invitation {
-  id            Int       @id @default(autoincrement())
-  event         Event     @relation(fields: [eventId], references: [id])
+  id            Int      @id @default(autoincrement())
   eventId       Int
-  email         String    // Invited user's email
-  invitedBy     User      @relation("SentInvitations", fields: [invitedById], references: [id])
+  email         String
   invitedById   Int
-  invitedUser   User?     @relation("ReceivedInvitations", fields: [invitedUserId], references: [id])
-  invitedUserId Int?      // Optional link to registered user
-  status        String    @default("pending") // "pending", "accepted", "declined"
-  token         String    @unique @default(uuid()) // Added for secure invitation links
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  invitedUserId Int?
+  status        String   @default("pending")
+  token         String   @unique @default(uuid())
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  event         Event    @relation(fields: [eventId], references: [id])
+  invitedBy     User     @relation("SentInvitations", fields: [invitedById], references: [id])
+  invitedUser   User?    @relation("ReceivedInvitations", fields: [invitedUserId], references: [id])
 
+  @@unique([eventId, email])
   @@index([eventId])
   @@index([email])
   @@index([invitedById])
   @@index([invitedUserId])
-  @@unique([eventId, email]) // Prevent duplicate invites
+}
+
+model Registration {
+  id           Int      @id @default(autoincrement())
+  eventId      Int
+  userId       Int?     // For individual registration, optional for team
+  teamName     String?
+  responses    Json?   // Dynamic answers to custom fields
+  paymentProof String? // URL to payment screenshot
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  event        Event    @relation(fields: [eventId], references: [id])
+  user         User?    @relation(fields: [userId], references: [id])
+  participants Participant[]
+
+  @@index([eventId])
+  @@index([userId])
+}
+
+model WaitingList {
+  id           Int      @id @default(autoincrement())
+  eventId      Int
+  userId       Int
+  teamName     String?
+  responses    Json?   // Dynamic answers to custom fields
+  participants Json?   // Participant details for team events
+  paymentProof String? // URL to payment screenshot
+  status       String   @default("pending") // "pending", "approved", "rejected"
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  event        Event    @relation(fields: [eventId], references: [id])
+  user         User     @relation(fields: [userId], references: [id])
+
+  @@index([eventId])
+  @@index([userId])
+}
+
+model Participant {
+  id             Int      @id @default(autoincrement())
+  registrationId Int
+  details        Json?   // Dynamic participant info (name, email, etc.)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  registration   Registration @relation(fields: [registrationId], references: [id])
+
+  @@index([registrationId])
+}
+
+model WhatsAppNotification {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  eventId   Int
+  eventTitle String
+  whatsappGroupLink String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id])
+  event     Event    @relation(fields: [eventId], references: [id])
+
+  @@unique([userId, eventId])
+  @@index([userId])
+  @@index([eventId])
 }

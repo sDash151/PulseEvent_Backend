@@ -1,141 +1,561 @@
-import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { useParams, Navigate } from 'react-router-dom';
+import { useAuth } from '../hooks/useAuth';
+import { useRoleCheck } from '../hooks/useRoleCheck';
+import AnalyticsPanel from '../components/analytics/AnalyticsPanel';
 import AttendanceChart from '../components/analytics/AttendanceChart';
 import EmojiChart from '../components/analytics/EmojiChart';
+import HeatmapChart from '../components/analytics/HeatmapChart';
 import KeywordCloud from '../components/analytics/KeywordCloud';
-import Card from '../components/ui/Card';
+import RegisteredUsersTable from '../components/analytics/RegisteredUsersTable';
 import StatCard from '../components/analytics/StatCard';
+import UserStatistics from '../components/analytics/UserStatistics';
+import BackButton from '../components/ui/BackButton';
+import Card from '../components/ui/Card';
+import Button from '../components/ui/Button';
+import PageContainer from '../components/ui/PageContainer';
+import Loading from '../components/ui/Loading';
+import Modal from '../components/ui/Modal';
+import Input from '../components/ui/Input';
+import { fetchEventById } from '../services/events';
 import { fetchAnalytics } from '../services/analytics';
+import { saveAs } from 'file-saver';
+import Papa from 'papaparse';
+import { format, subDays, startOfDay, endOfDay } from 'date-fns';
+import { ChartBarIcon, CalendarIcon, FunnelIcon, UserGroupIcon, ClockIcon, ArrowTrendingUpIcon, ShareIcon, ChatBubbleLeftEllipsisIcon, HeartIcon, HandThumbUpIcon, StarIcon, FireIcon, BoltIcon, EyeIcon, MapIcon } from '@heroicons/react/24/outline';
+import { Bar, Line } from 'react-chartjs-2';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  PointElement,
+  LineElement,
+  Title as ChartTitle,
+  Tooltip,
+  Legend,
+  Filler
+} from 'chart.js';
+
+ChartJS.register(CategoryScale, LinearScale, BarElement, PointElement, LineElement, ChartTitle, Tooltip, Legend, Filler);
+
+// Simple SentimentDonutChart component
+const SentimentDonutChart = ({ data }) => {
+  if (!data || data.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-32 text-gray-400">
+        No sentiment data available
+      </div>
+    );
+  }
+
+  const total = data.reduce((sum, item) => sum + item.value, 0);
+  const colors = {
+    positive: '#10B981', // green
+    neutral: '#F59E0B',  // amber
+    negative: '#EF4444'  // red
+  };
+
+  return (
+    <div className="flex items-center justify-center h-32">
+      <div className="relative w-24 h-24">
+        <svg className="w-24 h-24 transform -rotate-90" viewBox="0 0 100 100">
+          {data.map((item, index) => {
+            const percentage = (item.value / total) * 100;
+            const strokeDasharray = `${percentage * 3.14159} 314.159`;
+            const strokeDashoffset = index === 0 ? 0 : -data.slice(0, index).reduce((sum, prev) => sum + (prev.value / total) * 314.159, 0);
+            
+            return (
+              <circle
+                key={item.sentiment}
+                cx="50"
+                cy="50"
+                r="50"
+                fill="none"
+                stroke={colors[item.sentiment] || '#6B7280'}
+                strokeWidth="10"
+                strokeDasharray={strokeDasharray}
+                strokeDashoffset={strokeDashoffset}
+                className="opacity-80"
+              />
+            );
+          })}
+        </svg>
+        <div className="absolute inset-0 flex items-center justify-center">
+          <span className="text-sm font-semibold text-white">{total}</span>
+        </div>
+      </div>
+      <div className="ml-4 space-y-1">
+        {data.map((item) => (
+          <div key={item.sentiment} className="flex items-center text-sm">
+            <div 
+              className="w-3 h-3 rounded-full mr-2" 
+              style={{ backgroundColor: colors[item.sentiment] }}
+            />
+            <span className="capitalize text-gray-300">{item.sentiment}: {item.value}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
 
 const AnalyticsPage = () => {
   const { eventId } = useParams();
-  const [analytics, setAnalytics] = useState({
-    totalRsvps: 0,
-    rsvpChange: 0,
-    totalCheckIns: 0,
-    checkinRate: 0,
-    feedbackCount: 0,
-    feedbackChange: 0,
-    engagementRate: 0,
-    engagementChange: 0,
-    feedbackPerHour: [],
-    topEmojis: [],
-    topKeywords: [],
-    feedbackTypes: [],
-    sentiment: { negative: 0, neutral: 0, positive: 0 },
-  });
-
+  const { currentUser, loading: authLoading } = useAuth();
+  const { isHost, canAccessHostFeatures, loading: roleLoading } = useRoleCheck();
+  const [event, setEvent] = useState(null);
+  const [analytics, setAnalytics] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  
+  // Advanced Analytics State
+  const [viewMode, setViewMode] = useState('overview'); // overview, trends, funnel, comparison
+  const [dateRange, setDateRange] = useState({ start: null, end: null });
+  const [filters, setFilters] = useState({
+    attendanceStatus: 'all', // all, checked-in, not-checked-in
+    registrationType: 'all', // all, registration, waiting-list
+    demographic: 'all', // all, college, degree, gender
+    sentiment: 'all' // all, positive, neutral, negative
+  });
+  const [showFilters, setShowFilters] = useState(false);
+  const [exportModal, setExportModal] = useState(false);
+  const [realTimeMode, setRealTimeMode] = useState(false);
+  const [compareMode, setCompareMode] = useState(false);
+  const [selectedMetrics, setSelectedMetrics] = useState([
+    'attendance', 'feedback', 'demographics', 'engagement'
+  ]);
+  const [alertsEnabled, setAlertsEnabled] = useState(false);
 
   useEffect(() => {
-    let isMounted = true;
-    const loadAnalytics = async () => {
+    const loadData = async () => {
+      if (!eventId || !isHost) return;
+      
+      setLoading(true);
       try {
-        const data = await fetchAnalytics(eventId);
-        if (isMounted) setAnalytics(data);
-      } catch (error) {
-        if (isMounted) console.error('Failed to load analytics:', error);
+        const [eventData, analyticsData] = await Promise.all([
+          fetchEventById(eventId),
+          fetchAnalytics(eventId)
+        ]);
+        
+        setEvent(eventData);
+        setAnalytics(analyticsData);
+      } catch (err) {
+        setError(err.message || 'Failed to load analytics');
       } finally {
-        if (isMounted) setLoading(false);
+        setLoading(false);
       }
     };
 
-    loadAnalytics();
-    const interval = setInterval(loadAnalytics, 5000);
-    return () => {
-      isMounted = false;
-      clearInterval(interval);
-    };
-  }, [eventId]);
+    loadData();
+  }, [eventId, isHost]);
+
+  if (authLoading || roleLoading) {
+    return <Loading />;
+  }
+
+  // 🔐 Role-based access control - moved after loading states
+  if (!canAccessHostFeatures()) {
+    console.warn('Access denied: User is not a host', { 
+      userId: currentUser?.id, 
+      userRole: currentUser?.role 
+    });
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-red-400 text-xl mb-4">{error}</p>
+          <BackButton />
+        </div>
+      </div>
+    );
+  }
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex justify-center items-center bg-gradient-to-br from-[#0f0c29] via-[#302b63] to-[#24243e]">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-amber-400"></div>
-      </div>
-    );
+    return <Loading />;
   }
 
-  if (!analytics) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-[#0f0c29] via-[#302b63] to-[#24243e] flex justify-center items-center">
-        <div className="text-center text-gray-400 text-lg">No analytics data available for this event.</div>
-      </div>
+  // --- Export Clean Participants CSV ---
+  const handleExportCleanParticipantsCSV = () => {
+    if (!analytics || !analytics.registeredUsers) return;
+    // 1. Gather all participants and collect all unique field labels from both participant.details and registration.responses
+    let rows = [];
+    // Only include one 'Name' and one 'Email' column, using the best available value
+    const header = [
+      'Team Name',
+      'Name',
+      'College Name',
+      'Degree Name',
+      'USN',
+      'Email',
+      'Gender',
+      'Payment Proof',
+      'Whats App Number'
+    ];
+    analytics.registeredUsers.forEach(reg => {
+      if (Array.isArray(reg.participants) && reg.participants.length > 0) {
+        reg.participants.forEach(participant => {
+          const details = participant.details || {};
+          const responses = reg.responses || {};
+          const row = {
+            'Team Name': details['Team Name'] || responses['Team Name'] || reg.teamName || '-',
+            'Name': details['Name'] || details['name'] || responses['Name'] || responses['name'] || '-',
+            'College Name': details['College Name'] || details['College'] || responses['College Name'] || responses['College'] || '-',
+            'Degree Name': details['Degree Name'] || details['Degree'] || responses['Degree Name'] || responses['Degree'] || '-',
+            'USN': details['USN'] || responses['USN'] || '-',
+            'Email': details['EMAIL ID'] || details['Email'] || details['email'] || responses['EMAIL ID'] || responses['Email'] || responses['email'] || reg.email || '-',
+            'Gender': details['Gender'] || responses['Gender'] || '-',
+            'Payment Proof': reg.paymentProof || '-',
+            'Whats App Number': details['WhatsApp Number'] || details['Whats App Number'] || responses['WhatsApp Number'] || responses['Whats App Number'] || '-',
+          };
+          rows.push(row);
+        });
+      } else if (reg.registrationType === 'Registration' || reg.registrationType === 'Waiting List') {
+        // Fallback for solo registrations with no participants array
+        const details = reg.responses || {};
+        const row = {
+          'Team Name': details['Team Name'] || reg.teamName || '-',
+          'Name': details['Name'] || details['name'] || reg.name || '-',
+          'College Name': details['College Name'] || details['College'] || '-',
+          'Degree Name': details['Degree Name'] || details['Degree'] || '-',
+          'USN': details['USN'] || '-',
+          'Email': details['EMAIL ID'] || details['Email'] || details['email'] || reg.email || '-',
+          'Gender': details['Gender'] || '-',
+          'Payment Proof': reg.paymentProof || '-',
+          'Whats App Number': details['WhatsApp Number'] || details['Whats App Number'] || '-',
+        };
+        rows.push(row);
+      }
+    });
+    // Remove duplicate rows
+    const uniqueRows = rows.filter((row, idx, arr) =>
+      idx === arr.findIndex(r => JSON.stringify(r) === JSON.stringify(row))
     );
-  }
+    // Use PapaParse to generate CSV
+    const csv = Papa.unparse({ fields: header, data: uniqueRows.map(row => header.map(h => row[h] ?? '-')) });
+    // Download
+    const filename = `participants_clean_${event?.title?.replace(/\s+/g, '_') || 'event'}_${new Date().toISOString().replace(/[:.]/g, '-')}.csv`;
+    saveAs(new Blob([csv], { type: 'text/csv;charset=utf-8;' }), filename);
+  };
 
   return (
-    <div className="min-h-screen px-4 pt-24 pb-10 bg-gradient-to-br from-[#0f0c29] via-[#302b63] to-[#24243e] text-white">
-      {/* Ambient light spots */}
-      <div className="absolute top-0 left-0 w-full h-full overflow-hidden -z-10">
-        <div className="absolute w-96 h-96 bg-pink-500 opacity-10 blur-3xl top-10 left-10 rounded-full"></div>
-        <div className="absolute w-96 h-96 bg-amber-400 opacity-10 blur-3xl bottom-10 right-10 rounded-full"></div>
-      </div>
-
+    <div className="min-h-screen bg-gradient-to-br from-[#0f0c29] via-[#302b63] to-[#24243e] text-white p-6">
       <div className="max-w-7xl mx-auto">
-        <div className="mb-10">
-          <h1 className="text-4xl font-extrabold text-white mb-2">📊 Event Analytics</h1>
-          <p className="text-gray-300 text-lg">Insights from your event performance</p>
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h1 className="text-3xl font-bold text-amber-300 mb-2">
+              Event Analytics
+            </h1>
+            <p className="text-gray-300">
+              {event?.title} - Host Dashboard
+            </p>
+          </div>
+          <BackButton />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-          <StatCard title="Total RSVPs" value={analytics.totalRsvps} change={analytics.rsvpChange} icon="👥" />
-          <StatCard title="Check-ins" value={analytics.totalCheckIns} change={analytics.checkinRate} icon="✅" />
-          <StatCard title="Feedback Sent" value={analytics.feedbackCount} change={analytics.feedbackChange} icon="💬" />
-          <StatCard title="Engagement" value={`${analytics.engagementRate}%`} change={analytics.engagementChange} icon="🔥" />
+        {/* 🔐 Host-only warning banner */}
+        <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-4 mb-6">
+          <div className="flex items-center">
+            <div className="w-8 h-8 bg-amber-500/20 rounded-full flex items-center justify-center mr-3">
+              <span className="text-amber-300 text-sm">🔐</span>
+            </div>
+            <div>
+              <h3 className="text-amber-300 font-semibold">Host-Only Access</h3>
+              <p className="text-gray-300 text-sm">
+                This analytics dashboard is only accessible to event hosts.
+              </p>
+            </div>
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10">
-          <Card title="Feedback Activity" className="bg-white/5 backdrop-blur-md rounded-2xl shadow-xl p-6">
-            <AttendanceChart data={analytics.feedbackPerHour} />
-          </Card>
-          <Card title="Emoji Reactions" className="bg-white/5 backdrop-blur-md rounded-2xl shadow-xl p-6">
-            <EmojiChart emojis={analytics.topEmojis} />
-          </Card>
-        </div>
+        {analytics && (
+          <>
+            {/* Primary Stats Row */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-6 mb-8">
+              <StatCard
+                title="Total Attendees"
+                value={
+                  analytics.registeredUsers
+                    ? analytics.registeredUsers.length
+                    : analytics.totalAttendees || analytics.totalRsvps || 0
+                }
+                icon={<UserGroupIcon className="w-8 h-8" />}
+                color="blue"
+                trend="+12%"
+                subtitle="vs last event"
+              />
+              <StatCard
+                title="Checked In"
+                value={
+                  analytics.registeredUsers
+                    ? analytics.registeredUsers.filter(u => u.checkedIn).length
+                    : analytics.checkedIn || analytics.totalCheckIns || 0
+                }
+                icon={<HandThumbUpIcon className="w-8 h-8" />}
+                color="green"
+                trend="+8%"
+                subtitle="attendance rate"
+              />
+              <StatCard
+                title="Feedback Count"
+                value={analytics.feedbackCount}
+                icon={<ChatBubbleLeftEllipsisIcon className="w-8 h-8" />}
+                color="purple"
+                trend="+25%"
+                subtitle="engagement up"
+              />
+              <StatCard
+                title="Registration Rate"
+                value={`${analytics.registrationRate || 0}%`}
+                icon={<ArrowTrendingUpIcon className="w-8 h-8" />}
+                color="amber"
+                trend="+5%"
+                subtitle="conversion rate"
+              />
+            </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <Card title="Top Keywords" className="lg:col-span-2 bg-white/5 backdrop-blur-md rounded-2xl shadow-xl p-6">
-            <KeywordCloud keywords={analytics.topKeywords} />
+            {/* Advanced Analytics Row */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-6 mb-8">
+              <StatCard
+                title="Avg. Session Time"
+                value={analytics?.avgSessionTime || 'N/A'}
+                icon={<ClockIcon className="w-8 h-8" />}
+                color="indigo"
+                trend={analytics?.avgSessionTimeTrend || ''}
+                subtitle="vs target"
+              />
+              <StatCard
+                title="Satisfaction Score"
+                value={analytics?.satisfactionScore || 'N/A'}
+                icon={<StarIcon className="w-8 h-8" />}
+                color="yellow"
+                trend={analytics?.satisfactionScoreTrend || ''}
+                subtitle="rating improved"
+              />
+              <StatCard
+                title="Team Formations"
+                value={analytics?.totalTeams ?? 'N/A'}
+                icon={<UserGroupIcon className="w-8 h-8" />}
+                color="teal"
+                trend={analytics?.totalTeamsTrend || ''}
+                subtitle="collaboration up"
+              />
+              <StatCard
+                title="Engagement Rate"
+                value={analytics?.engagementRate ? `${analytics.engagementRate}%` : 'N/A'}
+                icon={<HeartIcon className="w-8 h-8" />}
+                color="pink"
+                trend={analytics?.engagementRateTrend || ''}
+                subtitle="active participation"
+              />
+            </div>
+          </>
+        )}
+
+        {/* Sub-Event Registration Chart (Mega Events Only) */}
+        {analytics?.subEventRegistrations && analytics?.subEventRegistrations.length > 0 && event?.type === 'MEGA' && (
+          <Card>
+            <h2 className="text-xl font-semibold mb-4">Sub-Event Registrations</h2>
+            <p className="text-gray-400 mb-6 text-sm">See how close each sub event is to capacity.</p>
+            <div className="w-full h-96 overflow-hidden">
+              <Bar
+                data={{
+                  labels: analytics.subEventRegistrations.map(s => s.subEventTitle),
+                  datasets: [
+                    {
+                      label: 'Max Attendees',
+                      data: analytics.subEventRegistrations.map(s => s.maxAttendees),
+                      backgroundColor: 'rgba(156, 163, 175, 0.18)', // gray-400/18
+                      borderRadius: 8,
+                      barPercentage: 0.7,
+                      categoryPercentage: 0.8,
+                      order: 1,
+                    },
+                    {
+                      label: 'Registrations',
+                      data: analytics.subEventRegistrations.map(s => s.registrationCount),
+                      backgroundColor: 'rgba(59, 130, 246, 0.92)', // blue-500
+                      borderRadius: 8,
+                      barPercentage: 0.5,
+                      categoryPercentage: 0.8,
+                      order: 2,
+                    },
+                  ],
+                }}
+                options={{
+                  responsive: true,
+                  maintainAspectRatio: false,
+                  plugins: {
+                    legend: { position: 'top', labels: { color: '#fff', font: { size: 14 } } },
+                    title: { display: false },
+                    tooltip: { mode: 'index', intersect: false },
+                  },
+                  scales: {
+                    x: {
+                      stacked: false,
+                      grid: { color: 'rgba(255,255,255,0.08)' },
+                      ticks: { color: '#fff', font: { size: 13 } },
+                      beginAtZero: true,
+                    },
+                    y: {
+                      stacked: false,
+                      grid: { color: 'rgba(255,255,255,0.08)' },
+                      ticks: { color: '#fff', font: { size: 13 } },
+                    },
+                  },
+                  barThickness: 32,
+                  categoryPercentage: 0.8,
+                  barPercentage: 0.7,
+                }}
+              />
+            </div>
+          </Card>
+        )}
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <Card>
+            <h2 className="text-xl font-semibold mb-4">Attendance Overview</h2>
+            <AttendanceChart data={analytics?.attendanceData} />
           </Card>
 
-          <Card title="Feedback Breakdown" className="bg-white/5 backdrop-blur-md rounded-2xl shadow-xl p-6">
+          <Card>
+            <h2 className="text-xl font-semibold mb-4">Feedback Sentiment</h2>
             <div className="space-y-4">
-              <div>
-                <h4 className="text-sm font-medium text-white mb-2">Feedback Type</h4>
-                <div className="space-y-2">
-                  {analytics.feedbackTypes && analytics.feedbackTypes.length > 0 ? (
-                    analytics.feedbackTypes.map((type, index) => (
-                      <div key={index} className="flex items-center justify-between text-sm text-gray-300">
-                        <span>{type.type}</span>
-                        <span className="font-medium">{type.count} ({type.percentage}%)</span>
-                      </div>
-                    ))
-                  ) : (
-                    <p className="text-gray-400 text-sm">No feedback types available.</p>
-                  )}
-                </div>
-              </div>
-
-              <div className="pt-4 border-t border-gray-700">
-                <h4 className="text-sm font-medium text-white mb-2">Sentiment</h4>
-                <div className="h-2 bg-gray-700 rounded-full overflow-hidden flex">
-                  <div className="h-full bg-red-500" style={{ width: `${analytics.sentiment.negative}%` }} />
-                  <div className="h-full bg-yellow-400" style={{ width: `${analytics.sentiment.neutral}%` }} />
-                  <div className="h-full bg-green-500" style={{ width: `${analytics.sentiment.positive}%` }} />
-                </div>
-                <div className="flex justify-between mt-2 text-xs text-gray-400">
-                  <span>Negative: {analytics.sentiment.negative}%</span>
-                  <span>Neutral: {analytics.sentiment.neutral}%</span>
-                  <span>Positive: {analytics.sentiment.positive}%</span>
-                </div>
+              <EmojiChart emojis={analytics?.topEmojis || []} />
+              <div className="border-t border-gray-600 pt-4">
+                <h3 className="text-sm font-medium text-gray-300 mb-3">Sentiment Distribution</h3>
+                <SentimentDonutChart data={
+                  analytics?.sentiment && (
+                    [
+                      { sentiment: 'positive', value: analytics?.sentiment?.positive },
+                      { sentiment: 'neutral', value: analytics?.sentiment?.neutral },
+                      { sentiment: 'negative', value: analytics?.sentiment?.negative }
+                    ].filter(item => typeof item.value === 'number')
+                  )
+                } />
               </div>
             </div>
           </Card>
         </div>
+
+        {/* Feedback Activity Timeline */}
+        <Card>
+          <h2 className="text-xl font-semibold mb-4">Feedback Activity Timeline</h2>
+          <div className="h-80 rounded-xl bg-white/5 backdrop-blur-lg p-4">
+            <Line 
+              data={{
+                labels: (analytics?.feedbackPerHour || []).map(item =>
+                  new Date(item.hour).toLocaleTimeString([], { hour: '2-digit' })
+                ),
+                datasets: [
+                  {
+                    label: 'Feedback Activity',
+                    data: (analytics?.feedbackPerHour || []).map(item => item.count),
+                    borderColor: '#facc15', // amber-400
+                    backgroundColor: 'rgba(250, 204, 21, 0.15)',
+                    borderWidth: 2,
+                    pointBackgroundColor: '#facc15',
+                    pointBorderColor: '#0f0c29',
+                    pointBorderWidth: 2,
+                    pointRadius: 5,
+                    tension: 0.35,
+                    fill: true
+                  }
+                ]
+              }}
+              options={{
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                  legend: {
+                    display: false
+                  },
+                  tooltip: {
+                    backgroundColor: '#1c1c2b',
+                    titleColor: '#facc15',
+                    bodyColor: '#e5e7eb',
+                    borderColor: '#facc15',
+                    borderWidth: 1,
+                    padding: 10,
+                    boxPadding: 6,
+                    usePointStyle: true,
+                    callbacks: {
+                      title: (tooltipItems) => `Hour: ${tooltipItems[0].label}`
+                    }
+                  }
+                },
+                scales: {
+                  x: {
+                    grid: {
+                      display: false
+                    },
+                    ticks: {
+                      color: '#a1a1aa',
+                      font: { size: 14, weight: 'bold' }
+                    }
+                  },
+                  y: {
+                    beginAtZero: true,
+                    grid: {
+                      color: 'rgba(255,255,255,0.1)'
+                    },
+                    ticks: {
+                      color: '#a1a1aa',
+                      precision: 0,
+                      font: { size: 14 }
+                    }
+                  }
+                }
+              }}
+            />
+          </div>
+        </Card>
+
+        {/* Activity Heatmap Section */}
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 mt-8">
+          <Card>
+            <HeatmapChart type="hourly" data={analytics?.hourlyEngagement} />
+          </Card>
+
+          <Card>
+            <HeatmapChart type="monthly" data={analytics?.monthlyActivity} />
+          </Card>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
+          <Card>
+            <h2 className="text-xl font-semibold mb-4">Popular Keywords</h2>
+            <KeywordCloud keywords={analytics?.topKeywords || []} />
+          </Card>
+
+          <Card>
+            <h2 className="text-xl font-semibold mb-4">User Demographics</h2>
+            <UserStatistics users={analytics?.registeredUsers || []} />
+          </Card>
+        </div>
+
+        <Card className="mt-8">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-semibold">Registered Users</h2>
+            <Button
+              onClick={handleExportCleanParticipantsCSV}
+              variant="amber"
+              title="Export Participants (Clean CSV)"
+            >
+              <span role="img" aria-label="csv">📄</span>
+              Export Participants (Clean CSV)
+            </Button>
+          </div>
+          <RegisteredUsersTable users={analytics?.registeredUsers} />
+        </Card>
       </div>
     </div>
   );
 };
 
 export default AnalyticsPage;
+
+

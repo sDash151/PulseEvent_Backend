@@ -53,19 +53,42 @@ export default function InvitationPage() {
           <h2 className="text-3xl font-bold text-white mb-2 animate-fade-in-slow">You're Invited!</h2>
           <p className="mb-2 text-gray-300 animate-fade-in-slow">Join your event on EventPulse.</p>
           <p className="mb-6 text-gray-400 animate-fade-in-slow">To accept the invitation, please log in or register. It only takes a moment!</p>
-          <div className="flex justify-center gap-4 animate-fade-in-slow">
-            <Link
-              to={`/login?redirect=${encodeURIComponent(redirectPath)}`}
-              className="px-5 py-2 bg-amber-400 text-black font-medium rounded-lg shadow hover:bg-amber-300 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-amber-400"
-            >
-              Log In
-            </Link>
+          
+          {/* Enhanced guidance section */}
+          <div className="mb-6 p-4 bg-gradient-to-r from-blue-400/10 to-purple-400/10 border border-blue-400/20 rounded-lg animate-fade-in-slow">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-8 h-8 bg-blue-400/20 rounded-full flex items-center justify-center">
+                <svg className="w-4 h-4 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <p className="text-blue-300 font-semibold">Quick Setup</p>
+            </div>
+            <p className="text-blue-200 text-sm leading-relaxed">
+              Don't have an account? No worries! Create one in under a minute and you'll be ready to join your event.
+            </p>
+          </div>
+          
+          <div className="flex flex-col sm:flex-row justify-center gap-4 animate-fade-in-slow">
             <Link
               to={`/register?redirect=${encodeURIComponent(redirectPath)}`}
-              className="px-5 py-2 bg-white/10 text-white border border-white/20 rounded-lg hover:bg-white/20 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-amber-400"
+              className="px-5 py-3 bg-gradient-to-r from-amber-400 to-orange-400 text-black font-semibold rounded-lg shadow-lg hover:from-amber-300 hover:to-orange-300 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-amber-400 transform hover:scale-105"
             >
-              Register
+              Create Account
             </Link>
+            <Link
+              to={`/login?redirect=${encodeURIComponent(redirectPath)}`}
+              className="px-5 py-3 bg-white/10 text-white border border-white/20 rounded-lg hover:bg-white/20 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-amber-400"
+            >
+              Already have an account? Sign In
+            </Link>
+          </div>
+          
+          {/* Additional info */}
+          <div className="mt-6 text-center">
+            <p className="text-xs text-gray-500">
+              After creating your account, you'll be automatically redirected back to accept this invitation.
+            </p>
           </div>
         </div>
 

@@ -71,20 +71,31 @@ const Footer = () => {
             <ul className="space-y-3">
               {['Home', 'Features', 'Pricing', 'About Us', 'Contact'].map((item) => (
                 <li key={item}>
-                  <Link
-                    to={
-                      item === 'Home' ? '/' :
-                      item === 'Features' ? '/features' :
-                      item === 'Pricing' ? '/pricing' :
-                      item === 'About Us' ? '/about' :
-                      item === 'Contact' ? '/contact' :
-                      '/'
-                    }
-                    className="text-gray-400 hover:text-amber-400 transition-colors flex items-center group"
-                  >
-                    <span className="w-2 h-2 bg-amber-500 rounded-full mr-3 opacity-0 group-hover:opacity-100 transition-opacity"></span>
-                    {item}
-                  </Link>
+                  {item === 'Contact' ? (
+                    <a
+                      href="https://souravdash151.netlify.app/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-gray-400 hover:text-amber-400 transition-colors flex items-center group"
+                    >
+                      <span className="w-2 h-2 bg-amber-500 rounded-full mr-3 opacity-0 group-hover:opacity-100 transition-opacity"></span>
+                      {item}
+                    </a>
+                  ) : (
+                    <Link
+                      to={
+                        item === 'Home' ? '/' :
+                        item === 'Features' ? '/features' :
+                        item === 'Pricing' ? '/pricing' :
+                        item === 'About Us' ? '/about' :
+                        '/'
+                      }
+                      className="text-gray-400 hover:text-amber-400 transition-colors flex items-center group"
+                    >
+                      <span className="w-2 h-2 bg-amber-500 rounded-full mr-3 opacity-0 group-hover:opacity-100 transition-opacity"></span>
+                      {item}
+                    </Link>
+                  )}
                 </li>
               ))}
             </ul>
@@ -145,19 +156,30 @@ const Footer = () => {
             
             <div className="flex space-x-6">
               {['Terms', 'Privacy', 'Cookies', 'Contact'].map((item) => (
-                <Link
-                  key={item}
-                  to={
-                    item === 'Terms' ? '/terms' :
-                    item === 'Privacy' ? '/privacy' :
-                    item === 'Cookies' ? '/cookies' :
-                    item === 'Contact' ? '/contact' :
-                    '/'
-                  }
-                  className="text-gray-500 hover:text-amber-400 transition-colors"
-                >
-                  {item}
-                </Link>
+                item === 'Contact' ? (
+                  <a
+                    key={item}
+                    href="https://souravdash151.netlify.app/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-gray-500 hover:text-amber-400 transition-colors"
+                  >
+                    {item}
+                  </a>
+                ) : (
+                  <Link
+                    key={item}
+                    to={
+                      item === 'Terms' ? '/terms' :
+                      item === 'Privacy' ? '/privacy' :
+                      item === 'Cookies' ? '/cookies' :
+                      '/'
+                    }
+                    className="text-gray-500 hover:text-amber-400 transition-colors"
+                  >
+                    {item}
+                  </Link>
+                )
               ))}
             </div>
           </div>

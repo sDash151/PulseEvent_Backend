@@ -168,4 +168,35 @@ router.post('/:eventId/checkin/:userId', authenticateToken, authorizeHost, async
   }
 })
 
+// Check if user has RSVP'd to an event
+router.get('/:eventId/check', authenticateToken, async (req, res) => {
+  console.log('=== RSVP CHECK ENDPOINT HIT ===');
+  const eventId = parseInt(req.params.eventId)
+  
+  console.log('RSVP Check Request:', { eventId, userId: req.user.id })
+  
+  if (isNaN(eventId)) {
+    console.log('Invalid event ID:', req.params.eventId);
+    return res.status(400).json({ message: 'Invalid event ID' })
+  }
+  
+  try {
+    console.log('Querying RSVP with:', { eventId, userId: req.user.id });
+    const rsvp = await prisma.rsvp.findUnique({
+      where: {
+        eventId_userId: {
+          eventId,
+          userId: req.user.id
+        }
+      }
+    })
+    
+    console.log('RSVP Check Result:', { eventId, userId: req.user.id, found: !!rsvp, rsvp })
+    res.json({ registered: !!rsvp })
+  } catch (error) {
+    console.error('RSVP check error:', error)
+    res.status(500).json({ message: 'Internal server error' })
+  }
+})
+
 module.exports = router

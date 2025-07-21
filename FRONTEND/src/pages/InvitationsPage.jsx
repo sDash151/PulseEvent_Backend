@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import api from '../services/api';
 import { useAuth } from '../hooks/useAuth';
+import BackButton from '../components/ui/BackButton';
 
 const statusColors = {
   pending: 'bg-yellow-400/10 text-yellow-300 border border-yellow-300/30',
@@ -76,7 +77,10 @@ const InvitationsPage = () => {
 
       {/* Main Content */}
       <div className="relative z-10 w-full max-w-5xl bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl shadow-[0_0_25px_rgba(255,255,255,0.06)] p-6">
-        <h1 className="text-3xl font-bold text-white mb-6">Your Invitations</h1>
+        <div className="flex items-center gap-4 mb-6">
+          <BackButton to="/dashboard" variant="subtle" label="Dashboard" />
+          <h1 className="text-3xl font-bold text-white">Your Invitations</h1>
+        </div>
 
         {invitations.length === 0 ? (
           <div className="text-gray-300 text-center p-8 bg-white/5 border border-white/10 rounded-xl">
@@ -100,6 +104,14 @@ const InvitationsPage = () => {
                   <tr key={invite.id} className="hover:bg-white/5 border-b border-white/10 transition">
                     <td className="px-6 py-4 font-medium text-white">
                       {invite.event?.title || '—'}
+                      {invite.event?.id && (
+                        <a
+                          href={`/events/${invite.event.id}`}
+                          className="ml-2 text-amber-400 underline"
+                        >
+                          View
+                        </a>
+                      )}
                     </td>
                     <td className="px-6 py-4">
                       {invite.invitedBy?.name || '—'}
