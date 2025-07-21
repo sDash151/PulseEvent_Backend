@@ -13,6 +13,7 @@ const invitationRouter = require('./routes/invitation.js')
 const path = require('path')    
 
 const app = express()
+app.set('trust proxy', 1); // Trust first proxy (Render, Heroku, etc.)
 
 app.use(express.static(path.join(process.cwd(), 'public')))
 
