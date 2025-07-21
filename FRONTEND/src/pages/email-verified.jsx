@@ -1,36 +1,56 @@
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Button from '../components/ui/Button';
-import { CheckCircleIcon, ExclamationTriangleIcon, EnvelopeIcon, ArrowPathIcon } from '@heroicons/react/24/outline';
+import { CheckCircleIcon, ExclamationTriangleIcon, EnvelopeIcon, ArrowPathIcon, SparklesIcon, FaceSmileIcon, XCircleIcon } from '@heroicons/react/24/outline';
 
 const statusConfig = {
   success: {
-    icon: <CheckCircleIcon className="w-12 h-12 text-green-400 mb-4" />,
-    title: 'Email Verified!',
-    message: 'Your email has been successfully verified. You can now log in to your account.',
+    icon: (
+      <span className="flex flex-col items-center">
+        <span className="text-5xl mb-2 animate-bounce">🎉</span>
+        <CheckCircleIcon className="w-14 h-14 text-green-400 drop-shadow-lg" />
+      </span>
+    ),
+    title: 'Congratulations! Your Email is Verified 🎊',
+    message: 'Welcome aboard! Your email has been successfully verified. You can now log in and start exploring all the features we have to offer. We’re excited to have you with us!',
     action: 'login',
-    actionLabel: 'Log In',
+    actionLabel: 'Log In & Explore',
   },
   already: {
-    icon: <CheckCircleIcon className="w-12 h-12 text-amber-400 mb-4" />,
-    title: 'Already Verified',
-    message: 'This email is already verified. You can log in to your account.',
+    icon: (
+      <span className="flex flex-col items-center">
+        <span className="text-5xl mb-2 animate-bounce">😊</span>
+        <CheckCircleIcon className="w-14 h-14 text-amber-400 drop-shadow-lg" />
+      </span>
+    ),
+    title: 'Already Verified!',
+    message: 'Looks like your email is already verified. You can log in and continue enjoying our platform!',
     action: 'login',
-    actionLabel: 'Log In',
+    actionLabel: 'Go to Login',
   },
   expired: {
-    icon: <ExclamationTriangleIcon className="w-12 h-12 text-red-400 mb-4" />,
+    icon: (
+      <span className="flex flex-col items-center">
+        <span className="text-5xl mb-2 animate-pulse">⌛</span>
+        <ExclamationTriangleIcon className="w-14 h-14 text-red-400 drop-shadow-lg" />
+      </span>
+    ),
     title: 'Link Expired',
-    message: 'This verification link has expired. Please request a new verification email.',
+    message: 'Oops! This verification link has expired. No worries, you can request a new one and get verified in no time.',
     action: 'resend',
-    actionLabel: 'Resend Verification',
+    actionLabel: 'Resend Verification Email',
   },
   error: {
-    icon: <ExclamationTriangleIcon className="w-12 h-12 text-red-400 mb-4" />,
-    title: 'Verification Error',
-    message: 'There was a problem verifying your email. Please try again or request a new link.',
+    icon: (
+      <span className="flex flex-col items-center">
+        <span className="text-5xl mb-2 animate-pulse">😕</span>
+        <XCircleIcon className="w-14 h-14 text-red-400 drop-shadow-lg" />
+      </span>
+    ),
+    title: 'Something Went Wrong',
+    message: 'There was a problem verifying your email. Please try again or request a new link. We’re here to help!',
     action: 'resend',
-    actionLabel: 'Resend Verification',
+    actionLabel: 'Resend Verification Email',
   },
 };
 
@@ -51,18 +71,51 @@ const EmailVerifiedPage = () => {
 
   return (
     <div className="relative min-h-screen bg-gradient-to-br from-[#0f0c29] via-[#302b63] to-[#24243e] flex items-center justify-center overflow-hidden px-4 py-8">
+      {/* Decorative blurred backgrounds */}
       <div className="absolute top-0 left-[25%] w-96 h-96 bg-amber-400/20 rounded-full blur-[150px] z-0"></div>
       <div className="absolute bottom-0 right-[20%] w-72 h-72 bg-pink-500/10 rounded-full blur-[100px] z-0"></div>
       <div className="absolute bottom-10 left-[10%] w-60 h-60 bg-blue-500/10 rounded-full blur-[120px] z-0"></div>
-      <div className="relative z-10 w-full max-w-md bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl shadow-[0_0_25px_rgba(255,255,255,0.06)] p-8 flex flex-col items-center text-center">
-        {config.icon}
-        <h2 className="text-2xl font-bold text-white mb-2">{config.title}</h2>
-        <p className="text-gray-300 text-base mb-6">{config.message}</p>
-        <Button onClick={handleAction} className="w-full justify-center">
-          {config.action === 'login' ? <EnvelopeIcon className="w-5 h-5 mr-2" /> : <ArrowPathIcon className="w-5 h-5 mr-2" />}
+      <div className="relative z-10 w-full max-w-md bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl shadow-2xl p-10 flex flex-col items-center text-center animate-fade-in">
+        {/* Icon/Emoji */}
+        <div className="mb-4">{config.icon}</div>
+        <h2 className="text-3xl font-extrabold text-white mb-3 drop-shadow-lg animate-fade-in-up">{config.title}</h2>
+        <p className="text-gray-200 text-lg mb-8 animate-fade-in-up delay-100">{config.message}</p>
+        <Button
+          onClick={handleAction}
+          className="w-full justify-center text-lg py-3 font-bold shadow-xl animate-pop-in"
+          variant={config.action === 'login' ? 'gradient' : 'primary'}
+          icon={config.action === 'login' ? <EnvelopeIcon className="w-5 h-5" /> : <ArrowPathIcon className="w-5 h-5" />}
+          iconPosition="left"
+        >
           {config.actionLabel}
         </Button>
+        {status === 'success' && (
+          <div className="mt-6 flex flex-col items-center animate-fade-in-up delay-200">
+            <span className="text-2xl">Need help? <a href="/support" className="text-amber-300 underline hover:text-amber-200 transition">Contact Support</a></span>
+          </div>
+        )}
       </div>
+      {/* Custom Animations */}
+      <style>{`
+        @keyframes fade-in {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        @keyframes fade-in-up {
+          from { opacity: 0; transform: translateY(30px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes pop-in {
+          0% { transform: scale(0.8); opacity: 0; }
+          80% { transform: scale(1.05); opacity: 1; }
+          100% { transform: scale(1); }
+        }
+        .animate-fade-in { animation: fade-in 0.7s both; }
+        .animate-fade-in-up { animation: fade-in-up 0.8s both; }
+        .animate-pop-in { animation: pop-in 0.5s both; }
+        .delay-100 { animation-delay: 0.1s; }
+        .delay-200 { animation-delay: 0.2s; }
+      `}</style>
     </div>
   );
 };
