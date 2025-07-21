@@ -123,7 +123,7 @@ router.post('/:waitingId/approve', authenticateToken, authorizeHost, async (req,
         }
       });
 
-      // Auto-create RSVP for paid events
+      // Auto-create RSVP for paid events (sub-event)
       const eventDetails = await tx.event.findUnique({ where: { id: waitingEntry.eventId } });
       if (eventDetails && eventDetails.paymentEnabled && waitingEntry.userId) {
         const existingRsvp = await tx.rsvp.findUnique({
@@ -132,6 +132,16 @@ router.post('/:waitingId/approve', authenticateToken, authorizeHost, async (req,
         if (!existingRsvp) {
           await tx.rsvp.create({ data: { eventId: waitingEntry.eventId, userId: waitingEntry.userId } });
           console.log('Auto-created RSVP for paid event (waiting list approval):', { eventId: waitingEntry.eventId, userId: waitingEntry.userId });
+        }
+        // Auto-create RSVP for parent (mega) event if applicable
+        if (eventDetails.parentEventId) {
+          const existingParentRsvp = await tx.rsvp.findUnique({
+            where: { eventId_userId: { eventId: eventDetails.parentEventId, userId: waitingEntry.userId } }
+          });
+          if (!existingParentRsvp) {
+            await tx.rsvp.create({ data: { eventId: eventDetails.parentEventId, userId: waitingEntry.userId } });
+            console.log('Auto-created RSVP for parent mega event (waiting list approval):', { eventId: eventDetails.parentEventId, userId: waitingEntry.userId });
+          }
         }
       }
 

@@ -6,6 +6,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { useRoleCheck } from '../../hooks/useRoleCheck';
 import Button from '../ui/Button';
 import { checkUserRegistration } from '../../services/registration';
+import { checkInToEvent } from '../../services/rsvp';
 
 const SubEventCard = ({ sub, parentEventId }) => {
   const navigate = useNavigate();
@@ -18,6 +19,8 @@ const SubEventCard = ({ sub, parentEventId }) => {
     onWaitingList: false
   });
   const [loadingRegistration, setLoadingRegistration] = useState(false);
+  const [checkedIn, setCheckedIn] = useState(sub.checkedIn || false);
+  const [checkInLoading, setCheckInLoading] = useState(false);
 
   // Check registration status when component mounts or when user changes
   useEffect(() => {
@@ -113,19 +116,21 @@ const SubEventCard = ({ sub, parentEventId }) => {
   }
 
   // Handle check-in functionality
-  function handleCheckIn() {
+  async function handleCheckIn() {
+    if (!currentUser) {
+      navigate('/login');
+      return;
+    }
+    setCheckInLoading(true);
     try {
-      if (!currentUser) {
-        navigate('/login');
-        return;
-      }
-      
-      // Add your check-in logic here
-      console.log('Check-in clicked for sub event:', sub.id);
-      // You might want to call an API to check in the user
-      // Example: await checkInToSubEvent(sub.id);
+      await checkInToEvent(sub.id);
+      setCheckedIn(true);
+      // Optionally show a toast: "Checked in successfully!"
     } catch (error) {
-      console.error('Error in handleCheckIn:', error);
+      // Optionally show error toast
+      console.error('Check-in failed:', error);
+    } finally {
+      setCheckInLoading(false);
     }
   }
 
@@ -342,9 +347,14 @@ const SubEventCard = ({ sub, parentEventId }) => {
           </Button>
         )}
         
-        {registrationStatus.isRegistered && !registrationStatus.onWaitingList && !sub.checkedIn && (
-          <Button className="bg-blue-500 text-white" onClick={handleCheckIn}>
+        {registrationStatus.isRegistered && !registrationStatus.onWaitingList && !checkedIn && (
+          <Button className="bg-blue-500 text-white" onClick={handleCheckIn} loading={checkInLoading}>
             Check In
+          </Button>
+        )}
+        {checkedIn && (
+          <Button className="bg-green-500 text-white" disabled>
+            Checked In
           </Button>
         )}
         

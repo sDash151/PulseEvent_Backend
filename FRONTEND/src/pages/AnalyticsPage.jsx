@@ -36,6 +36,7 @@ import {
   Legend,
   Filler
 } from 'chart.js';
+import { extractParticipants } from '../utils/fieldExtractors';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, PointElement, LineElement, ChartTitle, Tooltip, Legend, Filler);
 
@@ -183,7 +184,6 @@ const AnalyticsPage = () => {
     if (!analytics || !analytics.registeredUsers) return;
     // 1. Gather all participants and collect all unique field labels from both participant.details and registration.responses
     let rows = [];
-    // Only include one 'Name' and one 'Email' column, using the best available value
     const header = [
       'Team Name',
       'Name',
@@ -196,38 +196,22 @@ const AnalyticsPage = () => {
       'Whats App Number'
     ];
     analytics.registeredUsers.forEach(reg => {
-      if (Array.isArray(reg.participants) && reg.participants.length > 0) {
-        reg.participants.forEach(participant => {
-          const details = participant.details || {};
-          const responses = reg.responses || {};
+      const participants = extractParticipants(reg);
+      if (participants.length > 0) {
+        participants.forEach(participant => {
           const row = {
-            'Team Name': details['Team Name'] || responses['Team Name'] || reg.teamName || '-',
-            'Name': details['Name'] || details['name'] || responses['Name'] || responses['name'] || '-',
-            'College Name': details['College Name'] || details['College'] || responses['College Name'] || responses['College'] || '-',
-            'Degree Name': details['Degree Name'] || details['Degree'] || responses['Degree Name'] || responses['Degree'] || '-',
-            'USN': details['USN'] || responses['USN'] || '-',
-            'Email': details['EMAIL ID'] || details['Email'] || details['email'] || responses['EMAIL ID'] || responses['Email'] || responses['email'] || reg.email || '-',
-            'Gender': details['Gender'] || responses['Gender'] || '-',
+            'Team Name': participant.teamName || '-',
+            'Name': participant.name || '-',
+            'College Name': participant.college || '-',
+            'Degree Name': participant.degree || '-',
+            'USN': participant.usn || '-',
+            'Email': participant.email || '-',
+            'Gender': participant.gender || '-',
             'Payment Proof': reg.paymentProof || '-',
-            'Whats App Number': details['WhatsApp Number'] || details['Whats App Number'] || responses['WhatsApp Number'] || responses['Whats App Number'] || '-',
+            'Whats App Number': participant.whatsapp || '-',
           };
           rows.push(row);
         });
-      } else if (reg.registrationType === 'Registration' || reg.registrationType === 'Waiting List') {
-        // Fallback for solo registrations with no participants array
-        const details = reg.responses || {};
-        const row = {
-          'Team Name': details['Team Name'] || reg.teamName || '-',
-          'Name': details['Name'] || details['name'] || reg.name || '-',
-          'College Name': details['College Name'] || details['College'] || '-',
-          'Degree Name': details['Degree Name'] || details['Degree'] || '-',
-          'USN': details['USN'] || '-',
-          'Email': details['EMAIL ID'] || details['Email'] || details['email'] || reg.email || '-',
-          'Gender': details['Gender'] || '-',
-          'Payment Proof': reg.paymentProof || '-',
-          'Whats App Number': details['WhatsApp Number'] || details['Whats App Number'] || '-',
-        };
-        rows.push(row);
       }
     });
     // Remove duplicate rows

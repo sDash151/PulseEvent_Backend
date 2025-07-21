@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import ReactDOM from 'react-dom';
 import { format } from 'date-fns';
 import { exportToJSON } from '../../utils/exportUtils';
+import { extractParticipants, getBestField } from '../../utils/fieldExtractors';
 
 // NOTE: To ensure this modal overlays all content (including header/footer) and is always centered,
 // render <UserDetailsModal /> at the root of your page/component tree (not inside a table or scrollable container).
@@ -193,97 +194,38 @@ const UserDetailsModal = ({ user, isOpen, onClose }) => {
                      </div>
                      
                      <div className="grid gap-3">
-                       {user.participants.map((participant, index) => {
-                         const details = participant.details || {};
-                         const responses = user.responses || {};
-                         const name = getBestField(details, responses, ['Name', 'name']);
-                         const email = getBestField(details, responses, ['EMAIL ID', 'Email', 'email']);
-                         const college = getBestField(details, responses, ['College Name', 'College']);
-                         const degree = getBestField(details, responses, ['Degree Name', 'Degree']);
-                         const usn = getBestField(details, responses, ['USN']);
-                         const gender = getBestField(details, responses, ['Gender']);
-                         const whatsapp = getBestField(details, responses, ['WhatsApp Number', 'Whats App Number']);
-                         return (
-                           <div key={index} className="bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-blue-400/20 rounded-xl p-4 relative overflow-hidden">
-                             {/* Background decoration */}
-                             <div className="absolute top-0 right-0 w-16 h-16 bg-blue-400/10 rounded-full blur-xl"></div>
+                       {extractParticipants(user).map((participant, index) => (
+                         <div key={index} className="bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-blue-400/20 rounded-xl p-4 relative overflow-hidden">
+                           {/* Background decoration */}
+                           <div className="absolute top-0 right-0 w-16 h-16 bg-blue-400/10 rounded-full blur-xl"></div>
+                           
+                           <div className="relative z-10">
+                             <div className="flex items-center justify-between mb-3">
+                               <div className="flex items-center gap-3">
+                                 <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-purple-400 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                                   {participant.name?.charAt(0)?.toUpperCase() || (index + 1)}
+                                 </div>
+                                 <div>
+                                   <h4 className="text-white font-semibold">{participant.name || `Participant ${index + 1}`}</h4>
+                                   <p className="text-blue-300 text-sm">Team Member</p>
+                                 </div>
+                               </div>
+                               <div className="text-blue-400 text-xs font-medium bg-blue-400/20 px-2 py-1 rounded-full">#{index + 1}</div>
+                             </div>
                              
-                             <div className="relative z-10">
-                               <div className="flex items-center justify-between mb-3">
-                                 <div className="flex items-center gap-3">
-                                   <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-purple-400 rounded-full flex items-center justify-center text-white font-bold text-sm">
-                                     {name?.charAt(0)?.toUpperCase() || (index + 1)}
-                                   </div>
-                                   <div>
-                                     <h4 className="text-white font-semibold">
-                                       {name || `Participant ${index + 1}`}
-                                     </h4>
-                                     <p className="text-blue-300 text-sm">Team Member</p>
-                                   </div>
-                                 </div>
-                                 <div className="text-blue-400 text-xs font-medium bg-blue-400/20 px-2 py-1 rounded-full">
-                                   #{index + 1}
-                                 </div>
-                               </div>
-                               
-                               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                 <div className="flex items-center gap-2">
-                                   <span className="text-gray-400">USN:</span>
-                                   <span className="text-gray-300 text-sm">{usn}</span>
-                                 </div>
-                                 <div className="flex items-center gap-2">
-                                   <span className="text-gray-400">Name:</span>
-                                   <span className="text-gray-300 text-sm">{name}</span>
-                                 </div>
-                                 <div className="flex items-center gap-2">
-                                   <span className="text-gray-400">Email:</span>
-                                   <span className="text-gray-300 text-sm">{email}</span>
-                                 </div>
-                                 <div className="flex items-center gap-2">
-                                   <span className="text-gray-400">Gender:</span>
-                                   <span className="text-gray-300 text-sm">{gender}</span>
-                                 </div>
-                                 <div className="flex items-center gap-2">
-                                   <span className="text-gray-400">Team Name:</span>
-                                   <span className="text-gray-300 text-sm">{details['Team Name'] || responses['Team Name'] || user.teamName || '-'}</span>
-                                 </div>
-                                 <div className="flex items-center gap-2">
-                                   <span className="text-gray-400">Degree Name:</span>
-                                   <span className="text-gray-300 text-sm">{degree}</span>
-                                 </div>
-                                 <div className="flex items-center gap-2">
-                                   <span className="text-gray-400">College Name:</span>
-                                   <span className="text-gray-300 text-sm">{college}</span>
-                                 </div>
-                                 <div className="flex items-center gap-2">
-                                   <span className="text-gray-400">Whats App Number:</span>
-                                   <span className="text-gray-300 text-sm">{whatsapp}</span>
-                                 </div>
-                               </div>
-                               {/* Additional details if any, excluding already shown fields, only in View All Details */}
-                               {details && Object.keys(details).length > 0 && (
-                                 <div className="mt-3 pt-3 border-t border-blue-400/20">
-                                   <details className="group">
-                                     <summary className="cursor-pointer text-blue-400 text-sm font-medium hover:text-blue-300 transition-colors">
-                                       View All Details
-                                     </summary>
-                                     <div className="mt-2 space-y-1">
-                                       {Object.entries(details)
-                                         .filter(([key]) => !['Name','name','EMAIL ID','Email','email','College Name','College','Degree Name','Degree','USN','Gender','WhatsApp Number','Whats App Number','Team Name'].includes(key))
-                                         .map(([key, value]) => (
-                                           <div key={key} className="flex justify-between text-xs">
-                                             <span className="text-gray-400 capitalize">{key.replace(/([A-Z])/g, ' $1').trim()}:</span>
-                                             <span className="text-gray-300">{value}</span>
-                                           </div>
-                                         ))}
-                                     </div>
-                                   </details>
-                                 </div>
-                               )}
+                             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                               <div className="flex items-center gap-2"><span className="text-gray-400">USN:</span><span className="text-gray-300 text-sm">{participant.usn}</span></div>
+                               <div className="flex items-center gap-2"><span className="text-gray-400">Name:</span><span className="text-gray-300 text-sm">{participant.name}</span></div>
+                               <div className="flex items-center gap-2"><span className="text-gray-400">Email:</span><span className="text-gray-300 text-sm">{participant.email}</span></div>
+                               <div className="flex items-center gap-2"><span className="text-gray-400">Gender:</span><span className="text-gray-300 text-sm">{participant.gender}</span></div>
+                               <div className="flex items-center gap-2"><span className="text-gray-400">Team Name:</span><span className="text-gray-300 text-sm">{participant.teamName || user.teamName || '-'}</span></div>
+                               <div className="flex items-center gap-2"><span className="text-gray-400">Degree Name:</span><span className="text-gray-300 text-sm">{participant.degree}</span></div>
+                               <div className="flex items-center gap-2"><span className="text-gray-400">College Name:</span><span className="text-gray-300 text-sm">{participant.college}</span></div>
+                               <div className="flex items-center gap-2"><span className="text-gray-400">Whats App Number:</span><span className="text-gray-300 text-sm">{participant.whatsapp}</span></div>
                              </div>
                            </div>
-                         );
-                       })}
+                         </div>
+                       ))}
                      </div>
                    </div>
                  )}

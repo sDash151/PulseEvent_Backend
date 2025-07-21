@@ -9,6 +9,7 @@ import PageContainer from '../components/ui/PageContainer';
 import Modal from '../components/ui/Modal';
 import { saveAs } from 'file-saver';
 import Papa from 'papaparse';
+import { extractParticipants, getBestField } from '../utils/fieldExtractors';
 
 // Helper functions to parse registration data
 const getTeamName = (entry) => {
@@ -32,84 +33,6 @@ const getTeamName = (entry) => {
     }
   }
   return null;
-};
-
-const getParticipants = (entry) => {
-  const participants = [];
-  const isFallbackName = (name) => {
-    if (!name || typeof name !== 'string') return true;
-    const trimmedName = name.trim();
-    if (trimmedName === '') return true;
-    const fallbackPatterns = [
-      /^participant\s+\d+$/i,
-      /^member\s+\d+$/i,
-      /^user\s+\d+$/i,
-      /^player\s+\d+$/i
-    ];
-    return fallbackPatterns.some(pattern => pattern.test(trimmedName));
-  };
-  // Array of participants
-  if (Array.isArray(entry?.participants)) {
-    entry.participants.forEach((participant) => {
-      if (typeof participant === 'object' && participant !== null) {
-        let name = null;
-        let email = '';
-        if (participant.name && typeof participant.name === 'string' && participant.name.trim()) {
-          name = participant.name.trim();
-        } else if (participant.Name && typeof participant.Name === 'string' && participant.Name.trim()) {
-          name = participant.Name.trim();
-        } else if (participant.fullName && typeof participant.fullName === 'string' && participant.fullName.trim()) {
-          name = participant.fullName.trim();
-        } else if (participant.firstName && participant.lastName) {
-          name = `${participant.firstName} ${participant.lastName}`.trim();
-        }
-        if (participant.email && typeof participant.email === 'string' && participant.email.trim()) {
-          email = participant.email.trim();
-        } else if (participant.Email && typeof participant.Email === 'string' && participant.Email.trim()) {
-          email = participant.Email.trim();
-        }
-        if (name && !isFallbackName(name)) {
-          participants.push({ name, email });
-        }
-      } else if (typeof participant === 'string' && participant.trim() && !isFallbackName(participant)) {
-        participants.push({ name: participant.trim(), email: '' });
-      }
-    });
-  } else if (entry?.participants && typeof entry.participants === 'object') {
-    // Object of participants
-    Object.values(entry.participants).forEach((participant) => {
-      if (typeof participant === 'object' && participant !== null) {
-        let name = null;
-        let email = '';
-        if (participant.name && typeof participant.name === 'string' && participant.name.trim()) {
-          name = participant.name.trim();
-        } else if (participant.Name && typeof participant.Name === 'string' && participant.Name.trim()) {
-          name = participant.Name.trim();
-        }
-        if (participant.email && typeof participant.email === 'string' && participant.email.trim()) {
-          email = participant.email.trim();
-        } else if (participant.Email && typeof participant.Email === 'string' && participant.Email.trim()) {
-          email = participant.Email.trim();
-        }
-        if (name && !isFallbackName(name)) {
-          participants.push({ name, email });
-        }
-      }
-    });
-  }
-  // Check responses for participant info
-  if (entry?.responses && typeof entry.responses === 'object') {
-    for (const [label, value] of Object.entries(entry.responses)) {
-      if (Array.isArray(value) && label.toLowerCase().includes('participant')) {
-        value.forEach((participantName) => {
-          if (participantName && typeof participantName === 'string' && !isFallbackName(participantName)) {
-            participants.push({ name: participantName.trim(), email: '' });
-          }
-        });
-      }
-    }
-  }
-  return participants;
 };
 
 const getResponsesDisplay = (entry) => {
@@ -470,15 +393,21 @@ const HostReviewRegistrationsPage = () => {
                     <span className="text-amber-200 font-semibold text-sm">Team: {getTeamName(entry) || '-'}</span>
                   </div>
                   {/* Participants */}
-                  {getParticipants(entry).length > 0 && (
+                  {extractParticipants(entry).length > 0 && (
                     <div className="mb-2">
                       <p className="text-sm text-blue-300 font-semibold mb-1 flex items-center gap-1">👤 Team Members:</p>
                       <ul className="text-sm text-blue-100 ml-4 list-disc">
-                        {getParticipants(entry).map((participant, index) => (
+                        {extractParticipants(entry).map((participant, index) => (
                           <li key={index} className="mb-1">
                             <span className="font-semibold text-white">{participant.name}</span>
-                            {participant.email && (
+                            {participant.email && participant.email !== '-' && (
                               <span className="ml-2 text-xs text-blue-200">({participant.email})</span>
+                            )}
+                            {participant.degree && participant.degree !== '-' && (
+                              <span className="ml-2 text-xs text-pink-200">Degree: {participant.degree}</span>
+                            )}
+                            {participant.teamName && participant.teamName !== '-' && (
+                              <span className="ml-2 text-xs text-amber-200">Team: {participant.teamName}</span>
                             )}
                           </li>
                         ))}

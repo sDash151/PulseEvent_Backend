@@ -96,6 +96,16 @@ router.post('/registration', async (req, res) => {
         } else {
           console.log('RSVP already exists for paid event:', { eventId, userId });
         }
+        // Auto-create RSVP for parent (mega) event if applicable
+        if (event.parentEventId) {
+          const existingParentRsvp = await prisma.rsvp.findUnique({
+            where: { eventId_userId: { eventId: event.parentEventId, userId } }
+          });
+          if (!existingParentRsvp) {
+            await prisma.rsvp.create({ data: { eventId: event.parentEventId, userId } });
+            console.log('Auto-created RSVP for parent mega event (registration):', { eventId: event.parentEventId, userId });
+          }
+        }
       } catch (err) {
         console.error('Error auto-creating RSVP for paid event:', err);
         // Do not fail registration if RSVP creation fails

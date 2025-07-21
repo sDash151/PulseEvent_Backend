@@ -21,7 +21,7 @@ export const handleJoinSubeventRoom = (parentEventId, subeventId) => {
 // frontend/src/services/socket.js
 import io from 'socket.io-client'
 
-const SOCKET_URL = import.meta.env.VITE_API_BASE_URL;
+const SOCKET_URL = import.meta.env.VITE_API_BASE_URL || 'https://pulseevent-backend.onrender.com';
 
 let socket
 
