@@ -13,7 +13,7 @@ const transporter = nodemailer.createTransport({
 })
 
 async function sendInvitationEmail({ to, eventTitle, eventId, hostName, invitationToken }) {
-  const siteUrl = process.env.CLIENT_URL || 'https://your-eventpulse-site.com'
+  const siteUrl = process.env.CLIENT_URL || 'https://eventpulse1.netlify.app'
   // Always direct to login with redirect to invitation page
   const loginLink = invitationToken
     ? `${siteUrl}/login?redirect=/invitation/${invitationToken}`
