@@ -2,7 +2,7 @@
 import api from './api'
 
 export const rsvpToEvent = async (eventId) => {
-  const response = await api.post(`/api/rsvp/${eventId}`)
+  const response = await api.post(`/rsvp/${eventId}`)
   return response.data
 }
 

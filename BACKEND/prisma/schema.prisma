@@ -30,6 +30,8 @@ model User {
   registrations       Registration[]
   waitingList         WaitingList[]
   whatsAppNotifications WhatsAppNotification[]
+  verified            Boolean      @default(false) // <-- Added for email verification
+  emailVerificationTokens EmailVerificationToken[] // <-- Added for relation
 }
 
 model Event {
@@ -184,4 +186,12 @@ model WhatsAppNotification {
   @@unique([userId, eventId])
   @@index([userId])
   @@index([eventId])
+}
+
+model EmailVerificationToken {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  token     String   @unique
+  expiresAt DateTime
+  user      User     @relation(fields: [userId], references: [id])
 }

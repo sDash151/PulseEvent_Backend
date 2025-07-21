@@ -2,7 +2,7 @@
 import api from './api'
 
 export const fetchFeedbackForEvent = async (eventId) => {
-  const response = await api.get(`/api/feedback?eventId=${eventId}`)
+  const response = await api.get(`/feedback?eventId=${eventId}`)
   return response.data
 }
 

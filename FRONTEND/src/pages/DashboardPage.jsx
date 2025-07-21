@@ -53,7 +53,7 @@ const DashboardPage = () => {
   }, [currentUser]);
 
   const getUserInvitations = async () => {
-    return api.get('/api/invitations');
+    return api.get('/invitations');
   };
 
   const filteredEvents = events.filter((event) => {

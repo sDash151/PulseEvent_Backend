@@ -18,6 +18,7 @@ import ComingSoonPage from './pages/ComingSoonPage';
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
+import EmailVerifiedPage from './pages/email-verified';
 import DashboardPage from './pages/DashboardPage';
 import CreateEventPage from './pages/CreateEventPage';
 import EditEventPage from './pages/EditEventPage';
@@ -32,6 +33,7 @@ import DynamicRegistrationForm from './pages/DynamicRegistrationForm.jsx';
 import HostReviewRegistrationsPage from './pages/HostReviewRegistrationsPage';
 import HelpCenterPage from './pages/HelpCenterPage';
 import FeaturesPage from './pages/FeaturesPage';
+import CheckEmailPage from './pages/check-email';
 
 export const router = createBrowserRouter(
   createRoutesFromElements(
@@ -39,6 +41,8 @@ export const router = createBrowserRouter(
       <Route index element={<HomePage />} />
       <Route path="login" element={<LoginPage />} />
       <Route path="register" element={<RegisterPage />} />
+      <Route path="check-email" element={<CheckEmailPage />} />
+      <Route path="email-verified" element={<EmailVerifiedPage />} />
 
       {/* Permanent invitation page for all users */}
       <Route path="invitations" element={<InvitationsPage />} />

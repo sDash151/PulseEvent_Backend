@@ -2,7 +2,7 @@ import api from './api';
 
 // Get unread WhatsApp notifications for the current user
 export const getWhatsAppNotifications = async () => {
-  const response = await api.get('/api/whatsapp-notifications');
+  const response = await api.get('/whatsapp-notifications');
   return response.data;
 };
 

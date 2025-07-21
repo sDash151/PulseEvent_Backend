@@ -1,15 +1,15 @@
 // frontend/src/services/events.js
 import api from './api'
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://pulseevent-backend.onrender.com';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 export const fetchEvents = async () => {
-  const response = await api.get('/api/events')
+  const response = await api.get('/events')
   return response.data
 }
 
 export const fetchEventById = async (id) => {
-  const response = await api.get(`/api/events/${id}`)
+  const response = await api.get(`/events/${id}`)
   return response.data
 }
 
@@ -43,9 +43,9 @@ export const getFeaturedEvents = async () => {
       headers['Authorization'] = `Bearer ${token}`;
     }
 
-    console.log('Fetching featured events from:', `${API_BASE_URL}/api/events/featured`);
+    console.log('Fetching featured events from:', `${API_BASE_URL}/events/featured`);
 
-    const response = await fetch(`${API_BASE_URL}/api/events/featured`, {
+    const response = await fetch(`${API_BASE_URL}/events/featured`, {
       method: 'GET',
       headers,
     });

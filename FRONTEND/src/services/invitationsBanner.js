@@ -1,4 +1,4 @@
 import api from './api';
 
 export const getInvitationByToken = (token) =>
-  api.get(`/api/invitations/token/${token}`);
+  api.get(`/invitations/token/${token}`);

@@ -43,35 +43,45 @@ const RegisterPage = () => {
   }, [currentUser, navigate])
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
+    e.preventDefault();
     if (password !== confirmPassword) {
-      setSmartError('Passwords do not match')
-      return
+      setSmartError('Passwords do not match');
+      return;
     }
-    
-    // Clear any existing error
     clearError();
-    
-    setLoading(true)
-    
+    setLoading(true);
     try {
-      const token = await registerUser(name, email, password)
-      login(token)
-      // Secure redirect logic
-      const params = new URLSearchParams(location.search)
-      const redirect = params.get('redirect')
-      if (redirect && redirect.startsWith('/')) {
-        navigate(redirect)
+      const { message, token } = await registerUser(name, email, password);
+      console.log('[REGISTER] Backend response:', { message, token });
+      if (token) {
+        login(token);
+        // Secure redirect logic
+        const params = new URLSearchParams(location.search);
+        const redirect = params.get('redirect');
+        if (redirect && redirect.startsWith('/')) {
+          console.log('[REGISTER] Navigating to redirect:', redirect);
+          navigate(redirect);
+        } else {
+          console.log('[REGISTER] Navigating to dashboard');
+          navigate('/dashboard');
+        }
       } else {
-        navigate('/dashboard')
+        // No token means verification required or already sent
+        if (message && message.includes('already been sent')) {
+          console.log('[REGISTER] Navigating to /check-email with alreadySent: true');
+          navigate('/check-email', { state: { email, alreadySent: true } });
+        } else {
+          console.log('[REGISTER] Navigating to /check-email with only email');
+          navigate('/check-email', { state: { email } });
+        }
       }
     } catch (err) {
-      const errorMessage = err.message || 'Registration failed. Please try again.'
-      setSmartError(errorMessage, email)
+      console.error('[REGISTER] Registration error:', err);
+      setSmartError(err.message);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   // Smart input handlers using the error handler hook
   const handleEmailChange = useCallback((e) => {

@@ -46,7 +46,7 @@ export const useRoleCheck = () => {
     try {
       console.log('useRoleCheck - checkEventHost: Fetching event data', { eventId, currentUserId: currentUser.id });
       
-      const response = await api.get(`/api/events/${eventId}`)
+      const response = await api.get(`/events/${eventId}`)
       const event = response.data
       
       console.log('useRoleCheck - checkEventHost: Event data received', { 

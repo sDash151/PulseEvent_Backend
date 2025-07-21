@@ -40,7 +40,7 @@ const DynamicRegistrationForm = () => {
     async function fetchFields() {
       try {
         console.log('Fetching event data for subId:', subId);
-        const eventRes = await api.get(`/api/events/${subId}`);
+        const eventRes = await api.get(`/events/${subId}`);
         console.log('Event data received:', eventRes.data);
         console.log('Custom fields from event:', eventRes.data.customFields);
         console.log('QR Code URL:', eventRes.data.qrCode);
@@ -141,7 +141,7 @@ const DynamicRegistrationForm = () => {
       formData.append('paymentProof', file);
 
       console.log('Uploading payment proof...');
-      const uploadRes = await api.post('/api/upload/payment-proof', formData);
+      const uploadRes = await api.post('/upload/payment-proof', formData);
       const paymentProofUrl = uploadRes.data.paymentProof;
       console.log('Payment proof upload successful:', paymentProofUrl);
       
@@ -460,7 +460,7 @@ const DynamicRegistrationForm = () => {
 
       if (event.paymentEnabled && uploadedPaymentProofUrl) {
         // Create waiting list entry with complete form data
-        const waitingRes = await api.post('/api/waiting-list', {
+        const waitingRes = await api.post('/waiting-list', {
           eventId: Number(subId),
           userId: currentUser?.id,
           responses: responses,
@@ -481,7 +481,7 @@ const DynamicRegistrationForm = () => {
         return;
       } else {
         // Free event, register directly
-        const registrationResponse = await api.post('/api/registration', {
+        const registrationResponse = await api.post('/registration', {
           eventId: Number(subId),
           userId: currentUser?.id,
           responses: responses,

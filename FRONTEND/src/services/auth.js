@@ -3,7 +3,7 @@ import api from './api'
 
 export const loginUser = async (email, password) => {
   try {
-    const response = await api.post('/api/auth/login', { email, password })
+    const response = await api.post('/auth/login', { email, password })
     return response.data.token
   } catch (error) {
     const errorData = error.response?.data
@@ -21,13 +21,15 @@ export const loginUser = async (email, password) => {
 
 export const registerUser = async (name, email, password) => {
   try {
-    const response = await api.post('/api/auth/register', { name, email, password })
-    return response.data.token
+    const response = await api.post('/auth/register', { name, email, password })
+    // Return both message and token for robust UI handling
+    return { message: response.data.message, token: response.data.token };
   } catch (error) {
     const errorData = error.response?.data
     if (errorData?.code === 'ACCOUNT_EXISTS') {
       throw new Error('An account with this email already exists. Please sign in instead.')
     } else if (errorData?.message) {
+      // Pass through backend error messages for disposable email, rate limit, etc.
       throw new Error(errorData.message)
     } else {
       throw new Error('Registration failed. Please try again.')
@@ -43,7 +45,7 @@ export const getCurrentUser = async () => {
       throw new Error('No authentication token found')
     }
 
-    const response = await api.get('/api/auth/me')
+    const response = await api.get('/auth/me')
     return response.data
   } catch (error) {
     const errorData = error.response?.data
@@ -94,7 +96,7 @@ export const refreshToken = async () => {
       throw new Error('No token to refresh')
     }
 
-    const response = await api.post('/api/auth/refresh')
+    const response = await api.post('/auth/refresh')
     const newToken = response.data.token
     localStorage.setItem('token', newToken)
     return newToken
@@ -104,3 +106,14 @@ export const refreshToken = async () => {
     throw new Error('Session expired. Please log in again.')
   }
 }
+
+// Add a function to resend verification email
+export const resendVerificationEmail = async (email) => {
+  try {
+    const response = await api.post('/auth/resend-verification', { email });
+    return response.data.message;
+  } catch (error) {
+    // Always return generic message for security
+    return 'If your email is registered and not verified, a new verification email has been sent.';
+  }
+};
