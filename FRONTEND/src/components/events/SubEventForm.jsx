@@ -563,14 +563,16 @@ const SubEventForm = ({ megaEventId, parentLocation, parentRsvpDeadline, parentS
       return;
     }
     
+    // Convert local datetime-local values to UTC ISO strings before sending
+    const toISOString = (local) => local ? new Date(local).toISOString() : '';
     try {
       const eventResponse = await api.post(`/events/${megaEventId}/sub`, {
         title,
         description,
         location: parentLocation,
-        startTime,
-        endTime,
-        rsvpDeadline: parentRsvpDeadline,
+        startTime: toISOString(startTime),
+        endTime: toISOString(endTime),
+        rsvpDeadline: toISOString(parentRsvpDeadline),
         maxAttendees,
         teamSize: isTeamEvent ? (teamSize || null) : null,
         teamSizeMin: flexibleTeamSize ? teamSizeMin : null,

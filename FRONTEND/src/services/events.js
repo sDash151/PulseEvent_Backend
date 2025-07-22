@@ -28,6 +28,11 @@ export const deleteEvent = async (id) => {
   return response.data
 }
 
+export const updateSubEvent = async (subEventId, subEventData) => {
+  const response = await api.put(`/events/${subEventId}/sub-event`, subEventData);
+  return response.data;
+};
+
 // Fetch featured events for homepage (mega events only)
 export const getFeaturedEvents = async () => {
   try {

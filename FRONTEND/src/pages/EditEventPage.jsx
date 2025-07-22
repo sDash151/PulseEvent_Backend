@@ -48,8 +48,15 @@ const EditEventPage = () => {
     if (!currentUser || !event) return;
     setSaving(true);
     setError('');
+    // Convert local datetime-local values to UTC ISO strings
+    const toISOString = (local) => local ? new Date(local).toISOString() : '';
     try {
-      await updateEvent(id, formData);
+      await updateEvent(id, {
+        ...formData,
+        startTime: toISOString(formData.startTime),
+        endTime: toISOString(formData.endTime),
+        rsvpDeadline: toISOString(formData.rsvpDeadline),
+      });
       navigate(`/events/${id}`);
     } catch (err) {
       setError(err.message || 'Failed to update event');

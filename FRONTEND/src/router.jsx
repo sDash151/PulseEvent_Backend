@@ -34,6 +34,7 @@ import HostReviewRegistrationsPage from './pages/HostReviewRegistrationsPage';
 import HelpCenterPage from './pages/HelpCenterPage';
 import FeaturesPage from './pages/FeaturesPage';
 import CheckEmailPage from './pages/check-email';
+import EditSubEventPage from './pages/EditSubEventPage';
 
 export const router = createBrowserRouter(
   createRoutesFromElements(
@@ -87,6 +88,7 @@ export const router = createBrowserRouter(
       <Route element={<ProtectedRoute />}>
         <Route element={<EventHostRoute />}>
           <Route path="events/:id/edit" element={<EditEventPage />} />
+          <Route path="events/:parentId/sub/:subId/edit" element={<EditSubEventPage />} />
           <Route path="events/:parentId/sub/:subId/registrations/review" element={<HostReviewRegistrationsPage />} />
         </Route>
       </Route>

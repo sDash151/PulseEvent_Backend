@@ -1,0 +1,279 @@
+import React, { useState } from 'react';
+import { updateSubEvent } from '../../services/events';
+import Button from '../ui/Button';
+import QRCodeUpload from '../QRCodeUpload';
+
+const SubEventEditForm = ({ initialData, parentId, subId, onSuccess }) => {
+  const [form, setForm] = useState({
+    title: initialData.title || '',
+    description: initialData.description || '',
+    location: initialData.location || '',
+    startTime: initialData.startTime ? new Date(initialData.startTime).toISOString().slice(0, 16) : '',
+    endTime: initialData.endTime ? new Date(initialData.endTime).toISOString().slice(0, 16) : '',
+    rsvpDeadline: initialData.rsvpDeadline ? new Date(initialData.rsvpDeadline).toISOString().slice(0, 16) : '',
+    maxAttendees: initialData.maxAttendees || '',
+    teamSize: initialData.teamSize || '',
+    teamSizeMin: initialData.teamSizeMin || '',
+    teamSizeMax: initialData.teamSizeMax || '',
+    flexibleTeamSize: initialData.flexibleTeamSize || false,
+    paymentEnabled: initialData.paymentEnabled || false,
+    paymentProofRequired: initialData.paymentProofRequired || false,
+    whatsappGroupEnabled: initialData.whatsappGroupEnabled || false,
+    whatsappGroupLink: initialData.whatsappGroupLink || '',
+    qrCode: initialData.qrCode || '',
+    customFields: initialData.customFields || [],
+  });
+  const [qrPreview, setQrPreview] = useState(initialData.qrCode || null);
+  const [qrFile, setQrFile] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState(false);
+
+  // Handle input changes
+  const handleChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setForm((prev) => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value,
+    }));
+  };
+
+  // Handle QR code upload
+  const handleQrChange = (e) => {
+    const file = e.target.files[0];
+    setQrFile(file);
+    setQrPreview(file ? URL.createObjectURL(file) : null);
+  };
+
+  // Remove QR code
+  const handleRemoveQr = () => {
+    setQrFile(null);
+    setQrPreview(null);
+    setForm((prev) => ({ ...prev, qrCode: '' }));
+  };
+
+  // WhatsApp link validation
+  const isValidWhatsappLink = (link) =>
+    link.startsWith('https://chat.whatsapp.com/') && link.length > 30;
+
+  // Date/time UTC conversion
+  const toISOString = (local) => (local ? new Date(local).toISOString() : '');
+
+  // Handle form submit
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    setSuccess(false);
+    setLoading(true);
+
+    // Validation
+    if (!form.title.trim()) return setError('Title is required.');
+    if (!form.location.trim()) return setError('Location is required.');
+    if (!form.startTime || !form.endTime || !form.rsvpDeadline)
+      return setError('All date/time fields are required.');
+    if (form.paymentEnabled && !qrPreview && !form.qrCode)
+      return setError('QR code is required for payment events.');
+    if (form.whatsappGroupEnabled && !isValidWhatsappLink(form.whatsappGroupLink))
+      return setError('Please provide a valid WhatsApp group link.');
+    if (form.flexibleTeamSize) {
+      if (!form.teamSizeMin || !form.teamSizeMax)
+        return setError('Min and max team size required.');
+      if (parseInt(form.teamSizeMin) > parseInt(form.teamSizeMax))
+        return setError('Min team size cannot exceed max team size.');
+    } else if (form.teamSize && parseInt(form.teamSize) < 1) {
+      return setError('Team size must be at least 1.');
+    }
+
+    // Prepare payload
+    const payload = {
+      ...form,
+      startTime: toISOString(form.startTime),
+      endTime: toISOString(form.endTime),
+      rsvpDeadline: toISOString(form.rsvpDeadline),
+      qrCode: form.qrCode, // Will be replaced if uploading new QR
+    };
+
+    // Handle QR upload if changed
+    if (qrFile) {
+      const qrForm = new FormData();
+      qrForm.append('qrCode', qrFile);
+      qrForm.append('eventId', subId);
+      try {
+        const res = await fetch('/api/upload/qr-code', {
+          method: 'POST',
+          body: qrForm,
+        });
+        const data = await res.json();
+        if (data.qrCode) payload.qrCode = data.qrCode;
+      } catch (err) {
+        setLoading(false);
+        return setError('Failed to upload QR code.');
+      }
+    }
+
+    try {
+      await updateSubEvent(subId, payload);
+      setSuccess(true);
+      if (onSuccess) onSuccess();
+    } catch (err) {
+      setError(err.message || 'Failed to update sub-event.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // UI
+  return (
+    <form onSubmit={handleSubmit} className="space-y-8">
+      {/* Basic Info */}
+      <div>
+        <h2 className="text-lg font-bold text-amber-400 mb-2">Basic Info</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label className="block text-sm font-medium text-amber-300 mb-1">Title *</label>
+            <input name="title" value={form.title} onChange={handleChange} className="w-full px-4 py-2.5 bg-white/5 text-white border border-white/10 rounded-lg focus:ring-2 focus:ring-amber-400 focus:border-amber-400" required />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-amber-300 mb-1">Location *</label>
+            <input name="location" value={form.location} onChange={handleChange} className="w-full px-4 py-2.5 bg-white/5 text-white border border-white/10 rounded-lg focus:ring-2 focus:ring-amber-400 focus:border-amber-400" required />
+          </div>
+        </div>
+        <div className="mt-4">
+          <label className="block text-sm font-medium text-amber-300 mb-1">Description</label>
+          <textarea name="description" value={form.description} onChange={handleChange} rows={3} className="w-full px-4 py-2.5 bg-white/5 text-white border border-white/10 rounded-lg focus:ring-2 focus:ring-amber-400 focus:border-amber-400" />
+        </div>
+      </div>
+
+      {/* Timing */}
+      <div>
+        <h2 className="text-lg font-bold text-amber-400 mb-2">Timing</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div>
+            <label className="block text-sm font-medium text-amber-300 mb-1">Start Time *</label>
+            <input type="datetime-local" name="startTime" value={form.startTime} onChange={handleChange} className="w-full px-4 py-2.5 bg-white/5 text-white border border-white/10 rounded-lg focus:ring-2 focus:ring-amber-400 focus:border-amber-400" required />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-amber-300 mb-1">End Time *</label>
+            <input type="datetime-local" name="endTime" value={form.endTime} onChange={handleChange} className="w-full px-4 py-2.5 bg-white/5 text-white border border-white/10 rounded-lg focus:ring-2 focus:ring-amber-400 focus:border-amber-400" required />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-amber-300 mb-1">RSVP Deadline *</label>
+            <input type="datetime-local" name="rsvpDeadline" value={form.rsvpDeadline} onChange={handleChange} className="w-full px-4 py-2.5 bg-white/5 text-white border border-white/10 rounded-lg focus:ring-2 focus:ring-amber-400 focus:border-amber-400" required />
+          </div>
+        </div>
+      </div>
+
+      {/* Team Settings */}
+      <div>
+        <h2 className="text-lg font-bold text-amber-400 mb-2">Team Settings</h2>
+        <div className="flex items-center gap-4 mb-4">
+          <input type="checkbox" name="teamSize" checked={!!form.teamSize} onChange={e => setForm(prev => ({ ...prev, teamSize: e.target.checked ? (prev.teamSize || 4) : '' }))} className="h-5 w-5 rounded border-amber-400 text-amber-400 focus:ring-amber-400" id="teamEvent" />
+          <label htmlFor="teamEvent" className="text-white font-semibold cursor-pointer select-none">Team Event</label>
+        </div>
+        {!!form.teamSize && (
+          <div className="flex items-center gap-4 mb-4">
+            <input type="checkbox" name="flexibleTeamSize" checked={form.flexibleTeamSize} onChange={handleChange} className="h-5 w-5 rounded border-amber-400 text-amber-400 focus:ring-amber-400" id="flexibleTeamSize" />
+            <label htmlFor="flexibleTeamSize" className="text-white font-semibold cursor-pointer select-none">Flexible Team Size</label>
+          </div>
+        )}
+        {!!form.teamSize && form.flexibleTeamSize ? (
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-amber-300 mb-1">Min Team Size *</label>
+              <input type="number" name="teamSizeMin" value={form.teamSizeMin} onChange={handleChange} min={1} className="w-full px-4 py-2.5 bg-white/5 text-white border border-white/10 rounded-lg focus:ring-2 focus:ring-amber-400 focus:border-amber-400" required />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-amber-300 mb-1">Max Team Size *</label>
+              <input type="number" name="teamSizeMax" value={form.teamSizeMax} onChange={handleChange} min={form.teamSizeMin || 1} className="w-full px-4 py-2.5 bg-white/5 text-white border border-white/10 rounded-lg focus:ring-2 focus:ring-amber-400 focus:border-amber-400" required />
+            </div>
+          </div>
+        ) : !!form.teamSize ? (
+          <div className="w-1/2">
+            <label className="block text-sm font-medium text-amber-300 mb-1">Team Size *</label>
+            <input type="number" name="teamSize" value={form.teamSize} onChange={handleChange} min={1} className="w-full px-4 py-2.5 bg-white/5 text-white border border-white/10 rounded-lg focus:ring-2 focus:ring-amber-400 focus:border-amber-400" required />
+          </div>
+        ) : null}
+      </div>
+
+      {/* Payment Settings */}
+      <div>
+        <h2 className="text-lg font-bold text-amber-400 mb-2">Payment</h2>
+        <div className="flex items-center gap-4 mb-4">
+          <input type="checkbox" name="paymentEnabled" checked={form.paymentEnabled} onChange={handleChange} className="h-5 w-5 rounded border-amber-400 text-amber-400 focus:ring-amber-400" id="paymentEnabled" />
+          <label htmlFor="paymentEnabled" className="text-white font-semibold cursor-pointer select-none">Payment Required</label>
+        </div>
+        {form.paymentEnabled && (
+          <>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-amber-300 mb-1">QR Code *</label>
+              {qrPreview ? (
+                <div className="flex items-center gap-4 mb-2">
+                  <img src={qrPreview} alt="QR Preview" className="w-24 h-24 rounded-lg border border-amber-400 object-contain" />
+                  <Button type="button" onClick={handleRemoveQr} className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded">Remove</Button>
+                </div>
+              ) : form.qrCode ? (
+                <div className="flex items-center gap-4 mb-2">
+                  <img src={form.qrCode} alt="QR Preview" className="w-24 h-24 rounded-lg border border-amber-400 object-contain" />
+                  <Button type="button" onClick={handleRemoveQr} className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded">Remove</Button>
+                </div>
+              ) : null}
+              <input type="file" accept="image/*" onChange={handleQrChange} className="block w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-amber-50 file:text-amber-700 hover:file:bg-amber-100" />
+            </div>
+            <div className="flex items-center gap-4 mb-4">
+              <input type="checkbox" name="paymentProofRequired" checked={form.paymentProofRequired} onChange={handleChange} className="h-5 w-5 rounded border-amber-400 text-amber-400 focus:ring-amber-400" id="paymentProofRequired" />
+              <label htmlFor="paymentProofRequired" className="text-white font-semibold cursor-pointer select-none">Payment Proof Required</label>
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* WhatsApp Group */}
+      <div>
+        <h2 className="text-lg font-bold text-amber-400 mb-2">WhatsApp Group</h2>
+        <div className="flex items-center gap-4 mb-4">
+          <input type="checkbox" name="whatsappGroupEnabled" checked={form.whatsappGroupEnabled} onChange={handleChange} className="h-5 w-5 rounded border-amber-400 text-amber-400 focus:ring-amber-400" id="whatsappGroupEnabled" />
+          <label htmlFor="whatsappGroupEnabled" className="text-white font-semibold cursor-pointer select-none">Enable WhatsApp Group</label>
+        </div>
+        {form.whatsappGroupEnabled && (
+          <div className="w-full md:w-2/3">
+            <label className="block text-sm font-medium text-amber-300 mb-1">WhatsApp Group Link *</label>
+            <input type="url" name="whatsappGroupLink" value={form.whatsappGroupLink} onChange={handleChange} placeholder="https://chat.whatsapp.com/..." className="w-full px-4 py-2.5 bg-white/5 text-white border border-white/10 rounded-lg focus:ring-2 focus:ring-amber-400 focus:border-amber-400" required />
+            {!isValidWhatsappLink(form.whatsappGroupLink) && form.whatsappGroupLink && (
+              <div className="text-red-400 text-xs mt-1">Invalid WhatsApp group link.</div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Custom Fields (read-only for now) */}
+      <div>
+        <h2 className="text-lg font-bold text-amber-400 mb-2">Custom Registration Fields</h2>
+        {Array.isArray(form.customFields) && form.customFields.length > 0 ? (
+          <ul className="space-y-2">
+            {form.customFields.map((field, idx) => (
+              <li key={idx} className="bg-white/10 rounded px-3 py-2 text-gray-200 text-sm flex items-center gap-2">
+                <span className="font-semibold text-amber-300">{field.label}</span>
+                <span className="text-gray-400">({field.type})</span>
+                {field.required && <span className="text-red-400">*</span>}
+                {field.isIndividual && <span className="text-blue-400 text-xs ml-2">Individual</span>}
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <div className="text-gray-400 text-sm">No custom fields for this sub-event.</div>
+        )}
+      </div>
+
+      {/* Error/Success/Save */}
+      {error && <div className="text-red-400 bg-red-500/10 border border-red-400/20 rounded-lg px-4 py-2 text-center font-medium">{error}</div>}
+      {success && <div className="text-green-400 bg-green-500/10 border border-green-400/20 rounded-lg px-4 py-2 text-center font-medium">Sub-event updated successfully!</div>}
+      <div className="sticky bottom-0 bg-gradient-to-t from-[#0f0c29]/80 via-[#302b63]/80 to-[#24243e]/80 py-4 flex justify-end z-20">
+        <Button type="submit" disabled={loading} className="px-8 py-3 text-lg font-bold">
+          {loading ? 'Saving...' : 'Save Changes'}
+        </Button>
+      </div>
+    </form>
+  );
+};
+
+export default SubEventEditForm; 

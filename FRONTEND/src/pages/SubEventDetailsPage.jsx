@@ -111,6 +111,14 @@ const SubEventDetailsPage = () => {
 
   return (
     <div className="relative min-h-screen px-4 pt-28 pb-10 bg-gradient-to-br from-[#0f0c29] via-[#302b63] to-[#24243e] text-white">
+      {/* Edit Sub-Event Button for Host */}
+      {isHost && (
+        <div className="absolute top-6 right-6 z-20">
+          <Button onClick={() => navigate(`/events/${parentId}/sub/${subId}/edit`)} className="bg-amber-500 hover:bg-amber-600 text-white font-bold px-6 py-2 rounded-lg shadow-lg">
+            Edit Sub-Event
+          </Button>
+        </div>
+      )}
       {/* Animated background elements */}
       <div className="absolute top-0 left-[20%] w-96 h-96 bg-pink-500/10 rounded-full blur-[120px] z-0 animate-pulse-slow" />
       <div className="absolute bottom-10 right-[15%] w-72 h-72 bg-amber-400/10 rounded-full blur-[100px] z-0 animate-pulse-slow animation-delay-2000" />
