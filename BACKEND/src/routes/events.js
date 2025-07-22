@@ -30,6 +30,14 @@ router.get('/', authenticateToken, async (req, res) => {
             startTime: true,
             endTime: true,
             paymentEnabled: true,
+            maxAttendees: true,
+            teamSize: true,
+            teamSizeMin: true,
+            teamSizeMax: true,
+            flexibleTeamSize: true,
+            whatsappGroupEnabled: true,
+            whatsappGroupLink: true,
+            host: { select: { id: true, name: true, email: true } },
             rsvps: {
               select: {
                 userId: true,
@@ -330,6 +338,49 @@ router.post('/:megaEventId/sub', authenticateToken, async (req, res) => {
       console.error('Error creating sub-event:', error);
       res.status(500).json({ message: 'Internal server error' });
     }
+  }
+});
+
+// Update a sub-event (host only)
+router.put('/:subEventId/sub-event', authenticateToken, authorizeHost, async (req, res) => {
+  const subEventId = parseInt(req.params.subEventId);
+  const {
+    title, description, location, startTime, endTime, rsvpDeadline, maxAttendees,
+    teamSize, teamSizeMin, teamSizeMax, flexibleTeamSize, paymentEnabled,
+    paymentProofRequired, customFields, qrCode, whatsappGroupEnabled, whatsappGroupLink
+  } = req.body;
+
+  if (isNaN(subEventId)) {
+    return res.status(400).json({ message: 'Invalid sub-event ID' });
+  }
+
+  try {
+    const updated = await prisma.event.update({
+      where: { id: subEventId },
+      data: {
+        title,
+        description,
+        location,
+        startTime: new Date(startTime),
+        endTime: new Date(endTime),
+        rsvpDeadline: new Date(rsvpDeadline),
+        maxAttendees: parseInt(maxAttendees),
+        teamSize: teamSize ? parseInt(teamSize) : null,
+        teamSizeMin: flexibleTeamSize && teamSizeMin ? parseInt(teamSizeMin) : null,
+        teamSizeMax: flexibleTeamSize && teamSizeMax ? parseInt(teamSizeMax) : null,
+        flexibleTeamSize: !!flexibleTeamSize,
+        paymentEnabled: !!paymentEnabled,
+        paymentProofRequired: !!paymentProofRequired,
+        customFields: customFields || null,
+        qrCode: qrCode || null,
+        whatsappGroupEnabled: !!whatsappGroupEnabled,
+        whatsappGroupLink: whatsappGroupEnabled ? whatsappGroupLink : null
+      }
+    });
+    res.json(updated);
+  } catch (error) {
+    console.error('Error updating sub-event:', error);
+    res.status(500).json({ message: 'Internal server error' });
   }
 });
 
