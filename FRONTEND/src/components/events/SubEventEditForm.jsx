@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { updateSubEvent } from '../../services/events';
 import Button from '../ui/Button';
 import QRCodeUpload from '../QRCodeUpload';
@@ -43,6 +43,11 @@ const SubEventEditForm = ({ initialData, parentId, subId, onSuccess }) => {
   const [customFields, setCustomFields] = useState(form.customFields || []);
   const [fieldError, setFieldError] = useState('');
 
+  // Sync qrPreview with initialData.qrCode on change
+  useEffect(() => {
+    setQrPreview(initialData.qrCode || null);
+  }, [initialData.qrCode]);
+
   // Handle input changes
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -53,17 +58,60 @@ const SubEventEditForm = ({ initialData, parentId, subId, onSuccess }) => {
   };
 
   // Handle QR code upload
-  const handleQrChange = (e) => {
+  const handleQrChange = async (e) => {
     const file = e.target.files[0];
     setQrFile(file);
     setQrPreview(file ? URL.createObjectURL(file) : null);
+    if (file) {
+      setLoading(true);
+      setError("");
+      const qrForm = new FormData();
+      qrForm.append("qrCode", file);
+      qrForm.append("eventId", subId);
+      try {
+        const token = localStorage.getItem('token');
+        const res = await fetch(`${API_BASE_URL}/upload/qr-code`, {
+          method: "POST",
+          body: qrForm,
+          credentials: "include",
+          headers: {
+            Authorization: token ? `Bearer ${token}` : undefined
+          }
+        });
+        const data = await res.json();
+        if (data.qrCode) {
+          setForm((prev) => ({ ...prev, qrCode: data.qrCode }));
+          setQrPreview(data.qrCode);
+          setQrFile(null);
+          // Immediately update the event with new QR code
+          await updateSubEvent(subId, {
+            ...form,
+            qrCode: data.qrCode
+          });
+        } else {
+          setError("Failed to upload QR code.");
+        }
+      } catch (err) {
+        setError("Failed to upload QR code.");
+      } finally {
+        setLoading(false);
+      }
+    }
   };
 
-  // Remove QR code
+  // QR code preview logic
+  const hasQr = !!qrPreview || !!form.qrCode;
+  const [showQrInput, setShowQrInput] = useState(false);
+
   const handleRemoveQr = () => {
-    setQrFile(null);
     setQrPreview(null);
-    setForm((prev) => ({ ...prev, qrCode: '' }));
+    setQrFile(null);
+    setForm(f => ({ ...f, qrCode: '' }));
+    setShowQrInput(true);
+  };
+
+  const handleReplaceQr = () => {
+    setShowQrInput(true);
   };
 
   // WhatsApp link validation
@@ -105,6 +153,9 @@ const SubEventEditForm = ({ initialData, parentId, subId, onSuccess }) => {
     return '';
   };
 
+  // Utility to ensure options is always an array
+  const safeOptions = (opts) => Array.isArray(opts) ? opts : [];
+
   // Handle form submit
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -143,22 +194,7 @@ const SubEventEditForm = ({ initialData, parentId, subId, onSuccess }) => {
     };
 
     // Handle QR upload if changed
-    if (qrFile) {
-      const qrForm = new FormData();
-      qrForm.append('qrCode', qrFile);
-      qrForm.append('eventId', subId);
-      try {
-        const res = await fetch(`${API_BASE_URL}/upload/qr-code`, {
-          method: 'POST',
-          body: qrForm,
-        });
-        const data = await res.json();
-        if (data.qrCode) payload.qrCode = data.qrCode;
-      } catch (err) {
-        setLoading(false);
-        return setError('Failed to upload QR code.');
-      }
-    }
+    // (Removed from handleSubmit, now handled immediately on file select)
 
     payload.customFields = customFields;
 
@@ -257,18 +293,16 @@ const SubEventEditForm = ({ initialData, parentId, subId, onSuccess }) => {
           <>
             <div className="mb-4">
               <label className="block text-sm font-medium text-amber-300 mb-1">QR Code *</label>
-              {qrPreview ? (
+              {hasQr && (
                 <div className="flex items-center gap-4 mb-2">
-                  <img src={qrPreview} alt="QR Preview" className="w-24 h-24 rounded-lg border border-amber-400 object-contain" />
+                  <img src={qrPreview || form.qrCode} alt="QR Preview" className="w-24 h-24 rounded-lg border border-amber-400 object-contain" />
                   <Button type="button" onClick={handleRemoveQr} className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded">Remove</Button>
+                  <Button type="button" onClick={handleReplaceQr} className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded">Replace</Button>
                 </div>
-              ) : form.qrCode ? (
-                <div className="flex items-center gap-4 mb-2">
-                  <img src={form.qrCode} alt="QR Preview" className="w-24 h-24 rounded-lg border border-amber-400 object-contain" />
-                  <Button type="button" onClick={handleRemoveQr} className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded">Remove</Button>
-                </div>
-              ) : null}
-              <input type="file" accept="image/*" onChange={handleQrChange} className="block w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-amber-50 file:text-amber-700 hover:file:bg-amber-100" />
+              )}
+              {(!hasQr || showQrInput) && (
+                <input type="file" accept="image/*" onChange={handleQrChange} className="block w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-amber-50 file:text-amber-700 hover:file:bg-amber-100" />
+              )}
             </div>
             <div className="flex items-center gap-4 mb-4">
               <input type="checkbox" name="paymentProofRequired" checked={form.paymentProofRequired} onChange={handleChange} className="h-5 w-5 rounded border-amber-400 text-amber-400 focus:ring-amber-400" id="paymentProofRequired" />
@@ -327,7 +361,7 @@ const SubEventEditForm = ({ initialData, parentId, subId, onSuccess }) => {
                     <input
                       className="px-2 py-1 rounded bg-white/5 text-white border border-white/10 w-48"
                       placeholder="Options (comma separated)"
-                      value={field.options ? field.options.join(',') : ''}
+                      value={safeOptions(field.options).join(',')}
                       onChange={e => handleFieldOptionChange(idx, e.target.value.split(',').map(opt => opt.trim()).filter(Boolean))}
                     />
                   )}
@@ -359,6 +393,9 @@ const SubEventEditForm = ({ initialData, parentId, subId, onSuccess }) => {
                   {field.isIndividual && <span className="text-blue-400 text-xs ml-2">Individual</span>}
                   {field.type === 'dropdown' && field.options && (
                     <span className="text-xs text-gray-400 ml-2">[{field.options.join(', ')}]</span>
+                  )}
+                  {field.type === 'dropdown' && !Array.isArray(field.options) && (
+                    <span className="text-xs text-red-400 ml-2">[Invalid options]</span>
                   )}
                 </li>
               ))}

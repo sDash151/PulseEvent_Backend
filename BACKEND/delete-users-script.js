@@ -127,7 +127,12 @@ async function deleteNonHostUsers() {
       }
     });
 
-    console.log('8. Deleting non-host users...');
+    console.log('8. Deleting email verification tokens...');
+    await prisma.emailVerificationToken.deleteMany({
+      where: { userId: { in: nonHostUserIds } }
+    });
+
+    console.log('9. Deleting non-host users...');
     await prisma.user.deleteMany({
       where: { id: { in: nonHostUserIds } }
     });

@@ -732,6 +732,15 @@ const SubEventForm = ({ megaEventId, parentLocation, parentRsvpDeadline, parentS
     setQrPreview(file ? URL.createObjectURL(file) : null);
   };
 
+  // Utility to ensure options is always an array
+  const safeOptions = (opts) => Array.isArray(opts) ? opts : [];
+
+  // Utility to ensure input value is always string or number
+  const safeInputValue = (val) => {
+    if (typeof val === 'string' || typeof val === 'number') return val;
+    return '';
+  };
+
   return (
     <form onSubmit={handleSubmit} className="w-full max-w-6xl mx-auto bg-gray-900 md:bg-white/5 md:backdrop-blur-md border border-gray-700 md:border-white/10 shadow-none md:shadow-lg rounded-2xl p-4 md:p-6 lg:p-8 space-y-6 md:space-y-8">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -1370,18 +1379,24 @@ const SubEventForm = ({ megaEventId, parentLocation, parentRsvpDeadline, parentS
                   {field.type === 'dropdown' && (
                     <div className="md:col-span-2">
                       <label className="block text-white font-semibold mb-2 md:mb-3 text-sm tracking-wide">Dropdown Options</label>
-                      <input
-                        type="text"
-                        placeholder="Enter options separated by commas (e.g., Option 1, Option 2, Option 3)"
-                        value={field.options?.join(',') || ''}
-                        onChange={e => updateField(idx, 'options', e.target.value.split(','))}
-                        className={`w-full px-4 py-3 rounded-lg bg-gray-800 md:bg-[#302b63] text-white font-medium border-2 focus:outline-none focus:ring-2 transition-all duration-200 ${
-                          field.type === 'dropdown' && (!field.options || field.options.length === 0)
-                            ? 'border-amber-400/50 focus:ring-amber-400/60 focus:border-amber-400/60' 
-                            : 'border-amber-400/30 focus:ring-amber-400/60 focus:border-amber-400/60'
-                        }`}
-                        aria-label={`Dropdown Options ${idx+1}`}
-                      />
+                      {(() => {
+                        const opts = Array.isArray(field.options) ? field.options : [];
+                        console.log(`[SubEventForm][DropdownOptions] idx=${idx} label=${field.label} options=`, opts);
+                        return (
+                          <input
+                            type="text"
+                            placeholder="Enter options separated by commas (e.g., Option 1, Option 2, Option 3)"
+                            value={opts.join(',')}
+                            onChange={e => updateField(idx, 'options', e.target.value.split(',').map(opt => opt.trim()).filter(Boolean))}
+                            className={`w-full px-4 py-3 rounded-lg bg-gray-800 md:bg-[#302b63] text-white font-medium border-2 focus:outline-none focus:ring-2 transition-all duration-200 ${
+                              field.type === 'dropdown' && (!opts || opts.length === 0)
+                                ? 'border-amber-400/50 focus:ring-amber-400/60 focus:border-amber-400/60' 
+                                : 'border-amber-400/30 focus:ring-amber-400/60 focus:border-amber-400/60'
+                            }`}
+                            aria-label={`Dropdown Options ${idx+1}`}
+                          />
+                        );
+                      })()}
                       <p className="text-xs text-gray-400 mt-2">💡 Separate multiple options with commas</p>
                     </div>
                   )}

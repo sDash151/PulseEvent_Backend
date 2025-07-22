@@ -256,15 +256,14 @@ router.post('/:megaEventId/sub', authenticateToken, async (req, res) => {
   const userId = req.user.id;
   const { title, description, location, startTime, endTime, rsvpDeadline, maxAttendees, teamSize, teamSizeMin, teamSizeMax, flexibleTeamSize, paymentEnabled, customFields, whatsappGroupEnabled, whatsappGroupLink, paymentProofRequired } = req.body;
   
-  console.log('Creating sub-event with data:', {
-    megaEventId,
-    title,
-    customFields,
-    teamSize,
-    paymentEnabled,
-    whatsappGroupEnabled,
-    whatsappGroupLink
-  });
+  console.log('=== [BACKEND] Creating sub-event with data ===');
+  console.log('megaEventId:', megaEventId);
+  console.log('title:', title);
+  console.log('customFields:', customFields, 'type:', Array.isArray(customFields) ? 'array' : typeof customFields);
+  if (Array.isArray(customFields)) {
+    customFields.forEach((f, i) => console.log(`[customField ${i}]`, f, 'options:', f.options));
+  }
+  console.log('teamSize:', teamSize, 'paymentEnabled:', paymentEnabled, 'whatsappGroupEnabled:', whatsappGroupEnabled, 'whatsappGroupLink:', whatsappGroupLink);
   
   if (isNaN(megaEventId) || !title || !location || !startTime || !endTime || !rsvpDeadline || !maxAttendees) {
     return res.status(400).json({ message: 'Missing required fields or invalid event ID' });
@@ -335,8 +334,9 @@ router.post('/:megaEventId/sub', authenticateToken, async (req, res) => {
         host: { select: { id: true, name: true, email: true } }
       }
     });
-    
-    console.log('Sub-event created successfully:', subEvent.id);
+    console.log('=== [BACKEND] Sub-event created successfully ===');
+    console.log('subEvent.id:', subEvent.id);
+    console.log('subEvent.customFields:', subEvent.customFields);
     res.status(201).json(subEvent);
   } catch (error) {
     if (error.code === 'P2002') {
@@ -356,6 +356,14 @@ router.put('/:subEventId/sub-event', authenticateToken, authorizeHost, async (re
     teamSize, teamSizeMin, teamSizeMax, flexibleTeamSize, paymentEnabled,
     paymentProofRequired, customFields, qrCode, whatsappGroupEnabled, whatsappGroupLink
   } = req.body;
+
+  console.log('=== [BACKEND] Updating sub-event ===');
+  console.log('subEventId:', subEventId);
+  console.log('customFields:', customFields, 'type:', Array.isArray(customFields) ? 'array' : typeof customFields);
+  if (Array.isArray(customFields)) {
+    customFields.forEach((f, i) => console.log(`[customField ${i}]`, f, 'options:', f.options));
+  }
+  console.log('teamSize:', teamSize, 'paymentEnabled:', paymentEnabled, 'whatsappGroupEnabled:', whatsappGroupEnabled, 'whatsappGroupLink:', whatsappGroupLink);
 
   if (isNaN(subEventId)) {
     return res.status(400).json({ message: 'Invalid sub-event ID' });
@@ -384,6 +392,8 @@ router.put('/:subEventId/sub-event', authenticateToken, authorizeHost, async (re
         whatsappGroupLink: whatsappGroupEnabled ? whatsappGroupLink : null
       }
     });
+    console.log('=== [BACKEND] Sub-event updated ===');
+    console.log('updated.customFields:', updated.customFields);
     res.json(updated);
   } catch (error) {
     console.error('Error updating sub-event:', error);
@@ -463,6 +473,9 @@ router.get('/:id', authenticateToken, async (req, res) => {
 
     console.log('✅ Returning event data successfully');
     console.log('Event customFields:', event.customFields);
+    if (Array.isArray(event.customFields)) {
+      event.customFields.forEach((f, i) => console.log(`[customField ${i}]`, f, 'options:', f.options));
+    }
     console.log('Event teamSize:', event.teamSize, 'IsTeamEvent:', !!event.teamSize);
     res.json({ ...event, joined, checkedIn });
     
@@ -522,6 +535,9 @@ router.get('/:parentId/sub/:subId', authenticateToken, async (req, res) => {
     const checkedIn = subEvent.rsvps.find(r => r.userId === req.user.id)?.checkedIn || false;
 
     console.log('Sub-event customFields:', subEvent.customFields);
+    if (Array.isArray(subEvent.customFields)) {
+      subEvent.customFields.forEach((f, i) => console.log(`[customField ${i}]`, f, 'options:', f.options));
+    }
     console.log('Sub-event teamSize:', subEvent.teamSize, 'IsTeamEvent:', !!subEvent.teamSize);
     res.json({ ...subEvent, joined, checkedIn });
   } catch (error) {

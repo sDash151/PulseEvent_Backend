@@ -10,6 +10,12 @@ import Loading from '../components/ui/Loading';
 import PageContainer from '../components/ui/PageContainer';
 import { useAuth } from '../hooks/useAuth';
 
+// Utility to ensure input value is always string or number
+const safeInputValue = (val) => {
+  if (typeof val === 'string' || typeof val === 'number') return val;
+  return '';
+};
+
 const DynamicRegistrationForm = () => {
   const { parentId, subId } = useParams();
   const [customFields, setCustomFields] = useState([]);
@@ -45,7 +51,12 @@ const DynamicRegistrationForm = () => {
         console.log('Custom fields from event:', eventRes.data.customFields);
         console.log('QR Code URL:', eventRes.data.qrCode);
         console.log('Payment enabled:', eventRes.data.paymentEnabled);
-        setEvent(eventRes.data);
+        setEvent({
+          ...eventRes.data,
+          customFields: eventRes.data.customFields || [],
+          // Only default teamSize to 1 if not flexible team event
+          teamSize: eventRes.data.flexibleTeamSize ? null : (eventRes.data.teamSize || 1)
+        });
         setCustomFields(eventRes.data.customFields || []);
         console.log('Custom fields set:', eventRes.data.customFields || []);
         setLoading(false);
@@ -543,14 +554,14 @@ const DynamicRegistrationForm = () => {
   );
 
   console.log('Rendering registration form with:', {
-    event,
-    customFields,
+    event: { ...event, customFields: event?.customFields || [], teamSize: event?.teamSize || 1 },
+    customFields: customFields || [],
     formData,
     participants,
-    teamSize: event?.teamSize,
-    isTeamEvent: !!event?.teamSize,
-    isSoloEvent: !event?.teamSize,
-    fieldDetails: customFields?.map(field => ({
+    teamSize: event?.teamSize || 1,
+    isTeamEvent: !!(event?.teamSize || 1),
+    isSoloEvent: !(event?.teamSize || 1),
+    fieldDetails: (customFields || []).map(field => ({
       label: field.label,
       type: field.type,
       isIndividual: field.isIndividual,
@@ -693,8 +704,8 @@ const DynamicRegistrationForm = () => {
 
           {/* Custom Fields */}
           {customFields && customFields.length > 0 && customFields.map((field, idx) => {
-            const isIndividualField = field.isIndividual && event.teamSize;
-            const participantCount = isIndividualField ? (event.flexibleTeamSize ? selectedTeamSize : event.teamSize) : 1;
+            const isIndividualField = field.isIndividual && (event.teamSize || (event.flexibleTeamSize ? selectedTeamSize : 1));
+            const participantCount = isIndividualField ? (event.flexibleTeamSize ? selectedTeamSize : (event.teamSize || 1)) : 1;
             
             return (
               <div key={idx} className="mb-6">
@@ -731,45 +742,63 @@ const DynamicRegistrationForm = () => {
                       )}
                       
                       {field.type === 'textarea' ? (
-                        <Input
-                          as="textarea"
-                          name={fieldName}
-                          id={fieldId}
-                          value={formData[fieldName] || ''}
-                          onChange={handleChange}
-                          required={field.required}
-                          placeholder={`Enter ${field.label.toLowerCase()}${participantLabel}`}
-                          className="min-h-[100px] resize-vertical"
-                        />
-                      ) : field.type === 'dropdown' && field.options ? (
-                        <Input
-                          as="select"
-                          name={fieldName}
-                          id={fieldId}
-                          value={formData[fieldName] || ''}
-                          onChange={handleChange}
-                          required={field.required}
-                        >
-                          <option value="">Select {field.label}{participantLabel}</option>
-                          {field.options.map((option, optionIdx) => (
-                            <option key={optionIdx} value={option.trim()}>
-                              {option.trim()}
-                            </option>
-                          ))}
-                        </Input>
+                        (() => {
+                          const val = safeInputValue(formData[fieldName]);
+                          console.log(`[Input][textarea] name=${fieldName} id=${fieldId} value=`, val, 'type:', typeof val);
+                          return (
+                            <Input
+                              as="textarea"
+                              name={fieldName}
+                              id={fieldId}
+                              value={val}
+                              onChange={handleChange}
+                              required={field.required}
+                              placeholder={`Enter ${field.label.toLowerCase()}${participantLabel}`}
+                              className="min-h-[100px] resize-vertical"
+                            />
+                          );
+                        })()
+                      ) : field.type === 'dropdown' ? (
+                        (() => {
+                          const val = safeInputValue(formData[fieldName]);
+                          console.log(`[Input][dropdown] name=${fieldName} id=${fieldId} value=`, val, 'type:', typeof val, 'options:', field.options);
+                          return (
+                            <Input
+                              as="select"
+                              name={fieldName}
+                              id={fieldId}
+                              value={val}
+                              onChange={handleChange}
+                              required={field.required}
+                            >
+                              <option value="">Select {field.label}{participantLabel}</option>
+                              {Array.isArray(field.options) && field.options.map((option, optionIdx) => (
+                                <option key={optionIdx} value={option.trim()}>
+                                  {option.trim()}
+                                </option>
+                              ))}
+                            </Input>
+                          );
+                        })()
                       ) : (
-                        <Input
-                          type={field.type === 'email' ? 'email' : field.type === 'number' ? 'number' : 'text'}
-                          name={fieldName}
-                          id={fieldId}
-                          value={formData[fieldName] || ''}
-                          onChange={handleChange}
-                          required={field.required}
-                          placeholder={`Enter ${field.label.toLowerCase()}${participantLabel}`}
-                          {...(field.type === 'number' && { min: 0 })}
-                          {...(field.type === 'whatsapp' && { pattern: '[0-9]{10}', title: 'Please enter a 10-digit phone number' })}
-                          {...(field.type === 'usn' && { pattern: '[0-9]{1}[A-Z]{2}[0-9]{2}[A-Z]{2}[0-9]{3}', title: 'Please enter a valid USN format (e.g., 1MS20CS001)' })}
-                        />
+                        (() => {
+                          const val = safeInputValue(formData[fieldName]);
+                          console.log(`[Input][${field.type}] name=${fieldName} id=${fieldId} value=`, val, 'type:', typeof val);
+                          return (
+                            <Input
+                              type={field.type === 'email' ? 'email' : field.type === 'number' ? 'number' : 'text'}
+                              name={fieldName}
+                              id={fieldId}
+                              value={val}
+                              onChange={handleChange}
+                              required={field.required}
+                              placeholder={`Enter ${field.label.toLowerCase()}${participantLabel}`}
+                              {...(field.type === 'number' && { min: 0 })}
+                              {...(field.type === 'whatsapp' && { pattern: '[0-9]{10}', title: 'Please enter a 10-digit phone number' })}
+                              {...(field.type === 'usn' && { pattern: '[0-9]{1}[A-Z]{2}[0-9]{2}[A-Z]{2}[0-9]{3}', title: 'Please enter a valid USN format (e.g., 1MS20CS001)' })}
+                            />
+                          );
+                        })()
                       )}
                     </div>
                   );
