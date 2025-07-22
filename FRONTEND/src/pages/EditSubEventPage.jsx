@@ -6,6 +6,7 @@ import Loading from '../components/ui/Loading';
 import Button from '../components/ui/Button';
 import BackButton from '../components/ui/BackButton';
 import { deleteEvent } from '../services/events';
+import Modal from '../components/ui/Modal';
 
 const EditSubEventPage = () => {
   const { parentId, subId } = useParams();
@@ -13,6 +14,8 @@ const EditSubEventPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const navigate = useNavigate();
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
 
   useEffect(() => {
     const loadSubEvent = async () => {
@@ -40,13 +43,18 @@ const EditSubEventPage = () => {
   if (!subEvent) return null;
 
   const handleDelete = async () => {
-    if (!window.confirm('Are you sure you want to delete this sub-event? This action cannot be undone.')) return;
+    setDeleteError('');
+    setShowDeleteModal(true);
+  };
+  const confirmDelete = async () => {
+    setDeleteError('');
     try {
       await deleteEvent(subId);
       navigate(`/events/${parentId}`);
     } catch (err) {
-      alert('Failed to delete sub-event. Please try again.');
+      setDeleteError('Failed to delete sub-event. Please try again.');
     }
+    setShowDeleteModal(false);
   };
 
   return (
@@ -55,6 +63,18 @@ const EditSubEventPage = () => {
       <div className="w-full max-w-3xl mb-4 flex items-center">
         <BackButton to={`/events/${parentId}/sub/${subId}`} label="Back to Sub-Event" />
       </div>
+      {/* Delete Confirmation Modal */}
+      <Modal isOpen={showDeleteModal} onClose={() => setShowDeleteModal(false)} title="Delete Sub-Event" size="sm" backdrop="blur">
+        <div className="text-center">
+          <div className="text-2xl mb-4 text-amber-400 font-bold">Are you sure?</div>
+          <p className="mb-6 text-gray-300">This action cannot be undone. All registrations and data for this sub-event will be permanently deleted.</p>
+          {deleteError && <div className="mb-4 text-red-400 bg-red-500/10 border border-red-400/20 rounded-lg px-4 py-2 font-medium">{deleteError}</div>}
+          <div className="flex justify-center gap-4">
+            <button onClick={confirmDelete} className="px-6 py-2 rounded bg-red-600 hover:bg-red-700 text-white font-bold shadow transition">Delete</button>
+            <button onClick={() => setShowDeleteModal(false)} className="px-6 py-2 rounded bg-gray-700 hover:bg-gray-800 text-gray-200 font-semibold shadow transition">Cancel</button>
+          </div>
+        </div>
+      </Modal>
       <div className="w-full max-w-3xl bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-8 shadow-lg relative">
         <h1 className="text-2xl font-bold text-amber-400 mb-6 mt-2">Edit Sub-Event</h1>
         <SubEventEditForm initialData={subEvent} parentId={parentId} subId={subId} onSuccess={() => navigate(`/events/${parentId}/sub/${subId}`)} />

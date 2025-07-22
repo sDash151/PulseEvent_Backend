@@ -254,7 +254,7 @@ router.post('/', authenticateToken, async (req, res) => {
 router.post('/:megaEventId/sub', authenticateToken, async (req, res) => {
   const megaEventId = parseInt(req.params.megaEventId);
   const userId = req.user.id;
-  const { title, description, location, startTime, endTime, rsvpDeadline, maxAttendees, teamSize, teamSizeMin, teamSizeMax, flexibleTeamSize, paymentEnabled, customFields, whatsappGroupEnabled, whatsappGroupLink } = req.body;
+  const { title, description, location, startTime, endTime, rsvpDeadline, maxAttendees, teamSize, teamSizeMin, teamSizeMax, flexibleTeamSize, paymentEnabled, customFields, whatsappGroupEnabled, whatsappGroupLink, paymentProofRequired } = req.body;
   
   console.log('Creating sub-event with data:', {
     megaEventId,
@@ -326,6 +326,7 @@ router.post('/:megaEventId/sub', authenticateToken, async (req, res) => {
         type: 'SUB',
         parentEventId: megaEventId,
         paymentEnabled: !!paymentEnabled,
+        paymentProofRequired: paymentProofRequired !== undefined ? paymentProofRequired : false,
         customFields: customFields || null,
         whatsappGroupEnabled: !!whatsappGroupEnabled,
         whatsappGroupLink: whatsappGroupEnabled ? whatsappGroupLink : null
@@ -376,7 +377,7 @@ router.put('/:subEventId/sub-event', authenticateToken, authorizeHost, async (re
         teamSizeMax: flexibleTeamSize && teamSizeMax ? parseInt(teamSizeMax) : null,
         flexibleTeamSize: !!flexibleTeamSize,
         paymentEnabled: !!paymentEnabled,
-        paymentProofRequired: !!paymentProofRequired,
+        paymentProofRequired: paymentProofRequired !== undefined ? paymentProofRequired : false,
         customFields: customFields || null,
         qrCode: qrCode || null,
         whatsappGroupEnabled: !!whatsappGroupEnabled,

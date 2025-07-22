@@ -59,6 +59,7 @@ model Event {
 
   type           EventType @default(STANDALONE)
   paymentEnabled Boolean   @default(false) // Optional: for future payment integration
+  paymentProofRequired Boolean @default(false) // Whether payment proof is required for registration
   qrCode         String?   // URL to QR code image for payment
   customFields   Json?
   teamSize       Int?      // Optional: maximum team size for team events
