@@ -24,6 +24,15 @@ const Input = ({
   floatingLabel = false,
   ...props
 }) => {
+  try {
+    // Catch-all log for debugging React error #137
+    if (typeof value !== 'string' && typeof value !== 'number' && value !== undefined && value !== null) {
+      console.error('[Input][CatchAll] Invalid value prop:', value, 'type:', typeof value, 'props:', { type, label, placeholder, value, ...props });
+      console.trace();
+    }
+  } catch (err) {
+    console.error('[Input][CatchAll] Exception during value type check:', err);
+  }
   const [focused, setFocused] = useState(false);
   const [hasValue, setHasValue] = useState(Boolean(value));
   const inputRef = useRef(null);

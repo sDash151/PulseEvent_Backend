@@ -742,63 +742,45 @@ const DynamicRegistrationForm = () => {
                       )}
                       
                       {field.type === 'textarea' ? (
-                        (() => {
-                          const val = safeInputValue(formData[fieldName]);
-                          console.log(`[Input][textarea] name=${fieldName} id=${fieldId} value=`, val, 'type:', typeof val);
-                          return (
-                            <Input
-                              as="textarea"
-                              name={fieldName}
-                              id={fieldId}
-                              value={val}
-                              onChange={handleChange}
-                              required={field.required}
-                              placeholder={`Enter ${field.label.toLowerCase()}${participantLabel}`}
-                              className="min-h-[100px] resize-vertical"
-                            />
-                          );
-                        })()
+                        <Input
+                          as="textarea"
+                          name={fieldName}
+                          id={fieldId}
+                          value={safeInputValue(formData[fieldName])}
+                          onChange={handleChange}
+                          required={field.required}
+                          placeholder={`Enter ${field.label.toLowerCase()}${participantLabel}`}
+                          className="min-h-[100px] resize-vertical"
+                        />
                       ) : field.type === 'dropdown' ? (
-                        (() => {
-                          const val = safeInputValue(formData[fieldName]);
-                          console.log(`[Input][dropdown] name=${fieldName} id=${fieldId} value=`, val, 'type:', typeof val, 'options:', field.options);
-                          return (
-                            <Input
-                              as="select"
-                              name={fieldName}
-                              id={fieldId}
-                              value={val}
-                              onChange={handleChange}
-                              required={field.required}
-                            >
-                              <option value="">Select {field.label}{participantLabel}</option>
-                              {Array.isArray(field.options) && field.options.map((option, optionIdx) => (
-                                <option key={optionIdx} value={option.trim()}>
-                                  {option.trim()}
-                                </option>
-                              ))}
-                            </Input>
-                          );
-                        })()
+                        <Input
+                          as="select"
+                          name={fieldName}
+                          id={fieldId}
+                          value={safeInputValue(formData[fieldName])}
+                          onChange={handleChange}
+                          required={field.required}
+                        >
+                          <option value="">Select {field.label}{participantLabel}</option>
+                          {Array.isArray(field.options) && field.options.map((option, optionIdx) => (
+                            <option key={optionIdx} value={option.trim()}>
+                              {option.trim()}
+                            </option>
+                          ))}
+                        </Input>
                       ) : (
-                        (() => {
-                          const val = safeInputValue(formData[fieldName]);
-                          console.log(`[Input][${field.type}] name=${fieldName} id=${fieldId} value=`, val, 'type:', typeof val);
-                          return (
-                            <Input
-                              type={field.type === 'email' ? 'email' : field.type === 'number' ? 'number' : 'text'}
-                              name={fieldName}
-                              id={fieldId}
-                              value={val}
-                              onChange={handleChange}
-                              required={field.required}
-                              placeholder={`Enter ${field.label.toLowerCase()}${participantLabel}`}
-                              {...(field.type === 'number' && { min: 0 })}
-                              {...(field.type === 'whatsapp' && { pattern: '[0-9]{10}', title: 'Please enter a 10-digit phone number' })}
-                              {...(field.type === 'usn' && { pattern: '[0-9]{1}[A-Z]{2}[0-9]{2}[A-Z]{2}[0-9]{3}', title: 'Please enter a valid USN format (e.g., 1MS20CS001)' })}
-                            />
-                          );
-                        })()
+                        <Input
+                          type={field.type === 'email' ? 'email' : field.type === 'number' ? 'number' : 'text'}
+                          name={fieldName}
+                          id={fieldId}
+                          value={safeInputValue(formData[fieldName])}
+                          onChange={handleChange}
+                          required={field.required}
+                          placeholder={`Enter ${field.label.toLowerCase()}${participantLabel}`}
+                          {...(field.type === 'number' && { min: 0 })}
+                          {...(field.type === 'whatsapp' && { pattern: '[0-9]{10}', title: 'Please enter a 10-digit phone number' })}
+                          {...(field.type === 'usn' && { pattern: '[0-9]{1}[A-Z]{2}[0-9]{2}[A-Z]{2}[0-9]{3}', title: 'Please enter a valid USN format (e.g., 1MS20CS001)' })}
+                        />
                       )}
                     </div>
                   );
