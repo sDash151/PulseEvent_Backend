@@ -192,6 +192,9 @@ router.post('/:id/sub-events', authenticateToken, async (req, res) => {
         hostId: userId,
         type: 'SUB',
         parentEventId: megaEventId
+      },
+      include: {
+        host: { select: { id: true, name: true, email: true } }
       }
     });
     res.status(201).json(subEvent);
@@ -326,6 +329,9 @@ router.post('/:megaEventId/sub', authenticateToken, async (req, res) => {
         customFields: customFields || null,
         whatsappGroupEnabled: !!whatsappGroupEnabled,
         whatsappGroupLink: whatsappGroupEnabled ? whatsappGroupLink : null
+      },
+      include: {
+        host: { select: { id: true, name: true, email: true } }
       }
     });
     
