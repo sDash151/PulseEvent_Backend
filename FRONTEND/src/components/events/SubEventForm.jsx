@@ -566,7 +566,7 @@ const SubEventForm = ({ megaEventId, parentLocation, parentRsvpDeadline, parentS
     // Convert local datetime-local values to UTC ISO strings before sending
     const toISOString = (local) => local ? new Date(local).toISOString() : '';
     try {
-      const eventResponse = await api.post(`/events/${megaEventId}/sub`, {
+      const eventResponse = await api.post(`/api/events/${megaEventId}/sub`, {
         title,
         description,
         location: parentLocation,
@@ -594,7 +594,7 @@ const SubEventForm = ({ megaEventId, parentLocation, parentRsvpDeadline, parentS
             realEventId: eventResponse.data.id,
             qrCodeUrl: qrPreview
           });
-          const associateResponse = await api.post('/associate-qr-code', {
+          const associateResponse = await api.post('/api/associate-qr-code', {
             tempEventId: tempEventId,
             realEventId: eventResponse.data.id,
             qrCodeUrl: qrPreview
@@ -687,8 +687,8 @@ const SubEventForm = ({ megaEventId, parentLocation, parentRsvpDeadline, parentS
     { value: 'textarea', label: 'Textarea' },
     { value: 'whatsapp', label: 'WhatsApp Number' },
     { value: 'usn', label: 'USN' },
-    { value: 'dropdown', label: 'Dropdown' },
     { value: 'number', label: 'Number' },
+    // Removed dropdown
   ];
 
   const [dropdownOpenStates, setDropdownOpenStates] = useState([]);

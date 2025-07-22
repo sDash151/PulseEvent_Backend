@@ -46,17 +46,12 @@ const DynamicRegistrationForm = () => {
     async function fetchFields() {
       try {
         console.log('Fetching event data for subId:', subId);
-        const eventRes = await api.get(`/events/${subId}`);
+        const eventRes = await api.get(`/api/events/${subId}`);
         console.log('Event data received:', eventRes.data);
         console.log('Custom fields from event:', eventRes.data.customFields);
         console.log('QR Code URL:', eventRes.data.qrCode);
         console.log('Payment enabled:', eventRes.data.paymentEnabled);
-        setEvent({
-          ...eventRes.data,
-          customFields: eventRes.data.customFields || [],
-          // Only default teamSize to 1 if not flexible team event
-          teamSize: eventRes.data.flexibleTeamSize ? null : (eventRes.data.teamSize || 1)
-        });
+        setEvent(eventRes.data);
         setCustomFields(eventRes.data.customFields || []);
         console.log('Custom fields set:', eventRes.data.customFields || []);
         setLoading(false);
@@ -152,7 +147,7 @@ const DynamicRegistrationForm = () => {
       formData.append('paymentProof', file);
 
       console.log('Uploading payment proof...');
-      const uploadRes = await api.post('/upload/payment-proof', formData);
+      const uploadRes = await api.post('/api/upload/payment-proof', formData);
       const paymentProofUrl = uploadRes.data.paymentProof;
       console.log('Payment proof upload successful:', paymentProofUrl);
       
@@ -471,7 +466,7 @@ const DynamicRegistrationForm = () => {
 
       if (event.paymentEnabled && uploadedPaymentProofUrl) {
         // Create waiting list entry with complete form data
-        const waitingRes = await api.post('/waiting-list', {
+        const waitingRes = await api.post('/api/waiting-list', {
           eventId: Number(subId),
           userId: currentUser?.id,
           responses: responses,
@@ -492,7 +487,7 @@ const DynamicRegistrationForm = () => {
         return;
       } else {
         // Free event, register directly
-        const registrationResponse = await api.post('/registration', {
+        const registrationResponse = await api.post('/api/registration', {
           eventId: Number(subId),
           userId: currentUser?.id,
           responses: responses,
@@ -704,8 +699,8 @@ const DynamicRegistrationForm = () => {
 
           {/* Custom Fields */}
           {customFields && customFields.length > 0 && customFields.map((field, idx) => {
-            const isIndividualField = field.isIndividual && (event.teamSize || (event.flexibleTeamSize ? selectedTeamSize : 1));
-            const participantCount = isIndividualField ? (event.flexibleTeamSize ? selectedTeamSize : (event.teamSize || 1)) : 1;
+            const isIndividualField = field.isIndividual && event.teamSize;
+            const participantCount = isIndividualField ? (event.flexibleTeamSize ? selectedTeamSize : event.teamSize) : 1;
             
             return (
               <div key={idx} className="mb-6">
@@ -752,22 +747,6 @@ const DynamicRegistrationForm = () => {
                           placeholder={`Enter ${field.label.toLowerCase()}${participantLabel}`}
                           className="min-h-[100px] resize-vertical"
                         />
-                      ) : field.type === 'dropdown' ? (
-                        <Input
-                          as="select"
-                          name={fieldName}
-                          id={fieldId}
-                          value={safeInputValue(formData[fieldName])}
-                          onChange={handleChange}
-                          required={field.required}
-                        >
-                          <option value="">Select {field.label}{participantLabel}</option>
-                          {Array.isArray(field.options) && field.options.map((option, optionIdx) => (
-                            <option key={optionIdx} value={option.trim()}>
-                              {option.trim()}
-                            </option>
-                          ))}
-                        </Input>
                       ) : (
                         <Input
                           type={field.type === 'email' ? 'email' : field.type === 'number' ? 'number' : 'text'}

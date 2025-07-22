@@ -2,6 +2,6 @@
 import api from './api'
 
 export const fetchAnalytics = async (eventId) => {
-  const response = await api.get(`/analytics/${eventId}`)
+  const response = await api.get(`/api/analytics/${eventId}`)
   return response.data
 }

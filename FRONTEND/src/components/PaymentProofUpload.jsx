@@ -80,7 +80,7 @@ const PaymentProofUpload = ({
     }
 
     try {
-      const response = await api.post('/upload/payment-proof', formData, {
+      const response = await api.post('/api/upload/payment-proof', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
       const data = response.data;
@@ -102,7 +102,7 @@ const PaymentProofUpload = ({
     try {
       const type = waitingListId ? 'waiting-list' : 'registration';
       const id = waitingListId || registrationId;
-      await api.delete(`/upload/payment-proof/${type}/${id}`);
+      await api.delete(`/api/upload/payment-proof/${type}/${id}`);
       setPreview(null);
       onDelete();
       

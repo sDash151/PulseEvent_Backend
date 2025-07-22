@@ -16,6 +16,8 @@ const EditSubEventPage = () => {
   const navigate = useNavigate();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteError, setDeleteError] = useState('');
+  const [showDeleteErrorModal, setShowDeleteErrorModal] = useState(false);
+  const [deleteErrorMessage, setDeleteErrorMessage] = useState('');
 
   useEffect(() => {
     const loadSubEvent = async () => {
@@ -48,11 +50,18 @@ const EditSubEventPage = () => {
   };
   const confirmDelete = async () => {
     setDeleteError('');
+    setDeleteErrorMessage('');
     try {
       await deleteEvent(subId);
       navigate(`/events/${parentId}`);
     } catch (err) {
-      setDeleteError('Failed to delete sub-event. Please try again.');
+      const msg = err.response?.data?.error || err.message || 'Failed to delete sub-event.';
+      if (msg.toLowerCase().includes('registered participants') || msg.toLowerCase().includes('foreign key')) {
+        setDeleteErrorMessage('Cannot delete sub-event: there are registered participants. Please remove all registrations before deleting the sub-event.');
+        setShowDeleteErrorModal(true);
+      } else {
+        setDeleteError(msg);
+      }
     }
     setShowDeleteModal(false);
   };
@@ -72,6 +81,26 @@ const EditSubEventPage = () => {
           <div className="flex justify-center gap-4">
             <button onClick={confirmDelete} className="px-6 py-2 rounded bg-red-600 hover:bg-red-700 text-white font-bold shadow transition">Delete</button>
             <button onClick={() => setShowDeleteModal(false)} className="px-6 py-2 rounded bg-gray-700 hover:bg-gray-800 text-gray-200 font-semibold shadow transition">Cancel</button>
+          </div>
+        </div>
+      </Modal>
+      {/* Delete Error Modal */}
+      <Modal isOpen={showDeleteErrorModal} onClose={() => setShowDeleteErrorModal(false)} title="Cannot Delete Sub-Event" size="sm" backdrop="blur">
+        <div className="text-center">
+          <div className="text-2xl mb-4 text-red-400 font-bold flex items-center justify-center gap-2">
+            <span>⚠️</span>
+            Cannot Delete Sub-Event
+          </div>
+          <p className="mb-6 text-gray-300">
+            {deleteErrorMessage || 'This sub-event has registered participants. Please remove all registrations before deleting the sub-event.'}
+          </p>
+          <div className="flex justify-center gap-4">
+            <button
+              onClick={() => setShowDeleteErrorModal(false)}
+              className="px-6 py-2 rounded bg-amber-600 hover:bg-amber-700 text-white font-bold shadow transition"
+            >
+              OK
+            </button>
           </div>
         </div>
       </Modal>

@@ -614,6 +614,12 @@ router.delete('/:id', authenticateToken, authorizeHost, async (req, res) => {
     res.status(204).send();
   } catch (error) {
     console.error('Error deleting event:', error);
+    if (
+      error.code === 'P2003' ||
+      (error.message && error.message.toLowerCase().includes('foreign key'))
+    ) {
+      return res.status(400).json({ error: 'Cannot delete event: there are registered participants. Please remove all registrations first.' });
+    }
     res.status(500).json({ message: 'Internal server error' });
   }
 });

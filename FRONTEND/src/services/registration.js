@@ -7,9 +7,9 @@ export const checkUserRegistration = async (eventId) => {
     
     // Check RSVP, Registration, and Waiting List individually
     const [rsvpResponse, registrationResponse, waitingListResponse] = await Promise.all([
-      api.get(`/rsvp/${eventId}/check`),
-      api.get(`/registration/${eventId}/check`),
-      api.get(`/waiting-list/${eventId}/check`)
+      api.get(`/api/rsvp/${eventId}/check`),
+      api.get(`/api/registration/${eventId}/check`),
+      api.get(`/api/waiting-list/${eventId}/check`)
     ]);
     
     const hasRSVP = rsvpResponse.data.registered;

@@ -77,9 +77,9 @@ const HostReviewRegistrationsPage = () => {
       setLoading(true);
       try {
         const [eventRes, waitingRes, regRes] = await Promise.all([
-          api.get(`/events/${subId}`),
-          api.get(`/waiting-list/${subId}`),
-          api.get(`/registration?eventId=${subId}`), // NEW: fetch registrations
+          api.get(`/api/events/${subId}`),
+          api.get(`/api/waiting-list/${subId}`),
+          api.get(`/api/registration?eventId=${subId}`), // NEW: fetch registrations
         ]);
         
         setEvent(eventRes.data);
@@ -140,9 +140,9 @@ const HostReviewRegistrationsPage = () => {
     try {
       let response;
       if (status === 'approved') {
-        response = await api.post(`/waiting-list/${id}/approve`, {}, { timeout: 10000 });
+        response = await api.post(`/api/waiting-list/${id}/approve`, {}, { timeout: 10000 });
       } else if (status === 'rejected') {
-        response = await api.post(`/waiting-list/${id}/reject`, {}, { timeout: 10000 });
+        response = await api.post(`/api/waiting-list/${id}/reject`, {}, { timeout: 10000 });
       } else {
         throw new Error('Unknown action');
       }

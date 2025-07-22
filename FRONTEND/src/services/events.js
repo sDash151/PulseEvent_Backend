@@ -4,32 +4,32 @@ import api from './api'
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 export const fetchEvents = async () => {
-  const response = await api.get('/events')
+  const response = await api.get('/api/events')
   return response.data
 }
 
 export const fetchEventById = async (id) => {
-  const response = await api.get(`/events/${id}`)
+  const response = await api.get(`/api/events/${id}`)
   return response.data
 }
 
 export const createEvent = async (eventData) => {
-  const response = await api.post('/events', eventData)
+  const response = await api.post('/api/events', eventData)
   return response.data
 }
 
 export const updateEvent = async (id, eventData) => {
-  const response = await api.put(`/events/${id}`, eventData)
+  const response = await api.put(`/api/events/${id}`, eventData)
   return response.data
 }
 
 export const deleteEvent = async (id) => {
-  const response = await api.delete(`/events/${id}`)
+  const response = await api.delete(`/api/events/${id}`)
   return response.data
 }
 
 export const updateSubEvent = async (subEventId, subEventData) => {
-  const response = await api.put(`/events/${subEventId}/sub-event`, subEventData);
+  const response = await api.put(`/api/events/${subEventId}/sub-event`, subEventData);
   return response.data;
 };
 
@@ -48,9 +48,9 @@ export const getFeaturedEvents = async () => {
       headers['Authorization'] = `Bearer ${token}`;
     }
 
-    console.log('Fetching featured events from:', `${API_BASE_URL}/events/featured`);
+    console.log('Fetching featured events from:', `${API_BASE_URL}/api/events/featured`);
 
-    const response = await fetch(`${API_BASE_URL}/events/featured`, {
+    const response = await fetch(`${API_BASE_URL}/api/events/featured`, {
       method: 'GET',
       headers,
     });

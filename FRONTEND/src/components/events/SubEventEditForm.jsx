@@ -9,7 +9,6 @@ const FIELD_TYPES = [
   { value: 'text', label: 'Text' },
   { value: 'email', label: 'Email' },
   { value: 'number', label: 'Number' },
-  { value: 'dropdown', label: 'Dropdown' },
   { value: 'whatsapp', label: 'WhatsApp Number' },
   { value: 'usn', label: 'USN' },
 ];
@@ -70,7 +69,7 @@ const SubEventEditForm = ({ initialData, parentId, subId, onSuccess }) => {
       qrForm.append("eventId", subId);
       try {
         const token = localStorage.getItem('token');
-        const res = await fetch(`${API_BASE_URL}/upload/qr-code`, {
+        const res = await fetch(`${API_BASE_URL}/api/upload/qr-code`, {
           method: "POST",
           body: qrForm,
           credentials: "include",
@@ -349,14 +348,24 @@ const SubEventEditForm = ({ initialData, parentId, subId, onSuccess }) => {
                     value={field.label}
                     onChange={e => handleFieldChange(idx, 'label', e.target.value)}
                   />
-                  <select
-                    className="px-2 py-1 rounded bg-white/5 text-white border border-white/10 w-32"
-                    value={field.type}
-                    onChange={e => handleFieldChange(idx, 'type', e.target.value)}
-                  >
-                    <option value="">Type</option>
-                    {FIELD_TYPES.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
-                  </select>
+                  <div className="relative w-32">
+                    <select
+                      className="pl-3 pr-8 py-1.5 rounded-md bg-[#302b63] text-white border border-amber-400/30 focus:ring-2 focus:ring-amber-400 focus:border-amber-400 transition-all duration-200 text-sm shadow-sm hover:border-amber-400/60 appearance-none w-full"
+                      value={field.type}
+                      onChange={e => handleFieldChange(idx, 'type', e.target.value)}
+                      style={{ fontSize: '1rem' }}
+                    >
+                      <option value="" className="bg-[#302b63] text-gray-300">Type</option>
+                      {FIELD_TYPES.map(opt => (
+                        <option key={opt.value} value={opt.value} className="bg-[#302b63] text-amber-200 hover:bg-amber-400/10">{opt.label}</option>
+                      ))}
+                    </select>
+                    <span className="pointer-events-none absolute right-2 top-1/2 transform -translate-y-1/2 text-amber-300 flex items-center">
+                      <svg width="18" height="18" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M6 8L10 12L14 8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    </span>
+                  </div>
                   {field.type === 'dropdown' && (
                     <input
                       className="px-2 py-1 rounded bg-white/5 text-white border border-white/10 w-48"

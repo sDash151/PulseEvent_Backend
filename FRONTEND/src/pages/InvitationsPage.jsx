@@ -10,7 +10,7 @@ const statusColors = {
 };
 
 const getUserInvitations = async () => {
-  return api.get('/invitations');
+  return api.get('/api/invitations');
 };
 
 const InvitationsPage = () => {
@@ -38,7 +38,7 @@ const InvitationsPage = () => {
   const handleAction = async (invite, action) => {
     setActionLoading(prev => ({ ...prev, [invite.id]: true }));
     try {
-      await api.patch(`/invitations/${invite.token}/${action}`);
+      await api.patch(`/api/invitations/${invite.token}/${action}`);
       setInvitations(prev =>
         prev.map(i =>
           i.id === invite.id ? { ...i, status: action === 'accept' ? 'accepted' : 'declined' } : i

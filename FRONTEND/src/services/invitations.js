@@ -1,10 +1,10 @@
 import api from './api';
 
 export const sendInvitations = (eventId, emails) => 
-  api.post('/invitations', { eventId, emails });
+  api.post('/api/invitations', { eventId, emails });
 
 export const getEventInvitations = (eventId) => 
-  api.get(`/invitations/event/${eventId}`);
+  api.get(`/api/invitations/event/${eventId}`);
 
 export const acceptInvitation = (token) => 
-  api.patch(`/invitations/${token}/accept`);
+  api.patch(`/api/invitations/${token}/accept`);

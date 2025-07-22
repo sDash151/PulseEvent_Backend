@@ -6,6 +6,7 @@ import EventForm from '../components/events/EventForm';
 import BackButton from '../components/ui/BackButton';
 import { fetchEventById, updateEvent, deleteEvent } from '../services/events';
 import Button from '../components/ui/Button';
+import Modal from '../components/ui/Modal';
 
 const EditEventPage = () => {
   const { id } = useParams();
@@ -20,6 +21,8 @@ const EditEventPage = () => {
   const [hostCheckComplete, setHostCheckComplete] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [showDeleteErrorModal, setShowDeleteErrorModal] = useState(false);
+  const [deleteErrorMessage, setDeleteErrorMessage] = useState('');
 
   useEffect(() => {
     const loadEvent = async () => {
@@ -68,12 +71,19 @@ const EditEventPage = () => {
   const handleDelete = async () => {
     setDeleting(true);
     setError('');
+    setDeleteErrorMessage('');
     try {
       await deleteEvent(id);
       setShowDeleteModal(false);
       navigate('/dashboard');
     } catch (err) {
-      setError(err.message || 'Failed to delete event');
+      const msg = err.response?.data?.error || err.message || 'Failed to delete event';
+      if (msg.toLowerCase().includes('registered participants') || msg.toLowerCase().includes('foreign key')) {
+        setDeleteErrorMessage('Cannot delete event: there are registered participants. Please remove all registrations before deleting the event.');
+        setShowDeleteErrorModal(true);
+      } else {
+        setError(msg);
+      }
     } finally {
       setDeleting(false);
     }
@@ -211,6 +221,28 @@ const EditEventPage = () => {
             .delay-200 { animation-delay: 0.2s; }
           `}</style>
         </div>
+      )}
+      {/* Delete Error Modal */}
+      {showDeleteErrorModal && (
+        <Modal isOpen={showDeleteErrorModal} onClose={() => setShowDeleteErrorModal(false)} title="Cannot Delete Event" size="sm" backdrop="blur">
+          <div className="text-center">
+            <div className="text-2xl mb-4 text-red-400 font-bold flex items-center justify-center gap-2">
+              <span>⚠️</span>
+              Cannot Delete Event
+            </div>
+            <p className="mb-6 text-gray-300">
+              {deleteErrorMessage || 'This event has registered participants. Please remove all registrations before deleting the event.'}
+            </p>
+            <div className="flex justify-center gap-4">
+              <button
+                onClick={() => setShowDeleteErrorModal(false)}
+                className="px-6 py-2 rounded bg-amber-600 hover:bg-amber-700 text-white font-bold shadow transition"
+              >
+                OK
+              </button>
+            </div>
+          </div>
+        </Modal>
       )}
     </div>
   );

@@ -24,7 +24,7 @@ const EventHostRoute = () => {
 
       try {
         console.log('🔍 Checking event host for:', { currentUser: currentUser.id, eventId })
-        const response = await api.get(`/events/${eventId}`)
+        const response = await api.get(`/api/events/${eventId}`)
         const eventData = response.data
         setEvent(eventData)
         

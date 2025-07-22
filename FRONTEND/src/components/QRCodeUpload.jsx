@@ -89,7 +89,7 @@ const QRCodeUpload = ({
 
     try {
       console.log('Uploading QR code for event:', currentEventId);
-      const response = await api.post('/upload/qr-code', formData);
+      const response = await api.post('/api/upload/qr-code', formData);
       console.log('QR code upload successful:', response.data);
 
       setPreview(response.data.qrCode);
@@ -135,7 +135,7 @@ const QRCodeUpload = ({
 
     try {
       console.log('Deleting QR code for event:', currentEventId);
-      await api.delete(`/upload/qr-code/${currentEventId}`);
+      await api.delete(`/api/upload/qr-code/${currentEventId}`);
       console.log('QR code deletion successful');
 
       setPreview(null);

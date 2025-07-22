@@ -20,7 +20,7 @@ export const paymentProofService = {
       formData.append('registrationId', registrationId);
     }
 
-    const response = await api.post('/upload/payment-proof', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+    const response = await api.post('/api/upload/payment-proof', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
 
     if (!response.ok) {
       const error = await response.json();
@@ -41,7 +41,7 @@ export const paymentProofService = {
     formData.append('qrCode', file);
     formData.append('eventId', eventId);
 
-    const response = await api.post('/upload/qr-code', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+    const response = await api.post('/api/upload/qr-code', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
 
     if (!response.ok) {
       const error = await response.json();
@@ -58,7 +58,7 @@ export const paymentProofService = {
    * @returns {Promise<Object>} Delete result
    */
   async deletePaymentProof(type, id) {
-    const response = await api.delete(`/upload/payment-proof/${type}/${id}`);
+    const response = await api.delete(`/api/upload/payment-proof/${type}/${id}`);
 
     if (!response.ok) {
       const error = await response.json();
@@ -74,7 +74,7 @@ export const paymentProofService = {
    * @returns {Promise<Object>} Delete result
    */
   async deleteQRCode(eventId) {
-    const response = await api.delete(`/upload/qr-code/${eventId}`);
+    const response = await api.delete(`/api/upload/qr-code/${eventId}`);
 
     if (!response.ok) {
       const error = await response.json();
