@@ -305,9 +305,9 @@ const SubEventDetailPage = () => {
           </div>
           <div className="flex gap-3">
             {isHost && (
-              <Link to={`/events/${event.id}/edit`} className="text-sm px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-amber-400 font-semibold">
+              <Button onClick={() => navigate(`/events/${parentId}/sub/${subId}/edit`)} className="bg-amber-500 hover:bg-amber-600 text-white font-bold px-6 py-2 rounded-lg shadow-lg">
                 Edit Sub-Event
-              </Link>
+              </Button>
             )}
           </div>
         </div>

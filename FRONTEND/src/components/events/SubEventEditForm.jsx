@@ -2,6 +2,17 @@ import React, { useState } from 'react';
 import { updateSubEvent } from '../../services/events';
 import Button from '../ui/Button';
 import QRCodeUpload from '../QRCodeUpload';
+import api from '../../services/api';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://pulseevent-backend.onrender.com/api';
+
+const FIELD_TYPES = [
+  { value: 'text', label: 'Text' },
+  { value: 'email', label: 'Email' },
+  { value: 'number', label: 'Number' },
+  { value: 'dropdown', label: 'Dropdown' },
+  { value: 'whatsapp', label: 'WhatsApp Number' },
+  { value: 'usn', label: 'USN' },
+];
 
 const SubEventEditForm = ({ initialData, parentId, subId, onSuccess }) => {
   const [form, setForm] = useState({
@@ -28,6 +39,9 @@ const SubEventEditForm = ({ initialData, parentId, subId, onSuccess }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+  const [editFields, setEditFields] = useState(false);
+  const [customFields, setCustomFields] = useState(form.customFields || []);
+  const [fieldError, setFieldError] = useState('');
 
   // Handle input changes
   const handleChange = (e) => {
@@ -59,6 +73,38 @@ const SubEventEditForm = ({ initialData, parentId, subId, onSuccess }) => {
   // Date/time UTC conversion
   const toISOString = (local) => (local ? new Date(local).toISOString() : '');
 
+  const handleFieldChange = (idx, key, value) => {
+    setCustomFields(fields => fields.map((f, i) => i === idx ? { ...f, [key]: value } : f));
+  };
+  const handleFieldOptionChange = (idx, options) => {
+    setCustomFields(fields => fields.map((f, i) => i === idx ? { ...f, options } : f));
+  };
+  const addField = () => {
+    setCustomFields([...customFields, { label: '', type: 'text', required: false, isIndividual: false, options: [] }]);
+  };
+  const removeField = idx => {
+    if (window.confirm('Are you sure you want to delete this field?')) {
+      setCustomFields(fields => fields.filter((_, i) => i !== idx));
+    }
+  };
+  const moveField = (from, to) => {
+    if (to < 0 || to >= customFields.length) return;
+    const updated = [...customFields];
+    const [moved] = updated.splice(from, 1);
+    updated.splice(to, 0, moved);
+    setCustomFields(updated);
+  };
+  const validateFields = () => {
+    for (let i = 0; i < customFields.length; i++) {
+      const f = customFields[i];
+      if (!f.label.trim()) return 'All fields must have a label.';
+      if (!f.type) return 'All fields must have a type.';
+      if (f.type === 'dropdown' && (!f.options || f.options.length === 0 || f.options.some(opt => !opt.trim())))
+        return 'Dropdown fields must have at least one valid option.';
+    }
+    return '';
+  };
+
   // Handle form submit
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -84,6 +130,9 @@ const SubEventEditForm = ({ initialData, parentId, subId, onSuccess }) => {
       return setError('Team size must be at least 1.');
     }
 
+    const fieldValidation = validateFields();
+    if (fieldValidation) return setFieldError(fieldValidation);
+
     // Prepare payload
     const payload = {
       ...form,
@@ -99,7 +148,7 @@ const SubEventEditForm = ({ initialData, parentId, subId, onSuccess }) => {
       qrForm.append('qrCode', qrFile);
       qrForm.append('eventId', subId);
       try {
-        const res = await fetch('/api/upload/qr-code', {
+        const res = await fetch(`${API_BASE_URL}/upload/qr-code`, {
           method: 'POST',
           body: qrForm,
         });
@@ -110,6 +159,8 @@ const SubEventEditForm = ({ initialData, parentId, subId, onSuccess }) => {
         return setError('Failed to upload QR code.');
       }
     }
+
+    payload.customFields = customFields;
 
     try {
       await updateSubEvent(subId, payload);
@@ -247,20 +298,74 @@ const SubEventEditForm = ({ initialData, parentId, subId, onSuccess }) => {
 
       {/* Custom Fields (read-only for now) */}
       <div>
-        <h2 className="text-lg font-bold text-amber-400 mb-2">Custom Registration Fields</h2>
-        {Array.isArray(form.customFields) && form.customFields.length > 0 ? (
-          <ul className="space-y-2">
-            {form.customFields.map((field, idx) => (
-              <li key={idx} className="bg-white/10 rounded px-3 py-2 text-gray-200 text-sm flex items-center gap-2">
-                <span className="font-semibold text-amber-300">{field.label}</span>
-                <span className="text-gray-400">({field.type})</span>
-                {field.required && <span className="text-red-400">*</span>}
-                {field.isIndividual && <span className="text-blue-400 text-xs ml-2">Individual</span>}
-              </li>
+        <h2 className="text-lg font-bold text-amber-400 mb-2 flex items-center gap-4">
+          Custom Registration Fields
+          <Button type="button" onClick={() => setEditFields(e => !e)} className="ml-2 px-3 py-1 text-xs font-semibold bg-amber-400/20 text-amber-400 rounded hover:bg-amber-400/40">
+            {editFields ? 'Done' : 'Edit Fields'}
+          </Button>
+        </h2>
+        {editFields ? (
+          <div className="space-y-4">
+            {customFields.map((field, idx) => (
+              <div key={idx} className="bg-white/10 rounded px-3 py-2 flex flex-col md:flex-row md:items-center gap-2 relative">
+                <div className="flex-1 flex flex-col md:flex-row md:items-center gap-2">
+                  <input
+                    className="px-2 py-1 rounded bg-white/5 text-white border border-white/10 w-32"
+                    placeholder="Label"
+                    value={field.label}
+                    onChange={e => handleFieldChange(idx, 'label', e.target.value)}
+                  />
+                  <select
+                    className="px-2 py-1 rounded bg-white/5 text-white border border-white/10 w-32"
+                    value={field.type}
+                    onChange={e => handleFieldChange(idx, 'type', e.target.value)}
+                  >
+                    <option value="">Type</option>
+                    {FIELD_TYPES.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
+                  </select>
+                  {field.type === 'dropdown' && (
+                    <input
+                      className="px-2 py-1 rounded bg-white/5 text-white border border-white/10 w-48"
+                      placeholder="Options (comma separated)"
+                      value={field.options ? field.options.join(',') : ''}
+                      onChange={e => handleFieldOptionChange(idx, e.target.value.split(',').map(opt => opt.trim()).filter(Boolean))}
+                    />
+                  )}
+                  <label className="flex items-center gap-1 text-xs text-amber-300">
+                    <input type="checkbox" checked={!!field.required} onChange={e => handleFieldChange(idx, 'required', e.target.checked)} /> Required
+                  </label>
+                  <label className="flex items-center gap-1 text-xs text-blue-300">
+                    <input type="checkbox" checked={!!field.isIndividual} onChange={e => handleFieldChange(idx, 'isIndividual', e.target.checked)} /> Individual
+                  </label>
+                </div>
+                <div className="flex gap-2 items-center mt-2 md:mt-0">
+                  <Button type="button" onClick={() => moveField(idx, idx-1)} className="px-2 py-1 text-xs" disabled={idx===0}>↑</Button>
+                  <Button type="button" onClick={() => moveField(idx, idx+1)} className="px-2 py-1 text-xs" disabled={idx===customFields.length-1}>↓</Button>
+                  <Button type="button" onClick={() => removeField(idx)} className="px-2 py-1 text-xs bg-red-500 hover:bg-red-600 text-white">Delete</Button>
+                </div>
+              </div>
             ))}
-          </ul>
+            <Button type="button" onClick={addField} className="mt-2 px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded font-semibold">+ Add Field</Button>
+            {fieldError && <div className="text-red-400 bg-red-500/10 border border-red-400/20 rounded-lg px-4 py-2 text-center font-medium mt-2">{fieldError}</div>}
+          </div>
         ) : (
-          <div className="text-gray-400 text-sm">No custom fields for this sub-event.</div>
+          Array.isArray(customFields) && customFields.length > 0 ? (
+            <ul className="space-y-2">
+              {customFields.map((field, idx) => (
+                <li key={idx} className="bg-white/10 rounded px-3 py-2 text-gray-200 text-sm flex items-center gap-2">
+                  <span className="font-semibold text-amber-300">{field.label}</span>
+                  <span className="text-gray-400">({field.type})</span>
+                  {field.required && <span className="text-red-400">*</span>}
+                  {field.isIndividual && <span className="text-blue-400 text-xs ml-2">Individual</span>}
+                  {field.type === 'dropdown' && field.options && (
+                    <span className="text-xs text-gray-400 ml-2">[{field.options.join(', ')}]</span>
+                  )}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <div className="text-gray-400 text-sm">No custom fields for this sub-event.</div>
+          )
         )}
       </div>
 
