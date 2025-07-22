@@ -4,6 +4,7 @@ import Button from '../components/ui/Button'
 import BackButton from '../components/ui/BackButton'
 import Lottie from 'lottie-react';
 import avatarAnimation from '../assets/BOY2.json';
+import api from '../services/api';
 
 const ProfilePage = () => {
   const { currentUser } = useAuth()
@@ -36,12 +37,10 @@ const ProfilePage = () => {
       const formData = new FormData();
       formData.append("name", name);
       if (avatar) formData.append("avatar", avatar);
-      const res = await fetch("/api/user/profile", {
-        method: "PUT",
-        body: formData,
-        credentials: "include",
+      await api.put("/user/profile", formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+        withCredentials: true,
       });
-      if (!res.ok) throw new Error("Failed to update profile");
       setMessage("Profile updated!");
     } catch (err) {
       setMessage(err.message || "Error updating profile");

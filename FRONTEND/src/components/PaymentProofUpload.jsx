@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import Button from './ui/Button';
 import Card from './ui/Card';
+import api from '../services/api';
 
 const PaymentProofUpload = ({ 
   onUploadSuccess, 
@@ -79,17 +80,10 @@ const PaymentProofUpload = ({
     }
 
     try {
-      const response = await fetch('/api/upload/payment-proof', {
-        method: 'POST',
-        body: formData,
+      const response = await api.post('/upload/payment-proof', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
       });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Upload failed');
-      }
-
+      const data = response.data;
       setPreview(data.paymentProof);
       onUploadSuccess?.(data);
       
@@ -108,15 +102,7 @@ const PaymentProofUpload = ({
     try {
       const type = waitingListId ? 'waiting-list' : 'registration';
       const id = waitingListId || registrationId;
-      
-      const response = await fetch(`/api/upload/payment-proof/${type}/${id}`, {
-        method: 'DELETE',
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to delete payment proof');
-      }
-
+      await api.delete(`/upload/payment-proof/${type}/${id}`);
       setPreview(null);
       onDelete();
       

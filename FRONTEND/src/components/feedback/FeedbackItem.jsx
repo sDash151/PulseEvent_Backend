@@ -20,7 +20,7 @@ const FeedbackItem = ({ feedback, isHost, onAction }) => {
     }
     
     try {
-      await api.put(`/api/feedback/${feedback.id}/pin`, {
+      await api.put(`/feedback/${feedback.id}/pin`, {
         isPinned: !feedback.isPinned
       });
       
@@ -53,7 +53,7 @@ const FeedbackItem = ({ feedback, isHost, onAction }) => {
     }
     
     try {
-      await api.put(`/api/feedback/${feedback.id}/flag`, {
+      await api.put(`/feedback/${feedback.id}/flag`, {
         isFlagged: !feedback.isFlagged
       });
       

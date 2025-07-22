@@ -7,6 +7,6 @@ export const rsvpToEvent = async (eventId) => {
 }
 
 export const checkInToEvent = async (eventId) => {
-  const response = await api.post(`/api/rsvp/${eventId}/checkin`)
+  const response = await api.post(`/rsvp/${eventId}/checkin`)
   return response.data
 }

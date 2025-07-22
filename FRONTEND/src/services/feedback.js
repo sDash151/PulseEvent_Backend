@@ -7,16 +7,16 @@ export const fetchFeedbackForEvent = async (eventId) => {
 }
 
 export const createFeedback = async (feedbackData) => {
-  const response = await api.post('/api/feedback', feedbackData)
+  const response = await api.post('/feedback', feedbackData)
   return response.data
 }
 
 export const pinFeedback = async (feedbackId) => {
-  const response = await api.put(`/api/feedback/${feedbackId}/pin`)
+  const response = await api.put(`/feedback/${feedbackId}/pin`)
   return response.data
 }
 
 export const flagFeedback = async (feedbackId) => {
-  const response = await api.put(`/api/feedback/${feedbackId}/flag`)
+  const response = await api.put(`/feedback/${feedbackId}/flag`)
   return response.data
 }

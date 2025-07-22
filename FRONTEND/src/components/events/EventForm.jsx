@@ -34,8 +34,15 @@ const EventForm = ({ event, initialData, onSubmit, loading, submitText = 'Save E
   }
 
   const handleSubmit = (e) => {
-    e.preventDefault()
-    onSubmit(formData)
+    e.preventDefault();
+    // Convert local datetime-local values to UTC ISO strings
+    const toISOString = (local) => local ? new Date(local).toISOString() : '';
+    onSubmit({
+      ...formData,
+      startTime: toISOString(formData.startTime),
+      endTime: toISOString(formData.endTime),
+      rsvpDeadline: toISOString(formData.rsvpDeadline),
+    });
   }
 
   return (

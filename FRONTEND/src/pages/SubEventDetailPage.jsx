@@ -42,15 +42,15 @@ const SubEventDetailPage = () => {
       
       // Check RSVP, Registration, and Waiting List individually for better debugging
       console.log('Making RSVP check request...');
-      const rsvpResponse = await api.get(`/api/rsvp/${subId}/check`);
+      const rsvpResponse = await api.get(`/rsvp/${subId}/check`);
       console.log('RSVP response:', rsvpResponse.data);
       
       console.log('Making registration check request...');
-      const registrationResponse = await api.get(`/api/registration/${subId}/check`);
+      const registrationResponse = await api.get(`/registration/${subId}/check`);
       console.log('Registration response:', registrationResponse.data);
       
       console.log('Making waiting list check request...');
-      const waitingListResponse = await api.get(`/api/waiting-list/${subId}/check`);
+      const waitingListResponse = await api.get(`/waiting-list/${subId}/check`);
       console.log('Waiting list response:', waitingListResponse.data);
       
       const hasRSVP = rsvpResponse.data.registered;

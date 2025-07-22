@@ -8,13 +8,13 @@ export const getWhatsAppNotifications = async () => {
 
 // Mark a WhatsApp notification as read
 export const markNotificationAsRead = async (notificationId) => {
-  const response = await api.patch(`/api/whatsapp-notifications/${notificationId}/read`);
+  const response = await api.patch(`/whatsapp-notifications/${notificationId}/read`);
   return response.data;
 };
 
 // Create a WhatsApp notification (for testing purposes)
 export const createWhatsAppNotification = async (eventId, eventTitle, whatsappGroupLink) => {
-  const response = await api.post('/api/whatsapp-notifications', {
+  const response = await api.post('/whatsapp-notifications', {
     eventId,
     eventTitle,
     whatsappGroupLink

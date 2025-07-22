@@ -564,7 +564,7 @@ const SubEventForm = ({ megaEventId, parentLocation, parentRsvpDeadline, parentS
     }
     
     try {
-      const eventResponse = await api.post(`/api/events/${megaEventId}/sub`, {
+      const eventResponse = await api.post(`/events/${megaEventId}/sub`, {
         title,
         description,
         location: parentLocation,
@@ -592,7 +592,7 @@ const SubEventForm = ({ megaEventId, parentLocation, parentRsvpDeadline, parentS
             realEventId: eventResponse.data.id,
             qrCodeUrl: qrPreview
           });
-          const associateResponse = await api.post('/api/associate-qr-code', {
+          const associateResponse = await api.post('/associate-qr-code', {
             tempEventId: tempEventId,
             realEventId: eventResponse.data.id,
             qrCodeUrl: qrPreview

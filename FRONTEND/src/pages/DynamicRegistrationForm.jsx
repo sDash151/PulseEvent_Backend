@@ -158,7 +158,7 @@ const DynamicRegistrationForm = () => {
         message: err.message,
         status: err.response?.status,
         data: err.response?.data,
-        url: '/api/upload/payment-proof'
+        url: '/upload/payment-proof'
       });
       
       let errorMessage = 'Upload failed. Please try again.';

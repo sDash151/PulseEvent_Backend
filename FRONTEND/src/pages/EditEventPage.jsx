@@ -4,7 +4,8 @@ import { useAuth } from '../hooks/useAuth';
 import { useRoleCheck } from '../hooks/useRoleCheck';
 import EventForm from '../components/events/EventForm';
 import BackButton from '../components/ui/BackButton';
-import { fetchEventById, updateEvent } from '../services/events';
+import { fetchEventById, updateEvent, deleteEvent } from '../services/events';
+import Button from '../components/ui/Button';
 
 const EditEventPage = () => {
   const { id } = useParams();
@@ -17,54 +18,36 @@ const EditEventPage = () => {
   const [error, setError] = useState('');
   const [isEventHost, setIsEventHost] = useState(false);
   const [hostCheckComplete, setHostCheckComplete] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     const loadEvent = async () => {
       if (!id) return;
-      
       setLoading(true);
       try {
         const eventData = await fetchEventById(id);
         setEvent(eventData);
-        
-        console.log('EditEventPage - Event data loaded:', {
-          eventId: id,
-          eventHostId: eventData.hostId,
-          currentUserId: currentUser?.id,
-          isHost: currentUser?.id === eventData.hostId
-        });
-        
-        // Check if user is the host of this specific event
         const isHost = await checkEventHost(id);
         setIsEventHost(isHost);
         setHostCheckComplete(true);
-        console.log('EditEventPage - Event host check result:', isHost);
       } catch (err) {
-        console.error('EditEventPage - Error loading event:', err);
         setError(err.message || 'Failed to load event');
       } finally {
         setLoading(false);
       }
     };
-
     loadEvent();
   }, [id, currentUser]);
 
-  // 🔐 Role-based access control - check if user is the event host
   if (!authLoading && !roleLoading && hostCheckComplete && !isEventHost) {
-    console.warn('Access denied: User is not the event host', { 
-      userId: currentUser?.id, 
-      eventId: id 
-    });
     return <Navigate to="/dashboard" replace />;
   }
 
   const handleSubmit = async (formData) => {
     if (!currentUser || !event) return;
-    
     setSaving(true);
     setError('');
-    
     try {
       await updateEvent(id, formData);
       navigate(`/events/${id}`);
@@ -72,6 +55,20 @@ const EditEventPage = () => {
       setError(err.message || 'Failed to update event');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    setDeleting(true);
+    setError('');
+    try {
+      await deleteEvent(id);
+      setShowDeleteModal(false);
+      navigate('/dashboard');
+    } catch (err) {
+      setError(err.message || 'Failed to delete event');
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -146,9 +143,68 @@ const EditEventPage = () => {
               loading={saving}
               submitText="Update Event"
             />
+            {/* Delete Event Button (Host Only) */}
+            <div className="mt-8 flex justify-end">
+              <Button
+                variant="danger"
+                className="px-6 py-2 font-bold text-base"
+                onClick={() => setShowDeleteModal(true)}
+                disabled={deleting}
+              >
+                🗑️ Delete Event
+              </Button>
+            </div>
           </div>
         )}
       </div>
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <div className="relative w-full max-w-md mx-auto bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl shadow-2xl p-8 flex flex-col items-center text-center animate-fade-in">
+            <h2 className="text-2xl font-extrabold text-red-400 mb-3 drop-shadow-lg animate-fade-in-up">Delete Event?</h2>
+            <p className="text-gray-200 text-lg mb-8 animate-fade-in-up delay-100">Are you sure you want to delete this event? This action cannot be undone.</p>
+            <div className="flex flex-col sm:flex-row gap-4 w-full justify-center">
+              <Button
+                variant="danger"
+                className="w-full sm:w-auto px-8 py-3 font-bold text-lg shadow-xl animate-pop-in"
+                onClick={handleDelete}
+                loading={deleting}
+                disabled={deleting}
+              >
+                Yes, Delete
+              </Button>
+              <Button
+                variant="outline"
+                className="w-full sm:w-auto px-8 py-3 font-bold text-lg animate-pop-in"
+                onClick={() => setShowDeleteModal(false)}
+                disabled={deleting}
+              >
+                Cancel
+              </Button>
+            </div>
+          </div>
+          <style>{`
+            @keyframes fade-in {
+              from { opacity: 0; }
+              to { opacity: 1; }
+            }
+            @keyframes fade-in-up {
+              from { opacity: 0; transform: translateY(30px); }
+              to { opacity: 1; transform: translateY(0); }
+            }
+            @keyframes pop-in {
+              0% { transform: scale(0.8); opacity: 0; }
+              80% { transform: scale(1.05); opacity: 1; }
+              100% { transform: scale(1); }
+            }
+            .animate-fade-in { animation: fade-in 0.7s both; }
+            .animate-fade-in-up { animation: fade-in-up 0.8s both; }
+            .animate-pop-in { animation: pop-in 0.5s both; }
+            .delay-100 { animation-delay: 0.1s; }
+            .delay-200 { animation-delay: 0.2s; }
+          `}</style>
+        </div>
+      )}
     </div>
   );
 };

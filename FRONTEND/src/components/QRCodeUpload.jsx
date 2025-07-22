@@ -101,7 +101,7 @@ const QRCodeUpload = ({
         message: err.message,
         status: err.response?.status,
         data: err.response?.data,
-        url: '/api/upload/qr-code'
+        url: '/upload/qr-code'
       });
       
       let errorMessage = 'Upload failed. Please try again.';
