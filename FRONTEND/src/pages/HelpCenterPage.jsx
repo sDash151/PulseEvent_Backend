@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronDownIcon, ChevronUpIcon, MagnifyingGlassIcon, BookOpenIcon, UserGroupIcon, CalendarIcon, ChartBarIcon, CogIcon, ShieldCheckIcon, QuestionMarkCircleIcon, LightBulbIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline';
+import FormattedContent from '../components/FormattedContent';
 
 const HelpCenterPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -264,7 +265,7 @@ const HelpCenterPage = () => {
                               </button>
                               {expandedFAQs.has(faq.id) && (
                                 <div className="px-4 pb-4">
-                                  <p className="text-gray-300 leading-relaxed">{faq.answer}</p>
+                                  <FormattedContent content={faq.answer} />
                                 </div>
                               )}
                             </div>

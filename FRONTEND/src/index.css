@@ -715,3 +715,12 @@
   will-change: transform;
   backface-visibility: hidden;
 }
+
+.formatted-content {
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  font-family: 'Inter', sans-serif;
+  line-height: 1.6;
+  font-size: 1rem;
+  color: #f3f4f6; /* Changed from #333 to a light color for dark backgrounds */
+}

@@ -6,6 +6,7 @@ import BackButton from '../components/ui/BackButton';
 import { fetchEventById } from '../services/events';
 import { useAuth } from '../hooks/useAuth';
 import { checkUserRegistration } from '../services/registration';
+import FormattedContent from '../components/FormattedContent';
 
 const SubEventDetailsPage = () => {
   const { parentId, subId } = useParams();
@@ -176,7 +177,7 @@ const SubEventDetailsPage = () => {
                 </svg>
                 About This Event
               </h2>
-              <p className="text-gray-300 text-lg leading-relaxed">{event.description}</p>
+              <FormattedContent content={event.description} />
             </div>
 
             {/* Event Details Grid */}

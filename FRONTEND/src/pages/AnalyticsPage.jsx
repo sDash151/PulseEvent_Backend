@@ -182,9 +182,8 @@ const AnalyticsPage = () => {
   // --- Export Clean Participants CSV ---
   const handleExportCleanParticipantsCSV = () => {
     if (!analytics || !analytics.registeredUsers) return;
-    // 1. Gather all participants and collect all unique field labels from both participant.details and registration.responses
-    let rows = [];
-    const header = [
+    // 1. Gather all unique custom field labels from registration.responses
+    const fixedHeader = [
       'Team Name',
       'Name',
       'College Name',
@@ -193,10 +192,35 @@ const AnalyticsPage = () => {
       'Email',
       'Gender',
       'Payment Proof',
-      'Whats App Number'
+      'WhatsApp Number' // Use only the no-space version in the header
     ];
+    const fixedHeaderLower = fixedHeader.map(h => h.trim().toLowerCase());
+    const customFieldSet = new Set();
+    analytics.registeredUsers.forEach(reg => {
+      if (reg.responses && typeof reg.responses === 'object') {
+        Object.keys(reg.responses).forEach(label => {
+          // Merge both WhatsApp variants into one
+          const normalized = label.trim().replace(/\s+/g, '').toLowerCase();
+          if (normalized === 'whatsappnumber') return; // Already in fixed header
+          if (!fixedHeaderLower.includes(label.trim().toLowerCase())) {
+            customFieldSet.add(label);
+          }
+        });
+      }
+    });
+    const customFields = Array.from(customFieldSet).filter(label => {
+      // Remove Whats App Number variant from custom fields
+      const normalized = label.trim().replace(/\s+/g, '').toLowerCase();
+      return normalized !== 'whatsappnumber';
+    });
+    // 2. Build header
+    const header = [...fixedHeader, ...customFields];
+    // 3. Build rows
+    let rows = [];
     analytics.registeredUsers.forEach(reg => {
       const participants = extractParticipants(reg);
+      // Merge WhatsApp Number values from both variants
+      const whatsappValue = reg.responses?.['WhatsApp Number'] || reg.responses?.['Whats App Number'] || '-';
       if (participants.length > 0) {
         participants.forEach(participant => {
           const row = {
@@ -208,10 +232,31 @@ const AnalyticsPage = () => {
             'Email': participant.email || '-',
             'Gender': participant.gender || '-',
             'Payment Proof': reg.paymentProof || '-',
-            'Whats App Number': participant.whatsapp || '-',
+            'WhatsApp Number': participant.whatsapp || whatsappValue,
           };
+          // Add all custom fields for this registration
+          customFields.forEach(label => {
+            row[label] = reg.responses && reg.responses[label] !== undefined ? reg.responses[label] : '-';
+          });
           rows.push(row);
         });
+      } else {
+        // Solo registration: use registration.responses as participant row
+        const row = {
+          'Team Name': reg.teamName || '-',
+          'Name': reg.name || '-',
+          'College Name': reg.responses?.['College Name'] || '-',
+          'Degree Name': reg.responses?.['Degree Name'] || '-',
+          'USN': reg.responses?.['USN'] || '-',
+          'Email': reg.email || '-',
+          'Gender': reg.responses?.['Gender'] || '-',
+          'Payment Proof': reg.paymentProof || '-',
+          'WhatsApp Number': whatsappValue,
+        };
+        customFields.forEach(label => {
+          row[label] = reg.responses && reg.responses[label] !== undefined ? reg.responses[label] : '-';
+        });
+        rows.push(row);
       }
     });
     // Remove duplicate rows

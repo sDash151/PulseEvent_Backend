@@ -17,6 +17,7 @@ import { getEventInvitations } from '../services/invitations'
 import SubEventCard from '../components/events/SubEventCard';
 import { checkUserRegistration } from '../services/registration';
 import { initSocket, connectSocket, joinMegaEventRoom, sendFeedback, subscribeToFeedback, disconnectSocket } from '../services/socket'
+import FormattedContent from '../components/FormattedContent';
 
 const EventDetailPage = () => {
   const { id } = useParams()
@@ -356,7 +357,7 @@ const EventDetailPage = () => {
 
         {/* Glassmorphic Card */}
         <div className="bg-white/5 backdrop-blur-md p-6 rounded-2xl border border-white/10 shadow-[0_0_25px_rgba(255,255,255,0.05)] space-y-6">
-          <p className="text-gray-300">{event.description}</p>
+          <FormattedContent content={event.description} />
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
