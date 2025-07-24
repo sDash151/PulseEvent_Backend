@@ -6,6 +6,7 @@ const prisma = require('../utils/db.js');
 const { sendInvitationEmail, sendVerificationEmail, sendPasswordResetEmail, sendPasswordChangeNotification } = require('../utils/email.js');
 const crypto = require('crypto');
 const rateLimit = require('express-rate-limit');
+const { ipKeyGenerator } = require('express-rate-limit');
 const disposableDomains = require('disposable-email-domains');
 const { parse } = require('tldts');
 
@@ -30,7 +31,7 @@ const loginLimiter = rateLimit({
 const passwordResetLimiter10Min = rateLimit({
   windowMs: 10 * 60 * 1000, // 10 minutes
   max: 1,
-  keyGenerator: (req) => req.body.email || req.ip,
+  keyGenerator: (req) => req.body.email || ipKeyGenerator(req),
   handler: (req, res) => {
     return res.status(200).json({ message: 'If your email is registered, you will receive a password reset link shortly.' });
   },
@@ -40,7 +41,7 @@ const passwordResetLimiter10Min = rateLimit({
 const passwordResetLimiterDay = rateLimit({
   windowMs: 24 * 60 * 60 * 1000, // 24 hours
   max: 5,
-  keyGenerator: (req) => req.body.email || req.ip,
+  keyGenerator: (req) => req.body.email || ipKeyGenerator(req),
   handler: (req, res) => {
     return res.status(200).json({ message: 'If your email is registered, you will receive a password reset link shortly.' });
   },
