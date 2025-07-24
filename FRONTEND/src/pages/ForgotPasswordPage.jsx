@@ -122,7 +122,7 @@ const ForgotPasswordPage = () => {
           <p className="text-gray-300 text-sm mt-1">Enter your email to receive a password reset link</p>
         </div>
         <ErrorMessage error={error} onDismiss={() => setError('')} />
-        {success && (
+        {success && remaining <= 0 && (
           <div className="mb-4 p-3 rounded-lg border bg-green-500/10 border-green-500/20 text-green-400 text-sm text-center animate-fade-in">
             If your email is registered, a password reset link has been sent. Please check your inbox.
           </div>

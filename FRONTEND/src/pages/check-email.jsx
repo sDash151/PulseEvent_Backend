@@ -110,6 +110,9 @@ const CheckEmailPage = () => {
         ) : (
           <p className="text-blue-100 mb-4 text-center">Registration successful!<br />Please check your inbox{email && <> (<span className="font-semibold text-indigo-200">{email}</span>)</>} and verify your email to activate your account.</p>
         )}
+        {success && remaining <= 0 && (
+          <p className="text-green-300 text-sm mt-2">If your email is registered and not verified, a new verification email has been sent.</p>
+        )}
         {alreadySent && !loading && remaining > 0 && (
           <div className="w-full mb-2">
             <div className="bg-amber-100/10 border border-amber-300/30 text-amber-200 rounded-lg px-4 py-2 mb-2 text-center text-sm font-semibold flex flex-col items-center">
@@ -134,7 +137,6 @@ const CheckEmailPage = () => {
         {alreadySent && !loading && remaining > 0 && (
           <p className="text-xs text-amber-300 mt-1 text-center">You have already been sent a verification email. Please check your inbox. You can resend after <span className="font-semibold">10 minutes</span> if you did not receive it.</p>
         )}
-        {success && <p className="text-green-300 text-sm mt-2">If your email is registered and not verified, a new verification email has been sent.</p>}
         <Button variant="secondary" onClick={() => navigate('/login')} className="w-full mt-2">Back to Login</Button>
       </div>
     </div>
