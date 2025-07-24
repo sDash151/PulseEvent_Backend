@@ -442,4 +442,62 @@ router.post('/reset-password', async (req, res) => {
   }
 });
 
+// Get verification token status for a user (for accurate resend timer)
+router.get('/verification-status', async (req, res) => {
+  const { email } = req.query;
+  if (!email) {
+    return res.status(400).json({ message: 'Email is required.' });
+  }
+  try {
+    const user = await prisma.user.findUnique({ where: { email } });
+    if (!user || user.verified) {
+      return res.status(200).json({ hasToken: false });
+    }
+    const existingToken = await prisma.emailVerificationToken.findFirst({
+      where: {
+        userId: user.id,
+        expiresAt: { gt: new Date() }
+      },
+      orderBy: { expiresAt: 'desc' }
+    });
+    if (existingToken) {
+      return res.status(200).json({ hasToken: true, nextAllowedAt: existingToken.expiresAt });
+    } else {
+      return res.status(200).json({ hasToken: false });
+    }
+  } catch (error) {
+    console.error('Verification status error:', error);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// Get password reset token status for a user (for accurate resend timer)
+router.get('/reset-status', async (req, res) => {
+  const { email } = req.query;
+  if (!email) {
+    return res.status(400).json({ message: 'Email is required.' });
+  }
+  try {
+    const user = await prisma.user.findUnique({ where: { email } });
+    if (!user) {
+      return res.status(200).json({ hasToken: false });
+    }
+    const existingToken = await prisma.passwordResetToken.findFirst({
+      where: {
+        userId: user.id,
+        expiresAt: { gt: new Date() }
+      },
+      orderBy: { expiresAt: 'desc' }
+    });
+    if (existingToken) {
+      return res.status(200).json({ hasToken: true, nextAllowedAt: existingToken.expiresAt });
+    } else {
+      return res.status(200).json({ hasToken: false });
+    }
+  } catch (error) {
+    console.error('Reset status error:', error);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
 module.exports = router;

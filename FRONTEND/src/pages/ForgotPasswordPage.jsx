@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import Button from '../components/ui/Button';
 import ErrorMessage from '../components/ui/ErrorMessage';
-import { requestPasswordReset } from '../services/auth';
+import { requestPasswordReset, getResetStatus } from '../services/auth';
 import { useNavigate } from 'react-router-dom';
 
 const RESEND_WAIT_MINUTES = 10;
@@ -19,18 +19,32 @@ const ForgotPasswordPage = () => {
 
   // Timer logic: update on email or success
   useEffect(() => {
-    if (email) {
-      const key = getResendKey(email);
-      let expiry = localStorage.getItem(key);
-      if (expiry && !isNaN(Number(expiry)) && Number(expiry) > Date.now()) {
-        updateRemaining();
-        timerRef.current = setInterval(updateRemaining, 1000);
-        return () => clearInterval(timerRef.current);
-      } else {
-        setRemaining(0);
-        if (timerRef.current) clearInterval(timerRef.current);
+    let cancelled = false;
+    async function checkToken() {
+      if (email) {
+        const key = getResendKey(email);
+        const status = await getResetStatus(email);
+        let expiry;
+        if (status.hasToken && status.nextAllowedAt) {
+          expiry = new Date(status.nextAllowedAt).getTime();
+          localStorage.setItem(key, expiry);
+          setRemaining(expiry - Date.now());
+        } else {
+          // No valid token, allow immediate resend
+          localStorage.removeItem(key);
+          setRemaining(0);
+        }
+        if (!cancelled) {
+          if (timerRef.current) clearInterval(timerRef.current);
+          timerRef.current = setInterval(updateRemaining, 1000);
+        }
       }
     }
+    checkToken();
+    return () => {
+      cancelled = true;
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
     // eslint-disable-next-line
   }, [email, success]);
 

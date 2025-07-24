@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Button from '../components/ui/Button';
-import { resendVerificationEmail } from '../services/auth';
+import { resendVerificationEmail, getVerificationStatus } from '../services/auth';
 
 const RESEND_WAIT_MINUTES = 10;
 const RESEND_WAIT_MS = RESEND_WAIT_MINUTES * 60 * 1000;
@@ -22,19 +22,32 @@ const CheckEmailPage = () => {
 
   // On mount, set timer if alreadySent
   useEffect(() => {
-    if (alreadySent && email) {
-      // Check localStorage for expiry
-      const key = getResendKey(email);
-      let expiry = localStorage.getItem(key);
-      if (!expiry || isNaN(Number(expiry)) || Number(expiry) < Date.now()) {
-        // Set new expiry
-        expiry = Date.now() + RESEND_WAIT_MS;
-        localStorage.setItem(key, expiry);
+    let cancelled = false;
+    async function checkToken() {
+      if (alreadySent && email) {
+        const key = getResendKey(email);
+        const status = await getVerificationStatus(email);
+        let expiry;
+        if (status.hasToken && status.nextAllowedAt) {
+          expiry = new Date(status.nextAllowedAt).getTime();
+          localStorage.setItem(key, expiry);
+          setRemaining(expiry - Date.now());
+        } else {
+          // No valid token, allow immediate resend
+          localStorage.removeItem(key);
+          setRemaining(0);
+        }
+        if (!cancelled) {
+          if (timerRef.current) clearInterval(timerRef.current);
+          timerRef.current = setInterval(updateRemaining, 1000);
+        }
       }
-      updateRemaining();
-      timerRef.current = setInterval(updateRemaining, 1000);
-      return () => clearInterval(timerRef.current);
     }
+    checkToken();
+    return () => {
+      cancelled = true;
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
     // eslint-disable-next-line
   }, [alreadySent, email]);
 

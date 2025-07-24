@@ -149,3 +149,23 @@ export const resetPassword = async (token, password) => {
     }
   }
 };
+
+// Get verification token status for a user (for accurate resend timer)
+export const getVerificationStatus = async (email) => {
+  try {
+    const response = await api.get(`/api/auth/verification-status?email=${encodeURIComponent(email)}`);
+    return response.data;
+  } catch (error) {
+    return { hasToken: false };
+  }
+};
+
+// Get password reset token status for a user (for accurate resend timer)
+export const getResetStatus = async (email) => {
+  try {
+    const response = await api.get(`/api/auth/reset-status?email=${encodeURIComponent(email)}`);
+    return response.data;
+  } catch (error) {
+    return { hasToken: false };
+  }
+};
