@@ -117,3 +117,33 @@ export const resendVerificationEmail = async (email) => {
     return 'If your email is registered and not verified, a new verification email has been sent.';
   }
 };
+
+// Request password reset (forgot password)
+export const requestPasswordReset = async (email) => {
+  try {
+    const response = await api.post('/api/auth/forgot-password', { email });
+    return response.data.message;
+  } catch (error) {
+    const errorData = error.response?.data;
+    if (errorData?.message) {
+      throw new Error(errorData.message);
+    } else {
+      throw new Error('Failed to send reset email. Please try again.');
+    }
+  }
+};
+
+// Reset password
+export const resetPassword = async (token, password) => {
+  try {
+    const response = await api.post('/api/auth/reset-password', { token, password });
+    return response.data.message;
+  } catch (error) {
+    const errorData = error.response?.data;
+    if (errorData?.message) {
+      throw new Error(errorData.message);
+    } else {
+      throw new Error('Failed to reset password. The link may be expired or invalid.');
+    }
+  }
+};

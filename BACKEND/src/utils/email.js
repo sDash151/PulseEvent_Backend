@@ -67,4 +67,49 @@ async function sendVerificationEmail({ to, name, verificationToken }) {
   return transporter.sendMail(mailOptions);
 }
 
-module.exports = { sendInvitationEmail, sendVerificationEmail };
+async function sendPasswordResetEmail({ to, name, resetToken }) {
+  const frontendUrl = process.env.CLIENT_URL || 'https://eventpulse1.netlify.app';
+  const resetLink = `${frontendUrl}/reset-password?token=${resetToken}`;
+  const mailOptions = {
+    from: process.env.SMTP_FROM || 'noreply@eventpulse.com',
+    to,
+    subject: 'Reset your password for EventPulse',
+    html: `
+      <div style="font-family: Arial, sans-serif; background: #f9fafb; padding: 24px; border-radius: 8px; max-width: 480px; margin: auto;">
+        <h2 style="color: #4f46e5;">Reset Your Password</h2>
+        <p style="font-size: 16px; color: #222;">Hi${name ? ` ${name}` : ''},</p>
+        <p style="font-size: 16px; color: #222;">We received a request to reset your password for your <b>EventPulse</b> account.</p>
+        <p style="font-size: 16px; color: #222;">Click the button below to set a new password. This link will expire in <b>10 minutes</b>.</p>
+        <div style="text-align: center; margin: 24px 0;">
+          <a href="${resetLink}" target="_blank" style="background: #4f46e5; color: #fff; padding: 12px 28px; border-radius: 6px; text-decoration: none; font-size: 16px; font-weight: bold;">Reset Password</a>
+        </div>
+        <p style="font-size: 15px; color: #444;">If you did not request a password reset, you can safely ignore this email.</p>
+        <hr style="margin: 24px 0; border: none; border-top: 1px solid #eee;" />
+        <p style="font-size:12px;color:#888; text-align: center;">This email was sent via <b>EventPulse</b>. If you have questions, reply to this email.</p>
+      </div>
+    `,
+  };
+  return transporter.sendMail(mailOptions);
+}
+
+async function sendPasswordChangeNotification({ to, name }) {
+  const frontendUrl = process.env.CLIENT_URL || 'https://eventpulse1.netlify.app';
+  const mailOptions = {
+    from: process.env.SMTP_FROM || 'noreply@eventpulse.com',
+    to,
+    subject: 'Your EventPulse password was changed',
+    html: `
+      <div style="font-family: Arial, sans-serif; background: #f9fafb; padding: 24px; border-radius: 8px; max-width: 480px; margin: auto;">
+        <h2 style="color: #4f46e5;">Password Changed</h2>
+        <p style="font-size: 16px; color: #222;">Hi${name ? ` ${name}` : ''},</p>
+        <p style="font-size: 16px; color: #222;">Your password for <b>EventPulse</b> was just changed.</p>
+        <p style="font-size: 16px; color: #222;">If you did not perform this action, please <a href="${frontendUrl}/forgot-password" style="color: #4f46e5; text-decoration: underline;">reset your password</a> immediately or contact support.</p>
+        <hr style="margin: 24px 0; border: none; border-top: 1px solid #eee;" />
+        <p style="font-size:12px;color:#888; text-align: center;">This email was sent via <b>EventPulse</b>. If you have questions, reply to this email.</p>
+      </div>
+    `,
+  };
+  return transporter.sendMail(mailOptions);
+}
+
+module.exports = { sendInvitationEmail, sendVerificationEmail, sendPasswordResetEmail, sendPasswordChangeNotification };

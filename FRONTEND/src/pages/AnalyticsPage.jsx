@@ -270,6 +270,87 @@ const AnalyticsPage = () => {
     saveAs(new Blob([csv], { type: 'text/csv;charset=utf-8;' }), filename);
   };
 
+  // --- Export Clean Rejected Candidates CSV ---
+  const handleExportRejectedCandidatesCSV = () => {
+    if (!analytics || !analytics.rejectedCandidates) return;
+    // Use the same headers and logic as registered users
+    const fixedHeader = [
+      'Team Name',
+      'Name',
+      'College Name',
+      'Degree Name',
+      'USN',
+      'Email',
+      'Gender',
+      'Payment Proof',
+      'WhatsApp Number'
+    ];
+    const fixedHeaderLower = fixedHeader.map(h => h.trim().toLowerCase());
+    const customFieldSet = new Set();
+    analytics.rejectedCandidates.forEach(reg => {
+      if (reg.responses && typeof reg.responses === 'object') {
+        Object.keys(reg.responses).forEach(label => {
+          const normalized = label.trim().replace(/\s+/g, '').toLowerCase();
+          if (normalized === 'whatsappnumber') return;
+          if (!fixedHeaderLower.includes(label.trim().toLowerCase())) {
+            customFieldSet.add(label);
+          }
+        });
+      }
+    });
+    const customFields = Array.from(customFieldSet).filter(label => {
+      const normalized = label.trim().replace(/\s+/g, '').toLowerCase();
+      return normalized !== 'whatsappnumber';
+    });
+    const header = [...fixedHeader, ...customFields];
+    let rows = [];
+    analytics.rejectedCandidates.forEach(reg => {
+      const participants = extractParticipants(reg);
+      const whatsappValue = reg.responses?.['WhatsApp Number'] || reg.responses?.['Whats App Number'] || '-';
+      if (participants.length > 0) {
+        participants.forEach(participant => {
+          const row = {
+            'Team Name': participant.teamName || '-',
+            'Name': participant.name || '-',
+            'College Name': participant.college || '-',
+            'Degree Name': participant.degree || '-',
+            'USN': participant.usn || '-',
+            'Email': participant.email || '-',
+            'Gender': participant.gender || '-',
+            'Payment Proof': reg.paymentProof || '-',
+            'WhatsApp Number': participant.whatsapp || whatsappValue,
+          };
+          customFields.forEach(label => {
+            row[label] = reg.responses && reg.responses[label] !== undefined ? reg.responses[label] : '-';
+          });
+          rows.push(row);
+        });
+      } else {
+        const row = {
+          'Team Name': reg.teamName || '-',
+          'Name': reg.name || '-',
+          'College Name': reg.responses?.['College Name'] || '-',
+          'Degree Name': reg.responses?.['Degree Name'] || '-',
+          'USN': reg.responses?.['USN'] || '-',
+          'Email': reg.email || '-',
+          'Gender': reg.responses?.['Gender'] || '-',
+          'Payment Proof': reg.paymentProof || '-',
+          'WhatsApp Number': whatsappValue,
+        };
+        customFields.forEach(label => {
+          row[label] = reg.responses && reg.responses[label] !== undefined ? reg.responses[label] : '-';
+        });
+        rows.push(row);
+      }
+    });
+    const uniqueRows = rows.filter((row, idx, arr) =>
+      idx === arr.findIndex(r => JSON.stringify(r) === JSON.stringify(row))
+    );
+    const csv = Papa.unparse({ fields: header, data: uniqueRows.map(row => header.map(h => row[h] ?? '-')) });
+    const filename = `rejected_candidates_${event?.title?.replace(/\s+/g, '_') || 'event'}_${new Date().toISOString().replace(/[:.]/g, '-')}.csv`;
+    saveAs(new Blob([csv], { type: 'text/csv;charset=utf-8;' }), filename);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#0f0c29] via-[#302b63] to-[#24243e] text-white p-6">
       <div className="max-w-7xl mx-auto">
@@ -579,6 +660,21 @@ const AnalyticsPage = () => {
             </Button>
           </div>
           <RegisteredUsersTable users={analytics?.registeredUsers} />
+        </Card>
+        {/* Rejected Candidates Section */}
+        <Card className="mt-8">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-semibold text-red-400">Rejected Candidates</h2>
+            <Button
+              onClick={handleExportRejectedCandidatesCSV}
+              variant="red"
+              title="Export Rejected Candidates (CSV)"
+            >
+              <span role="img" aria-label="csv">📄</span>
+              Export Rejected Candidates (CSV)
+            </Button>
+          </div>
+          <RegisteredUsersTable users={analytics?.rejectedCandidates || []} />
         </Card>
       </div>
     </div>

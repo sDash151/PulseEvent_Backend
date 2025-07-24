@@ -3,6 +3,8 @@ import ReactDOM from 'react-dom';
 import { format } from 'date-fns';
 import { exportToJSON } from '../../utils/exportUtils';
 import { extractParticipants, getBestField } from '../../utils/fieldExtractors';
+import Modal from '../ui/Modal';
+import Button from '../ui/Button';
 
 // NOTE: To ensure this modal overlays all content (including header/footer) and is always centered,
 // render <UserDetailsModal /> at the root of your page/component tree (not inside a table or scrollable container).
@@ -47,6 +49,8 @@ const UserDetailsModal = ({ user, isOpen, onClose }) => {
     }
     return '-';
   };
+
+  const [showImageModal, setShowImageModal] = React.useState(false);
 
   const modalContent = (
     <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4">
@@ -285,7 +289,8 @@ const UserDetailsModal = ({ user, isOpen, onClose }) => {
                    <img 
                      src={user.paymentProof} 
                      alt="Payment Proof" 
-                     className="max-w-full h-auto rounded-lg border border-emerald-400/30 max-h-64 object-contain"
+                     className="max-w-full h-auto rounded-lg border border-emerald-400/30 max-h-64 object-contain cursor-pointer hover:scale-105 transition-transform duration-200"
+                     onClick={() => setShowImageModal(true)}
                      onError={(e) => {
                        e.target.style.display = 'none';
                        e.target.nextSibling.style.display = 'flex';
@@ -301,6 +306,42 @@ const UserDetailsModal = ({ user, isOpen, onClose }) => {
                      </div>
                    </div>
                  </div>
+                 {/* Image Preview Modal */}
+                 <Modal
+                   isOpen={showImageModal}
+                   onClose={() => setShowImageModal(false)}
+                   title="Payment Proof Preview"
+                   size="lg"
+                   backdrop="heavy"
+                   animation="scale"
+                   showCloseButton
+                 >
+                   <div className="flex flex-col items-center gap-6">
+                     <img
+                       src={user.paymentProof}
+                       alt="Payment Proof Preview"
+                       className="max-w-full max-h-[60vh] rounded-xl border border-emerald-400/40 shadow-lg object-contain"
+                     />
+                     <div className="flex gap-4">
+                       <Button
+                         variant="success"
+                         onClick={() => {
+                           const link = document.createElement('a');
+                           link.href = user.paymentProof;
+                           link.download = `payment-proof-${user.id || 'user'}.jpg`;
+                           document.body.appendChild(link);
+                           link.click();
+                           document.body.removeChild(link);
+                         }}
+                       >
+                         Download Image
+                       </Button>
+                       <Button variant="outline" onClick={() => setShowImageModal(false)}>
+                         Close
+                       </Button>
+                     </div>
+                   </div>
+                 </Modal>
                </div>
              </div>
            )}

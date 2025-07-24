@@ -7,6 +7,12 @@ async function deleteAllData() {
     console.log('🗑️  Starting database cleanup...');
     
     // Delete in order to avoid foreign key constraints
+    console.log('🔑 Deleting password reset tokens...');
+    await prisma.passwordResetToken.deleteMany({});
+
+    console.log('🔑 Deleting email verification tokens...');
+    await prisma.emailVerificationToken.deleteMany({});
+    
     console.log('📧 Deleting WhatsApp notifications...');
     await prisma.whatsAppNotification.deleteMany({});
     

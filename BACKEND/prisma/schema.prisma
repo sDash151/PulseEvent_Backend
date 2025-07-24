@@ -32,6 +32,8 @@ model User {
   whatsAppNotifications WhatsAppNotification[]
   verified            Boolean      @default(false) // <-- Added for email verification
   emailVerificationTokens EmailVerificationToken[] // <-- Added for relation
+  passwordResetTokens PasswordResetToken[] // <-- Added for password reset relation
+  passwordChangedAt DateTime? // <-- Used for session invalidation after password reset
 }
 
 model Event {
@@ -193,6 +195,14 @@ model EmailVerificationToken {
   id        Int      @id @default(autoincrement())
   userId    Int
   token     String   @unique
+  expiresAt DateTime
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+model PasswordResetToken {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  token     String   @unique // Stores a hash of the token, not the raw token
   expiresAt DateTime
   user      User     @relation(fields: [userId], references: [id])
 }

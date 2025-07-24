@@ -132,7 +132,12 @@ async function deleteNonHostUsers() {
       where: { userId: { in: nonHostUserIds } }
     });
 
-    console.log('9. Deleting non-host users...');
+    console.log('9. Deleting password reset tokens...');
+    await prisma.passwordResetToken.deleteMany({
+      where: { userId: { in: nonHostUserIds } }
+    });
+
+    console.log('10. Deleting non-host users...');
     await prisma.user.deleteMany({
       where: { id: { in: nonHostUserIds } }
     });

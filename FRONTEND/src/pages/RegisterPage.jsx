@@ -15,6 +15,7 @@ const RegisterPage = () => {
   const [pendingInvite, setPendingInvite] = useState(null)
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [passwordStrength, setPasswordStrength] = useState('')
   
   // Use the custom error handler hook - always call with same parameters
   const {
@@ -83,6 +84,16 @@ const RegisterPage = () => {
     }
   };
 
+  // Password strength regex: min 8 chars, 1 uppercase, 1 lowercase, 1 number, 1 special char
+  const strongPasswordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]).{8,}$/;
+
+  function getPasswordStrength(password) {
+    if (!password) return '';
+    if (strongPasswordRegex.test(password)) return 'Strong';
+    if (password.length >= 8) return 'Medium';
+    return 'Weak';
+  }
+
   // Smart input handlers using the error handler hook
   const handleEmailChange = useCallback((e) => {
     const newEmail = e.target.value
@@ -99,6 +110,7 @@ const RegisterPage = () => {
   const handlePasswordChange = useCallback((e) => {
     const newPassword = e.target.value
     setPassword(newPassword)
+    setPasswordStrength(getPasswordStrength(newPassword))
     handleInputChange(newPassword, 'password')
   }, [handleInputChange])
 
@@ -207,6 +219,18 @@ const RegisterPage = () => {
                 {showPassword ? "Hide" : "Show"}
               </button>
             </div>
+            {/* Password strength indicator */}
+            {password && (
+              <div className={`mt-1 text-xs font-semibold ${passwordStrength === 'Strong' ? 'text-green-400' : passwordStrength === 'Medium' ? 'text-amber-300' : 'text-red-400'}`}>Strength: {passwordStrength}</div>
+            )}
+            {/* Password requirements */}
+            <ul className="mt-1 text-xs text-gray-300 space-y-0.5">
+              <li className={password.length >= 8 ? 'text-green-400' : ''}>• At least 8 characters</li>
+              <li className={/[A-Z]/.test(password) ? 'text-green-400' : ''}>• At least 1 uppercase letter</li>
+              <li className={/[a-z]/.test(password) ? 'text-green-400' : ''}>• At least 1 lowercase letter</li>
+              <li className={/\d/.test(password) ? 'text-green-400' : ''}>• At least 1 number</li>
+              <li className={/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password) ? 'text-green-400' : ''}>• At least 1 special character</li>
+            </ul>
           </div>
 
           <div>
@@ -233,12 +257,15 @@ const RegisterPage = () => {
                 {showConfirmPassword ? "Hide" : "Show"}
               </button>
             </div>
+            {confirmPassword && confirmPassword !== password && (
+              <div className="mt-1 text-xs text-red-400">Passwords do not match.</div>
+            )}
           </div>
 
           <Button 
             type="submit" 
             className="w-full justify-center mt-6"
-            disabled={loading}
+            disabled={loading || passwordStrength !== 'Strong' || password !== confirmPassword}
           >
             {loading ? 'Creating Account...' : 'Create Account'}
           </Button>

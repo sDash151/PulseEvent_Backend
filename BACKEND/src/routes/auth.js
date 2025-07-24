@@ -3,7 +3,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { authenticateToken, authorizeHost } = require('../middleware/auth.js');
 const prisma = require('../utils/db.js');
-const { sendInvitationEmail, sendVerificationEmail } = require('../utils/email.js');
+const { sendInvitationEmail, sendVerificationEmail, sendPasswordResetEmail, sendPasswordChangeNotification } = require('../utils/email.js');
 const crypto = require('crypto');
 const rateLimit = require('express-rate-limit');
 const disposableDomains = require('disposable-email-domains');
@@ -27,6 +27,29 @@ const loginLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
 });
+const passwordResetLimiter10Min = rateLimit({
+  windowMs: 10 * 60 * 1000, // 10 minutes
+  max: 1,
+  keyGenerator: (req) => req.body.email || req.ip,
+  handler: (req, res) => {
+    return res.status(200).json({ message: 'If your email is registered, you will receive a password reset link shortly.' });
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+const passwordResetLimiterDay = rateLimit({
+  windowMs: 24 * 60 * 60 * 1000, // 24 hours
+  max: 5,
+  keyGenerator: (req) => req.body.email || req.ip,
+  handler: (req, res) => {
+    return res.status(200).json({ message: 'If your email is registered, you will receive a password reset link shortly.' });
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Password strength regex: min 8 chars, 1 uppercase, 1 lowercase, 1 number, 1 special char
+const strongPasswordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]).{8,}$/;
 
 // 👥 Fetch all users (host-only)
 router.get('/users', authenticateToken, authorizeHost, async (req, res) => {
@@ -46,6 +69,9 @@ router.post('/register', registerLimiter, async (req, res) => {
   if (!name || !email || !password) {
     console.log('[REGISTER] Missing fields:', { name, email, password });
     return res.status(400).json({ message: 'All fields are required' });
+  }
+  if (!strongPasswordRegex.test(password)) {
+    return res.status(400).json({ message: 'Password must be at least 8 characters and include uppercase, lowercase, number, and special character.' });
   }
 
   // Block disposable emails
@@ -327,6 +353,75 @@ router.post('/resend-verification', async (req, res) => {
   } catch (error) {
     console.error('Resend verification error:', error);
     res.status(200).json({ message: 'If your email is registered and not verified, a new verification email has been sent.' });
+  }
+});
+
+// Forgot Password - Request Reset
+router.post('/forgot-password', passwordResetLimiter10Min, passwordResetLimiterDay, async (req, res) => {
+  const { email } = req.body;
+  if (!email) {
+    return res.status(200).json({ message: 'If your email is registered, you will receive a password reset link shortly.' });
+  }
+  try {
+    const user = await prisma.user.findUnique({ where: { email } });
+    if (user) {
+      // Check for existing valid token (10 min window)
+      const existingToken = await prisma.passwordResetToken.findFirst({
+        where: {
+          userId: user.id,
+          expiresAt: { gt: new Date() }
+        },
+        orderBy: { expiresAt: 'desc' }
+      });
+      if (existingToken) {
+        // If a valid token exists, do not send another email
+        return res.status(200).json({ message: 'If your email is registered, you will receive a password reset link shortly.' });
+      }
+      // Remove old tokens
+      await prisma.passwordResetToken.deleteMany({ where: { userId: user.id } });
+      // Generate new token
+      const rawToken = crypto.randomBytes(32).toString('hex');
+      const tokenHash = crypto.createHash('sha256').update(rawToken).digest('hex');
+      const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 min expiry
+      await prisma.passwordResetToken.create({
+        data: { userId: user.id, token: tokenHash, expiresAt }
+      });
+      await sendPasswordResetEmail({ to: user.email, name: user.name, resetToken: rawToken });
+    }
+    // Always respond with generic message
+    return res.status(200).json({ message: 'If your email is registered, you will receive a password reset link shortly.' });
+  } catch (error) {
+    console.error('Forgot password error:', error);
+    return res.status(200).json({ message: 'If your email is registered, you will receive a password reset link shortly.' });
+  }
+});
+
+// Reset Password
+router.post('/reset-password', async (req, res) => {
+  const { token, password } = req.body;
+  if (!token || !password) {
+    return res.status(400).json({ message: 'Token and new password are required.' });
+  }
+  if (!strongPasswordRegex.test(password)) {
+    return res.status(400).json({ message: 'Password must be at least 8 characters and include uppercase, lowercase, number, and special character.' });
+  }
+  try {
+    const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+    const record = await prisma.passwordResetToken.findUnique({ where: { token: tokenHash }, include: { user: true } });
+    if (!record || record.expiresAt < new Date()) {
+      if (record) await prisma.passwordResetToken.delete({ where: { token: tokenHash } });
+      return res.status(400).json({ message: 'Invalid or expired reset token.' });
+    }
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
+    await prisma.user.update({ where: { id: record.userId }, data: { password: hashedPassword, passwordChangedAt: new Date() } });
+    await prisma.passwordResetToken.deleteMany({ where: { userId: record.userId } });
+    // Send notification email
+    await sendPasswordChangeNotification({ to: record.user.email, name: record.user.name });
+    // (Next step: send notification email and handle session invalidation)
+    return res.status(200).json({ message: 'Password has been reset successfully.' });
+  } catch (error) {
+    console.error('Reset password error:', error);
+    return res.status(500).json({ message: 'Internal server error' });
   }
 });
 

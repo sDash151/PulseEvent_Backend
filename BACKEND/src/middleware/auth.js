@@ -27,6 +27,14 @@ const authenticateToken = async (req, res, next) => {
       return res.status(401).json({ message: 'User not found' });
     }
 
+    // Session invalidation: check if passwordChangedAt is after token's iat
+    if (user.passwordChangedAt) {
+      const passwordChangedAt = Math.floor(new Date(user.passwordChangedAt).getTime() / 1000);
+      if (decoded.iat < passwordChangedAt) {
+        return res.status(403).json({ message: 'Session invalidated. Please log in again.' });
+      }
+    }
+
     req.user = user;
     next();
   } catch (err) {

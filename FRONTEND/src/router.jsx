@@ -35,6 +35,8 @@ import HelpCenterPage from './pages/HelpCenterPage';
 import FeaturesPage from './pages/FeaturesPage';
 import CheckEmailPage from './pages/check-email';
 import EditSubEventPage from './pages/EditSubEventPage';
+import ForgotPasswordPage from './pages/ForgotPasswordPage';
+import ResetPasswordPage from './pages/ResetPasswordPage';
 
 export const router = createBrowserRouter(
   createRoutesFromElements(
@@ -44,6 +46,8 @@ export const router = createBrowserRouter(
       <Route path="register" element={<RegisterPage />} />
       <Route path="check-email" element={<CheckEmailPage />} />
       <Route path="email-verified" element={<EmailVerifiedPage />} />
+      <Route path="forgot-password" element={<ForgotPasswordPage />} />
+      <Route path="reset-password" element={<ResetPasswordPage />} />
 
       {/* Permanent invitation page for all users */}
       <Route path="invitations" element={<InvitationsPage />} />

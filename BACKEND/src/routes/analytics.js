@@ -447,6 +447,26 @@ router.get('/:eventId', authenticateToken, authorizeHost, async (req, res) => {
       }
     }
 
+    // Add rejected candidates (waiting list with status 'rejected')
+    const rejectedCandidates = event.waitingList
+      .filter(waiting => waiting.status === 'rejected' && waiting.user)
+      .map(waiting => ({
+        id: waiting.user.id,
+        name: waiting.user.name,
+        email: waiting.user.email,
+        avatar: waiting.user.avatar,
+        registrationType: 'Waiting List',
+        registrationDate: waiting.createdAt,
+        checkedIn: false,
+        checkInDate: null,
+        teamName: waiting.teamName,
+        participants: waiting.participants || [],
+        responses: waiting.responses,
+        paymentProof: waiting.paymentProof,
+        createdAt: waiting.user.createdAt,
+        status: waiting.status
+      }));
+
     // --- Attendance Data: Registered vs Feedback Users ---
     const attendanceData = [];
     if (event.startTime && event.endTime) {
@@ -520,6 +540,7 @@ router.get('/:eventId', authenticateToken, authorizeHost, async (req, res) => {
       feedbackTypes,
       sentiment,
       registeredUsers,
+      rejectedCandidates,
       registrationRate, // <-- Add this field
       hourlyEngagement, // <-- NEW
       monthlyActivity,  // <-- NEW
