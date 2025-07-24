@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import Button from '../components/ui/Button';
 import ErrorMessage from '../components/ui/ErrorMessage';
 import { resetPassword } from '../services/auth';
+import Modal from '../components/ui/Modal';
 
 const validatePassword = (password) => {
   // At least 8 chars, 1 uppercase, 1 lowercase, 1 number, 1 special char
@@ -68,6 +69,30 @@ const ResetPasswordPage = () => {
     }
   };
 
+  if (success) {
+    return (
+      <Modal isOpen={success} onClose={() => navigate('/login')} title="Password Changed!" size="sm" backdrop="heavy" animation="scale" showCloseButton={false}>
+        <div className="flex flex-col items-center gap-6 p-4">
+          <svg className="w-16 h-16 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="10" strokeWidth="2" stroke="currentColor" fill="none" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4" />
+          </svg>
+          <p className="text-2xl font-bold text-green-400">Password Changed!</p>
+          <p className="text-gray-200 text-center">Your password has been updated. You can now log in with your new password.</p>
+          <Button
+            variant="success"
+            size="lg"
+            className="w-full mt-2"
+            onClick={() => navigate('/login')}
+            autoFocus
+          >
+            Go to Login
+          </Button>
+        </div>
+      </Modal>
+    );
+  }
+
   return (
     <div className="relative min-h-screen bg-gradient-to-br from-[#0f0c29] via-[#302b63] to-[#24243e] flex items-center justify-center overflow-hidden px-4 py-8">
       {/* Ambient Glow Spotlights */}
@@ -80,17 +105,6 @@ const ResetPasswordPage = () => {
           <p className="text-gray-300 text-sm mt-1">Enter your new password below</p>
         </div>
         <ErrorMessage error={error} onDismiss={() => setError('')} />
-        {success && (
-          <div className="fixed inset-0 flex items-center justify-center z-50">
-            <div className="bg-white/20 backdrop-blur-lg border border-green-400/30 rounded-2xl shadow-2xl p-8 max-w-sm w-full flex flex-col items-center animate-pop-in">
-              <svg className="w-16 h-16 text-green-400 mb-4 animate-bounce" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-              <h3 className="text-2xl font-bold text-green-300 mb-2">Password Changed!</h3>
-              <p className="text-green-100 mb-4 text-center">Your password has been updated. You can now log in with your new password.</p>
-              <Button className="w-full" onClick={() => navigate('/login')}>Go to Login</Button>
-            </div>
-            <div className="fixed inset-0 bg-black/60 z-40" />
-          </div>
-        )}
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-1">New Password</label>

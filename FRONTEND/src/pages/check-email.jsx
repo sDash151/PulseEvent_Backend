@@ -53,14 +53,26 @@ const CheckEmailPage = () => {
   // When resend is successful, reset timer
   const handleResend = async () => {
     setLoading(true);
-    await resendVerificationEmail(email);
+    const res = await resendVerificationEmail(email);
     setLoading(false);
     setSuccess(true);
     // Set new expiry
     const key = getResendKey(email);
-    const expiry = Date.now() + RESEND_WAIT_MS;
-    localStorage.setItem(key, expiry);
-    setRemaining(RESEND_WAIT_MS);
+    let expiry;
+    if (res.sent && res.nextAllowedAt) {
+      expiry = new Date(res.nextAllowedAt).getTime();
+      localStorage.setItem(key, expiry);
+      setRemaining(expiry - Date.now());
+    } else if (!res.sent && res.nextAllowedAt) {
+      expiry = new Date(res.nextAllowedAt).getTime();
+      localStorage.setItem(key, expiry);
+      setRemaining(expiry - Date.now());
+    } else {
+      // fallback: 10 min
+      expiry = Date.now() + RESEND_WAIT_MS;
+      localStorage.setItem(key, expiry);
+      setRemaining(RESEND_WAIT_MS);
+    }
     if (timerRef.current) clearInterval(timerRef.current);
     timerRef.current = setInterval(updateRemaining, 1000);
   };

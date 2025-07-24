@@ -313,7 +313,7 @@ router.post('/resend-verification', async (req, res) => {
   const { email } = req.body;
   if (!email) {
     console.log('[RESEND] No email provided');
-    return res.status(200).json({ message: 'If your email is registered and not verified, a new verification email has been sent.' });
+    return res.status(200).json({ message: 'If your email is registered and not verified, a new verification email has been sent.', sent: false });
   }
   try {
     const user = await prisma.user.findUnique({ where: { email } });
@@ -330,7 +330,9 @@ router.post('/resend-verification', async (req, res) => {
         console.log('[RESEND] Valid token exists for user:', email, 'Token expires at:', existingToken.expiresAt);
         // Valid token exists, do not send another email
         return res.status(200).json({
-          message: 'A verification email has already been sent. Please check your inbox and verify your email. If you did not receive it, you can resend after it expires.'
+          message: 'A verification email has already been sent. Please check your inbox and verify your email. If you did not receive it, you can resend after it expires.',
+          sent: false,
+          nextAllowedAt: existingToken.expiresAt
         });
       }
       // No valid token, remove old tokens and send new one
@@ -346,14 +348,19 @@ router.post('/resend-verification', async (req, res) => {
       });
       await sendVerificationEmail({ to: email, name: user.name, verificationToken: token });
       console.log('[RESEND] Sent new verification email to user:', email);
+      return res.status(200).json({
+        message: 'A verification email has been sent. Please check your inbox.',
+        sent: true,
+        nextAllowedAt: expiresAt
+      });
     } else {
       console.log('[RESEND] User not found or already verified:', email);
     }
     // Always respond with generic message
-    res.status(200).json({ message: 'If your email is registered and not verified, a new verification email has been sent.' });
+    res.status(200).json({ message: 'If your email is registered and not verified, a new verification email has been sent.', sent: false });
   } catch (error) {
     console.error('Resend verification error:', error);
-    res.status(200).json({ message: 'If your email is registered and not verified, a new verification email has been sent.' });
+    res.status(200).json({ message: 'If your email is registered and not verified, a new verification email has been sent.', sent: false });
   }
 });
 
@@ -361,7 +368,7 @@ router.post('/resend-verification', async (req, res) => {
 router.post('/forgot-password', passwordResetLimiter10Min, passwordResetLimiterDay, async (req, res) => {
   const { email } = req.body;
   if (!email) {
-    return res.status(200).json({ message: 'If your email is registered, you will receive a password reset link shortly.' });
+    return res.status(200).json({ message: 'If your email is registered, you will receive a password reset link shortly.', sent: false });
   }
   try {
     const user = await prisma.user.findUnique({ where: { email } });
@@ -376,7 +383,11 @@ router.post('/forgot-password', passwordResetLimiter10Min, passwordResetLimiterD
       });
       if (existingToken) {
         // If a valid token exists, do not send another email
-        return res.status(200).json({ message: 'If your email is registered, you will receive a password reset link shortly.' });
+        return res.status(200).json({
+          message: 'If your email is registered, you will receive a password reset link shortly.',
+          sent: false,
+          nextAllowedAt: existingToken.expiresAt
+        });
       }
       // Remove old tokens
       await prisma.passwordResetToken.deleteMany({ where: { userId: user.id } });
@@ -388,12 +399,17 @@ router.post('/forgot-password', passwordResetLimiter10Min, passwordResetLimiterD
         data: { userId: user.id, token: tokenHash, expiresAt }
       });
       await sendPasswordResetEmail({ to: user.email, name: user.name, resetToken: rawToken });
+      return res.status(200).json({
+        message: 'If your email is registered, you will receive a password reset link shortly.',
+        sent: true,
+        nextAllowedAt: expiresAt
+      });
     }
     // Always respond with generic message
-    return res.status(200).json({ message: 'If your email is registered, you will receive a password reset link shortly.' });
+    return res.status(200).json({ message: 'If your email is registered, you will receive a password reset link shortly.', sent: false });
   } catch (error) {
     console.error('Forgot password error:', error);
-    return res.status(200).json({ message: 'If your email is registered, you will receive a password reset link shortly.' });
+    return res.status(200).json({ message: 'If your email is registered, you will receive a password reset link shortly.', sent: false });
   }
 });
 

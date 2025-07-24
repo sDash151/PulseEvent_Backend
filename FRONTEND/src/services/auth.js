@@ -111,10 +111,11 @@ export const refreshToken = async () => {
 export const resendVerificationEmail = async (email) => {
   try {
     const response = await api.post('/api/auth/resend-verification', { email });
-    return response.data.message;
+    // Return the full response for cooldown logic
+    return response.data;
   } catch (error) {
     // Always return generic message for security
-    return 'If your email is registered and not verified, a new verification email has been sent.';
+    return { message: 'If your email is registered and not verified, a new verification email has been sent.', sent: false };
   }
 };
 
@@ -122,7 +123,8 @@ export const resendVerificationEmail = async (email) => {
 export const requestPasswordReset = async (email) => {
   try {
     const response = await api.post('/api/auth/forgot-password', { email });
-    return response.data.message;
+    // Return the full response for cooldown logic
+    return response.data;
   } catch (error) {
     const errorData = error.response?.data;
     if (errorData?.message) {
