@@ -471,9 +471,27 @@ router.get('/verification-status', async (req, res) => {
   }
 });
 
-// Get password reset token status for a user (for accurate resend timer)
+// Get password reset token status for a user (for accurate resend timer and frontend token validation)
 router.get('/reset-status', async (req, res) => {
-  const { email } = req.query;
+  const { email, token } = req.query;
+  if (token) {
+    // Token-based validation for frontend
+    try {
+      const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+      const record = await prisma.passwordResetToken.findUnique({ where: { token: tokenHash } });
+      if (!record) {
+        return res.status(200).json({ valid: false, expired: false, invalid: true });
+      }
+      if (record.expiresAt < new Date()) {
+        await prisma.passwordResetToken.delete({ where: { token: tokenHash } });
+        return res.status(200).json({ valid: false, expired: true, invalid: false });
+      }
+      return res.status(200).json({ valid: true, expired: false, invalid: false });
+    } catch (error) {
+      console.error('Reset status (token) error:', error);
+      return res.status(500).json({ valid: false, expired: false, invalid: true, message: 'Internal server error' });
+    }
+  }
   if (!email) {
     return res.status(400).json({ message: 'Email is required.' });
   }
