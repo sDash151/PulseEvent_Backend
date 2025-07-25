@@ -56,7 +56,8 @@ app.use('/api', authenticateToken, require('./routes/registration.js'));
 app.use('/api/waiting-list', authenticateToken, require('./routes/waitingList.js'));
 app.use('/api', authenticateToken, require('./routes/upload.js'));
 app.use('/api', authenticateToken, require('./routes/whatsappNotifications.js'));
-console.log('✓ User, Registration, WaitingList, Upload, WhatsApp routes loaded (PROTECTED)')
+app.use('/api', authenticateToken, require('./routes/rejectionNotifications.js'));
+console.log('✓ User, Registration, WaitingList, Upload, WhatsApp, RejectionNotification routes loaded (PROTECTED)');
 
 // Health check endpoint
 app.get('/health', (req, res) => {

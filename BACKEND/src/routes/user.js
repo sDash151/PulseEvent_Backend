@@ -5,6 +5,7 @@ const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const cloudinary = require('../utils/cloudinary');
 const prisma = require('../utils/db');
 const { ensureAuth } = require('../middleware/auth');
+const { authenticateToken } = require('../middleware/auth');
 
 // Set up cloudinary multer storage
 const storage = new CloudinaryStorage({
@@ -50,6 +51,71 @@ router.get('/profile', ensureAuth, async (req, res) => {
     res.json({ user });
   } catch (err) {
     res.status(400).json({ error: err.message });
+  }
+});
+
+// Get all registrations and waiting list entries for the current user
+router.get('/my-registrations', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    // Get all registrations (approved)
+    const registrations = await prisma.registration.findMany({
+      where: { userId },
+      include: {
+        event: true,
+        participants: true
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+    // Get all waiting list entries (pending/rejected)
+    const waitingList = await prisma.waitingList.findMany({
+      where: { userId },
+      include: {
+        event: true
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+    // Merge and format results
+    const allApplications = [
+      ...registrations.map(reg => ({
+        id: reg.id,
+        eventId: reg.eventId,
+        eventTitle: reg.event.title,
+        eventStartTime: reg.event.startTime,
+        eventEndTime: reg.event.endTime,
+        eventLocation: reg.event.location,
+        status: 'approved',
+        teamName: reg.teamName,
+        paymentProof: null, // Always hide payment proof for all users
+        appliedAt: reg.createdAt,
+        participants: reg.participants,
+        responses: reg.responses,
+        whatsappGroupEnabled: reg.event.whatsappGroupEnabled,
+        whatsappGroupLink: reg.event.whatsappGroupLink
+      })),
+      ...waitingList.map(wl => ({
+        id: wl.id,
+        eventId: wl.eventId,
+        eventTitle: wl.event.title,
+        eventStartTime: wl.event.startTime,
+        eventEndTime: wl.event.endTime,
+        eventLocation: wl.event.location,
+        status: wl.status === 'pending' ? 'pending' : 'rejected',
+        teamName: wl.teamName,
+        paymentProof: null, // Always hide payment proof for all users
+        appliedAt: wl.createdAt,
+        participants: wl.participants,
+        responses: wl.responses,
+        whatsappGroupEnabled: null, // Hide WhatsApp info for pending/rejected
+        whatsappGroupLink: null
+      }))
+    ];
+    // Sort by appliedAt descending
+    allApplications.sort((a, b) => new Date(b.appliedAt) - new Date(a.appliedAt));
+    res.json({ applications: allApplications });
+  } catch (err) {
+    console.error('Error fetching my registrations:', err);
+    res.status(500).json({ error: 'Failed to fetch registrations' });
   }
 });
 

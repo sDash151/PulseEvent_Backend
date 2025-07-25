@@ -329,6 +329,24 @@ const SubEventCard = ({ sub, parentEventId }) => {
             <span role="img" aria-label="locked">🔒</span>
             Pending Approval
           </Button>
+        ) : registrationStatus.rejected ? (
+          <div className="flex flex-col w-full items-start">
+            <Button
+              className="bg-red-400/30 text-red-300 font-semibold cursor-not-allowed flex items-center gap-2 w-full"
+              disabled
+              style={{ cursor: 'not-allowed' }}
+              tabIndex={-1}
+              title="You have been rejected for this event."
+            >
+              <svg className="w-5 h-5 text-red-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+              Rejected
+            </Button>
+            <div className="mt-2 text-xs text-gray-300 bg-white/10 rounded-lg p-3 border border-white/20 w-full">
+              <span className="font-semibold text-amber-300">Do not worry!</span> You cannot register online, but you can do an <span className="font-semibold text-amber-300">on-spot registration at the venue before the RSVP deadline</span>.
+            </div>
+          </div>
         ) : !registrationStatus.isRegistered ? (
           // Not registered - show registration button
           <Button

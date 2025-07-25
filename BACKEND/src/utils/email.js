@@ -112,4 +112,36 @@ async function sendPasswordChangeNotification({ to, name }) {
   return transporter.sendMail(mailOptions);
 }
 
-module.exports = { sendInvitationEmail, sendVerificationEmail, sendPasswordResetEmail, sendPasswordChangeNotification };
+async function sendRegistrationRejectionEmail({ to, name, eventTitle, hostName, hostEmail }) {
+  const mailOptions = {
+    from: process.env.SMTP_FROM || 'noreply@eventpulse.com',
+    to,
+    subject: `Update on your registration for ${eventTitle} – EventPulse`,
+    html: `
+      <div style="font-family: Arial, sans-serif; background: #f9fafb; padding: 24px; border-radius: 8px; max-width: 480px; margin: auto;">
+        <h2 style="color: #eab308;">Registration Update</h2>
+        <p style="font-size: 16px; color: #222;">Hi${name ? ` ${name}` : ''},</p>
+        <p style="font-size: 16px; color: #222;">
+          Thank you for your interest in <b>${eventTitle}</b> on <b>EventPulse</b>.
+        </p>
+        <p style="font-size: 16px; color: #222;">
+          After a careful and thorough review of your registration details, the event host <b>${hostName}</b> has decided not to approve your registration for this event.
+        </p>
+        <p style="font-size: 16px; color: #222;">
+          We understand this may be disappointing, but please know that every application is reviewed thoughtfully and the decision was made by the host based on event requirements and criteria.
+        </p>
+        <p style="font-size: 16px; color: #222;">
+          If you have any questions or would like more information about this decision, you are welcome to contact the host directly at <a href="mailto:${hostEmail}" style="color: #4f46e5; text-decoration: underline;">${hostEmail}</a>.
+        </p>
+        <p style="font-size: 16px; color: #222;">
+          We encourage you to explore other events on EventPulse and hope to see you participate in the future!
+        </p>
+        <hr style="margin: 24px 0; border: none; border-top: 1px solid #eee;" />
+        <p style="font-size:12px;color:#888; text-align: center;">This message was sent via <b>EventPulse</b>. If you have questions, reply to this email.</p>
+      </div>
+    `,
+  };
+  return transporter.sendMail(mailOptions);
+}
+
+module.exports = { sendInvitationEmail, sendVerificationEmail, sendPasswordResetEmail, sendPasswordChangeNotification, sendRegistrationRejectionEmail };

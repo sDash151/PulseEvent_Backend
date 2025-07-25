@@ -37,6 +37,7 @@ import CheckEmailPage from './pages/check-email';
 import EditSubEventPage from './pages/EditSubEventPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
+import MyRegistrationsPage from './pages/MyRegistrationsPage';
 
 export const router = createBrowserRouter(
   createRoutesFromElements(
@@ -73,6 +74,7 @@ export const router = createBrowserRouter(
       {/* ✅ Protected Routes */}
       <Route element={<ProtectedRoute />}>
         <Route path="dashboard" element={<DashboardPage />} />
+        <Route path="my-registrations" element={<MyRegistrationsPage />} />
         <Route path="events/create" element={<CreateEventPage />} />
         <Route path="events/:parentId/sub/:subId/register" element={<DynamicRegistrationForm />} />
         <Route path="events/:parentId/sub/:subId/details" element={<SubEventDetailsPage />} />

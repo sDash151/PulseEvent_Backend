@@ -449,6 +449,31 @@ const SubEventDetailsPage = () => {
                         <p className="text-green-400 font-semibold">You are Registered</p>
                         <p className="text-green-300 text-sm">You can now enter the event when it starts</p>
                       </div>
+                    ) : registrationStatus.rejected ? (
+                      <div className="text-center p-6 bg-gradient-to-br from-red-400/10 via-pink-400/10 to-orange-400/10 border border-red-400/30 rounded-xl relative overflow-hidden">
+                        <div className="flex flex-col items-center gap-3 mb-4">
+                          <div className="w-14 h-14 bg-red-400/20 rounded-full flex items-center justify-center">
+                            <svg className="w-7 h-7 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          </div>
+                          <span className="text-xl font-bold text-red-400">Registration Rejected</span>
+                        </div>
+                        <Button
+                          disabled
+                          className="w-full bg-gradient-to-r from-red-400/50 to-pink-400/50 text-red-200 cursor-not-allowed opacity-75 flex items-center justify-center gap-2 mt-2"
+                          style={{ cursor: 'not-allowed' }}
+                          tabIndex={-1}
+                        >
+                          <svg className="w-5 h-5 text-red-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                          Rejected
+                        </Button>
+                        <div className="mt-4 text-sm text-gray-300 bg-white/10 rounded-lg p-4 border border-white/20">
+                          <span className="font-semibold text-amber-300">Do not worry!</span> You cannot register online, but you can do an <span className="font-semibold text-amber-300">on-spot registration at the venue before the RSVP deadline</span>.
+                        </div>
+                      </div>
                     ) : registrationClosedEarly ? (
                       <div className="text-center p-4 bg-orange-500/10 border border-orange-500/20 rounded-lg">
                         <p className="text-orange-400 font-semibold">Registration Closed</p>

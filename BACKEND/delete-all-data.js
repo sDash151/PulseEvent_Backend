@@ -15,6 +15,9 @@ async function deleteAllData() {
     
     console.log('📧 Deleting WhatsApp notifications...');
     await prisma.whatsAppNotification.deleteMany({});
+
+    console.log('❌ Deleting rejection notifications...');
+    await prisma.rejectionNotification.deleteMany({});
     
     console.log('👥 Deleting participants...');
     await prisma.participant.deleteMany({});

@@ -70,6 +70,27 @@ const HostReviewRegistrationsPage = () => {
   // 🔐 Access control is handled by EventHostRoute wrapper
   // No need for additional checks here since EventHostRoute already verified the user is the host
 
+  const fetchAllData = async () => {
+    if (!subId || !currentUser) return;
+    setLoading(true);
+    try {
+      const [eventRes, waitingRes, regRes] = await Promise.all([
+        api.get(`/api/events/${subId}`),
+        api.get(`/api/waiting-list/${subId}`),
+        api.get(`/api/registration?eventId=${subId}`),
+      ]);
+      setEvent(eventRes.data);
+      setWaitingList(waitingRes.data.waitingList || []);
+      setRegistrations(regRes.data.registrations || []);
+      setDataFetched(true);
+    } catch (err) {
+      console.error('Failed to load registrations:', err);
+      setError('Failed to load registrations.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       if (!subId || !currentUser) return;
@@ -150,32 +171,9 @@ const HostReviewRegistrationsPage = () => {
       if (!response || !response.data) {
         throw new Error('Invalid response from server');
       }
-      
-      // Update the waiting list - remove entry if approved, update status if rejected
-      console.log('Updating waiting list state:', { status, id, currentWaitingList: waitingList.length });
-      
-      if (status === 'approved') {
-        // Remove from waiting list when approved
-        setWaitingList((prev) => {
-          const filtered = prev.filter((entry) => entry.id !== id);
-          console.log('After filtering approved entry:', { 
-            beforeCount: prev.length, 
-            afterCount: filtered.length, 
-            removedId: id 
-          });
-          return filtered;
-        });
-        setSuccessMessage('Registration approved successfully!');
-      } else if (status === 'rejected') {
-        // Update status when rejected
-        setWaitingList((prev) => 
-          prev.map((entry) => 
-            entry.id === id ? { ...entry, status: 'rejected' } : entry
-          )
-        );
-        setSuccessMessage('Registration rejected successfully!');
-      }
-      
+      // After action, re-fetch all data to update counts and lists
+      await fetchAllData();
+      setSuccessMessage(`Registration ${status === 'approved' ? 'approved' : 'rejected'} successfully!`);
       // Clear success message after 3 seconds
       setTimeout(() => setSuccessMessage(null), 3000);
       
@@ -334,13 +332,13 @@ const HostReviewRegistrationsPage = () => {
             <span className="inline-block w-2 h-8 bg-gradient-to-b from-amber-400 to-pink-400 rounded-full"></span>
             Registration Requests
           </h2>
-          {waitingList.length === 0 ? (
+          {waitingList.filter(entry => entry.status === 'pending').length === 0 ? (
             <div className="text-center py-16">
               <p className="text-gray-400 text-lg">No registration requests to review.</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
-              {waitingList.map((entry) => (
+              {waitingList.filter(entry => entry.status === 'pending').map((entry) => (
                 <div
                   key={entry.id}
                   className={`group relative bg-gradient-to-br from-[#23243a]/80 to-[#302b63]/80 rounded-2xl shadow-xl border border-white/10 p-6 transition-all duration-300 hover:scale-[1.025] hover:shadow-2xl hover:border-amber-400/30 flex flex-col min-h-[340px]`}

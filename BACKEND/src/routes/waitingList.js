@@ -3,6 +3,7 @@ const router = express.Router();
 const { PrismaClient } = require('@prisma/client');
 const { authenticateToken, authorizeHost } = require('../middleware/auth');
 const prisma = new PrismaClient();
+const { sendRegistrationRejectionEmail } = require('../utils/email');
 
 // Get all waiting list entries for an event (host only)
 router.get('/:eventId', authenticateToken, authorizeHost, async (req, res) => {
@@ -234,6 +235,38 @@ router.post('/:waitingId/reject', authenticateToken, authorizeHost, async (req, 
       where: { id: waitingId },
       data: { status: 'rejected' }
     });
+
+    // Create a one-time rejection notification for the user
+    try {
+      await prisma.rejectionNotification.create({
+        data: {
+          userId: waitingEntry.user.id,
+          eventId: waitingEntry.eventId,
+          eventTitle: waitingEntry.event.title,
+          rejectionReason: null // You can add a reason if available
+        }
+      });
+    } catch (err) {
+      if (err.code !== 'P2002') {
+        console.error('Failed to create rejection notification:', err);
+      }
+      // Ignore duplicate notification errors
+    }
+
+    // Fetch host details for email
+    const host = await prisma.user.findUnique({
+      where: { id: waitingEntry.event.hostId },
+      select: { name: true, email: true }
+    });
+
+    // Send rejection email (do not block response if it fails)
+    sendRegistrationRejectionEmail({
+      to: waitingEntry.user.email,
+      name: waitingEntry.user.name,
+      eventTitle: waitingEntry.event.title,
+      hostName: host?.name || 'Event Host',
+      hostEmail: host?.email || ''
+    }).catch(e => console.error('Failed to send rejection email:', e));
 
     console.log(`❌ Registration rejected: ${waitingEntry.user.name} (${waitingEntry.user.email}) for event: ${waitingEntry.event.title}`);
 

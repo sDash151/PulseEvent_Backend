@@ -30,6 +30,7 @@ model User {
   registrations       Registration[]
   waitingList         WaitingList[]
   whatsAppNotifications WhatsAppNotification[]
+  rejectionNotifications RejectionNotification[]
   verified            Boolean      @default(false) // <-- Added for email verification
   emailVerificationTokens EmailVerificationToken[] // <-- Added for relation
   passwordResetTokens PasswordResetToken[] // <-- Added for password reset relation
@@ -58,6 +59,7 @@ model Event {
   registrations Registration[]
   waitingList   WaitingList[]
   whatsAppNotifications WhatsAppNotification[]
+  rejectionNotifications RejectionNotification[]
 
   type           EventType @default(STANDALONE)
   paymentEnabled Boolean   @default(false) // Optional: for future payment integration
@@ -205,4 +207,21 @@ model PasswordResetToken {
   token     String   @unique // Stores a hash of the token, not the raw token
   expiresAt DateTime
   user      User     @relation(fields: [userId], references: [id])
+}
+
+model RejectionNotification {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  eventId   Int
+  eventTitle String
+  rejectionReason String?
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id])
+  event     Event    @relation(fields: [eventId], references: [id])
+
+  @@unique([userId, eventId])
+  @@index([userId])
+  @@index([eventId])
 }

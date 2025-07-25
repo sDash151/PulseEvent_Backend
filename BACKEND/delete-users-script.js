@@ -48,6 +48,8 @@ async function deleteNonHostUsers() {
     const totalWaitingList = nonHosts.reduce((sum, user) => sum + user.waitingList.length, 0);
     const totalInvitations = nonHosts.reduce((sum, user) => sum + user.sentInvitations.length + user.receivedInvitations.length, 0);
     const totalWhatsAppNotifications = nonHosts.reduce((sum, user) => sum + user.whatsAppNotifications.length, 0);
+    // Count rejection notifications for non-hosts
+    const totalRejectionNotifications = await prisma.rejectionNotification.count({ where: { userId: { in: nonHostUserIds } } });
 
     console.log(`   - ${totalRSVPs} RSVPs`);
     console.log(`   - ${totalFeedbacks} feedbacks`);
@@ -55,6 +57,7 @@ async function deleteNonHostUsers() {
     console.log(`   - ${totalWaitingList} waiting list entries`);
     console.log(`   - ${totalInvitations} invitations`);
     console.log(`   - ${totalWhatsAppNotifications} WhatsApp notifications`);
+    console.log(`   - ${totalRejectionNotifications} rejection notifications`);
 
     // Step 4: Confirmation prompt
     console.log('\n⚠️  WARNING: This action cannot be undone!');
@@ -77,6 +80,11 @@ async function deleteNonHostUsers() {
     // Delete in order of dependencies (child records first)
     console.log('1. Deleting WhatsApp notifications...');
     await prisma.whatsAppNotification.deleteMany({
+      where: { userId: { in: nonHostUserIds } }
+    });
+
+    console.log('1b. Deleting rejection notifications...');
+    await prisma.rejectionNotification.deleteMany({
       where: { userId: { in: nonHostUserIds } }
     });
 
