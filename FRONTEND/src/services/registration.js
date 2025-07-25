@@ -15,11 +15,13 @@ export const checkUserRegistration = async (eventId) => {
     const hasRSVP = rsvpResponse.data.registered;
     const hasRegistration = registrationResponse.data.registered;
     const onWaitingList = waitingListResponse.data.onWaitingList;
+    const rejected = waitingListResponse.data.rejected;
     
     console.log('Registration check results:', {
       hasRSVP,
       hasRegistration,
-      onWaitingList
+      onWaitingList,
+      rejected
     });
     
     // FIXED: Only consider user registered if they have RSVP or registration (NOT waiting list)
@@ -31,7 +33,8 @@ export const checkUserRegistration = async (eventId) => {
       isRegistered,
       hasRSVP,
       hasRegistration,
-      onWaitingList
+      onWaitingList,
+      rejected
     };
   } catch (error) {
     console.error('Error checking user registration:', error);

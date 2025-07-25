@@ -25,6 +25,9 @@ async function deleteNonHostUsers() {
     const hosts = allUsers.filter(user => user.events.length > 0);
     const nonHosts = allUsers.filter(user => user.events.length === 0);
 
+    // Define nonHostUserIds early for use in all queries
+    const nonHostUserIds = nonHosts.map(user => user.id);
+
     console.log(`👑 Found ${hosts.length} hosts:`);
     hosts.forEach(host => {
       console.log(`   - ${host.name} (${host.email}) - ${host.events.length} events`);
@@ -75,7 +78,6 @@ async function deleteNonHostUsers() {
     console.log('\n🗑️  Proceeding with deletion...');
 
     // Step 5: Delete in correct order to maintain referential integrity
-    const nonHostUserIds = nonHosts.map(user => user.id);
 
     // Delete in order of dependencies (child records first)
     console.log('1. Deleting WhatsApp notifications...');
@@ -92,6 +94,7 @@ async function deleteNonHostUsers() {
     await prisma.waitingList.deleteMany({
       where: { userId: { in: nonHostUserIds } }
     });
+    // NOTE: If waiting list participants ever become a relational model, add deletion here.
 
     // --- Move participant deletion here, before registrations ---
     console.log('3. Deleting participants (from registrations)...');

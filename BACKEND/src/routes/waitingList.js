@@ -464,20 +464,30 @@ router.post('/:eventId/bulk-action', authenticateToken, authorizeHost, async (re
 router.get('/:eventId/check', authenticateToken, async (req, res) => {
   const eventId = parseInt(req.params.eventId);
   if (isNaN(eventId)) {
-    return res.status(400).json({ onWaitingList: false, error: 'Invalid event ID' });
+    return res.status(400).json({ onWaitingList: false, rejected: false, error: 'Invalid event ID' });
   }
   try {
-    const entry = await prisma.waitingList.findFirst({
+    const pendingEntry = await prisma.waitingList.findFirst({
       where: {
         eventId,
         userId: req.user.id,
         status: 'pending'
       }
     });
-    res.json({ onWaitingList: !!entry });
+    const rejectedEntry = await prisma.waitingList.findFirst({
+      where: {
+        eventId,
+        userId: req.user.id,
+        status: 'rejected'
+      }
+    });
+    res.json({
+      onWaitingList: !!pendingEntry,
+      rejected: !!rejectedEntry
+    });
   } catch (error) {
     console.error('Waiting list check error:', error);
-    res.status(500).json({ onWaitingList: false, error: 'Internal server error' });
+    res.status(500).json({ onWaitingList: false, rejected: false, error: 'Internal server error' });
   }
 });
 
