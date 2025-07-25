@@ -674,7 +674,7 @@ const AnalyticsPage = () => {
               Export Rejected Candidates (CSV)
             </Button>
           </div>
-          <RegisteredUsersTable users={analytics?.rejectedCandidates || []} />
+          <RegisteredUsersTable users={analytics?.rejectedCandidates || []} heading="Rejected Candidates" summaryLabel="rejections" />
         </Card>
       </div>
     </div>

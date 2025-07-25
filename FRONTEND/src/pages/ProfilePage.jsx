@@ -62,50 +62,29 @@ const ProfilePage = () => {
           </div>
           {/* Avatar */}
           <div className="flex justify-center">
-            <div className="relative group w-24 h-24">
-              {avatar ? (
+            <div className="relative w-24 h-24">
+              {currentUser && currentUser.avatar ? (
                 <img
-                  src={URL.createObjectURL(avatar)}
+                  src={currentUser.avatar}
                   alt="User Avatar"
                   className="w-24 h-24 rounded-full border-4 border-amber-400 object-cover"
                 />
               ) : (
                 <Lottie animationData={avatarAnimation} loop={true} style={{ width: '100%', height: '100%' }} />
               )}
-              <label className="absolute bottom-0 right-0 bg-amber-500 text-white rounded-full p-1 text-xs cursor-pointer opacity-0 group-hover:opacity-100 transition">
-                ✏️
-                <input type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
-              </label>
             </div>
           </div>
-          <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Profile Info (read-only) */}
+          <div className="space-y-6">
             <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-300 mb-1">Name</label>
-              <input
-                type="text"
-                id="name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="w-full px-4 py-2.5 bg-white/10 text-white border border-white/20 rounded-lg placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-amber-400"
-              />
+              <label className="block text-sm font-medium text-gray-300 mb-1">Name</label>
+              <div className="w-full px-4 py-2.5 bg-white/10 text-white border border-white/20 rounded-lg">{currentUser?.name || '-'}</div>
             </div>
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-1">Email</label>
-              <input
-                type="email"
-                id="email"
-                value={email}
-                disabled
-                className="w-full px-4 py-2.5 bg-white/10 text-white border border-white/20 rounded-lg placeholder-gray-400 opacity-70 cursor-not-allowed"
-              />
+              <label className="block text-sm font-medium text-gray-300 mb-1">Email</label>
+              <div className="w-full px-4 py-2.5 bg-white/10 text-white border border-white/20 rounded-lg opacity-70">{currentUser?.email || '-'}</div>
             </div>
-            {message && (
-              <div className="text-center text-sm text-amber-400 font-medium">{message}</div>
-            )}
-            <Button type="submit" className="w-full justify-center" disabled={loading}>
-              {loading ? "Saving..." : "Save Changes"}
-            </Button>
-          </form>
+          </div>
         </div>
       </div>
     </div>

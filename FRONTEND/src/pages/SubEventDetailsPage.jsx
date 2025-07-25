@@ -710,7 +710,8 @@ const SubEventDetailsPage = () => {
                     Join the WhatsApp community to connect with other participants, get event updates, and share experiences.
                   </p>
                 </div>
-                {!isEventPast && !registrationClosedEarly && canRSVP && event.rsvps?.length < event.maxAttendees && (
+                {!isEventPast && !registrationClosedEarly && canRSVP && event.rsvps?.length < event.maxAttendees &&
+                  !registrationStatus.rejected && (
                   <Button
                     onClick={handleRegister}
                     className="w-full mt-4 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-semibold"

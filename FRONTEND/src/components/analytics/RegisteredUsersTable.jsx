@@ -5,7 +5,7 @@ import { exportToCSV, exportToJSON } from '../../utils/exportUtils';
 import { saveAs } from 'file-saver';
 import CustomDropdown from '../ui/CustomDropdown';
 
-const RegisteredUsersTable = ({ users, loading }) => {
+const RegisteredUsersTable = ({ users, loading, heading = 'Registered Users', summaryLabel = 'registrations' }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [registrationTypeFilter, setRegistrationTypeFilter] = useState('all');
@@ -150,9 +150,9 @@ const RegisteredUsersTable = ({ users, loading }) => {
       <div className="p-6 border-b border-white/10">
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
           <div>
-            <h3 className="text-2xl font-bold text-amber-400 mb-2">Registered Users</h3>
+            <h3 className="text-2xl font-bold text-amber-400 mb-2">{heading}</h3>
             <p className="text-gray-300 text-sm">
-              {filteredAndSortedUsers.length} of {users?.length || 0} total registrations
+              {filteredAndSortedUsers.length} of {users?.length || 0} total {summaryLabel}
             </p>
           </div>
           {/* Export Buttons */}
