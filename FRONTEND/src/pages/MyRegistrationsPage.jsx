@@ -4,6 +4,7 @@ import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import { useAuth } from '../hooks/useAuth';
 import api from '../services/api';
+import CustomDropdown from '../components/ui/CustomDropdown';
 
 const statusStyles = {
   approved: 'bg-green-400/10 text-green-300 border-green-400/30',
@@ -124,15 +125,16 @@ const MyRegistrationsPage = () => {
               className="w-full md:w-72 px-4 py-3 md:py-2 rounded-xl bg-white/10 border border-white/10 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-400/40 transition-all duration-200 shadow-inner backdrop-blur-md"
               style={{ minWidth: 0 }}
             />
-            <select
+            <CustomDropdown
+              options={[
+                { value: 'applied', label: 'Sort by Date Applied' },
+                { value: 'event', label: 'Sort by Event Date' },
+                { value: 'status', label: 'Sort by Status' },
+              ]}
               value={sortBy}
-              onChange={e => setSortBy(e.target.value)}
-              className="w-full md:w-48 px-4 py-3 md:py-2 rounded-xl bg-white/10 border border-white/10 text-white font-semibold focus:outline-none focus:ring-2 focus:ring-amber-400/40 transition-all duration-200 shadow-inner backdrop-blur-md"
-            >
-              <option value="applied">Sort by Date Applied</option>
-              <option value="event">Sort by Event Date</option>
-              <option value="status">Sort by Status</option>
-            </select>
+              onChange={setSortBy}
+              className="w-full md:w-48"
+            />
           </div>
         </div>
 
@@ -168,7 +170,7 @@ const MyRegistrationsPage = () => {
                 const now = new Date();
                 const eventStart = new Date(app.eventStartTime);
                 const isUpcoming = eventStart > now;
-                const calendarLinks = useMemo(() => getCalendarLinks(app), [app]);
+                const calendarLinks = getCalendarLinks(app);
                 return (
                   <Card key={app.id} className="relative" shadow="xl" rounded="xl" hoverEffect>
                     <div className="flex items-center justify-between mb-2">
@@ -210,8 +212,8 @@ const MyRegistrationsPage = () => {
                         as="a"
                         href={
                           app.status === 'approved'
-                            ? `/events/${app.parentId || ''}/sub/${app.eventId}`
-                            : `/events/${app.parentId || ''}/sub/${app.eventId}/details`
+                            ? `/events/${app.parentEventId || app.eventId}/sub/${app.eventId}`
+                            : `/events/${app.parentEventId || app.eventId}/sub/${app.eventId}/details`
                         }
                         variant="outline"
                         className="font-semibold flex items-center gap-2"

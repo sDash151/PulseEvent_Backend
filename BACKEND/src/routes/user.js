@@ -80,6 +80,7 @@ router.get('/my-registrations', authenticateToken, async (req, res) => {
       ...registrations.map(reg => ({
         id: reg.id,
         eventId: reg.eventId,
+        parentEventId: reg.event.parentEventId || null,
         eventTitle: reg.event.title,
         eventStartTime: reg.event.startTime,
         eventEndTime: reg.event.endTime,
@@ -96,6 +97,7 @@ router.get('/my-registrations', authenticateToken, async (req, res) => {
       ...waitingList.map(wl => ({
         id: wl.id,
         eventId: wl.eventId,
+        parentEventId: wl.event.parentEventId || null,
         eventTitle: wl.event.title,
         eventStartTime: wl.event.startTime,
         eventEndTime: wl.event.endTime,

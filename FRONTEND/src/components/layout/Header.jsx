@@ -146,7 +146,7 @@ const Header = () => {
             </Link>
             
             {/* Desktop Navigation */}
-            <nav className="hidden md:flex items-center space-x-1" role="navigation">
+            <nav className="hidden lg:flex items-center space-x-1" role="navigation">
               {visibleNavItems.filter(item => !item.mobileOnly).map((item) => (
                 <Link 
                   key={item.to}
@@ -265,7 +265,7 @@ const Header = () => {
               <button 
                 onClick={toggleMobileMenu}
                 className="
-                  md:hidden p-2 rounded-lg text-gray-200 hover:text-white 
+                  lg:hidden p-2 rounded-lg text-gray-200 hover:text-white 
                   hover:bg-white/10 transition-all duration-200 z-[110]
                 "
                 aria-label="Toggle mobile menu"
