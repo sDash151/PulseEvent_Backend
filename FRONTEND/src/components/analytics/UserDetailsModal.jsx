@@ -21,7 +21,7 @@ const UserDetailsModal = ({ user, isOpen, onClose }) => {
     };
   }, [isOpen]);
 
-  if (!isOpen || !user) return null;
+  if (!isOpen || !user || !user.id) return null;
 
   const getStatusColor = (status) => {
     const colors = {
@@ -83,8 +83,8 @@ const UserDetailsModal = ({ user, isOpen, onClose }) => {
                 </span>
               </div>
               <div>
-                <h2 className="text-2xl font-bold text-white">{user.name}</h2>
-                <p className="text-gray-400">{user.email}</p>
+                <h2 className="text-2xl font-bold text-white">{safeField(user, 'name', 'Unknown')}</h2>
+                <p className="text-gray-400">{safeField(user, 'email', '-')}</p>
               </div>
             </div>
             <button
@@ -118,20 +118,18 @@ const UserDetailsModal = ({ user, isOpen, onClose }) => {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-400">Status:</span>
-                  <span className={`font-medium ${getStatusColor(user.status)}`}>
-                    {user.status.charAt(0).toUpperCase() + user.status.slice(1)}
-                  </span>
+                  <span className={`font-medium ${getStatusColor(user.status)}`}>{user.status ? user.status.charAt(0).toUpperCase() + user.status.slice(1) : 'Unknown'}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-400">Registered:</span>
                   <span className="text-white font-medium">
-                    {format(new Date(user.registrationDate), 'MMM dd, yyyy')}
+                    {safeDate(user.registrationDate)}
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-400">Time:</span>
                   <span className="text-white font-medium">
-                    {format(new Date(user.registrationDate), 'h:mm a')}
+                    {safeTime(user.registrationDate)}
                   </span>
                 </div>
               </div>
@@ -180,12 +178,12 @@ const UserDetailsModal = ({ user, isOpen, onClose }) => {
                    <div className="flex justify-between items-center">
                      <span className="text-gray-400">Team Name:</span>
                      <span className="text-white font-medium bg-gradient-to-r from-amber-400/20 to-pink-400/20 px-3 py-1 rounded-lg border border-amber-400/30">
-                       {user.teamName}
+                       {safeField(user, 'teamName', '-')}
                      </span>
                    </div>
                  )}
                  
-                 {user.participants && user.participants.length > 0 && (
+                 {Array.isArray(user.participants) && user.participants.length > 0 && (
                    <div>
                      <div className="flex items-center justify-between mb-3">
                        <span className="text-gray-400 font-medium">Team Members ({user.participants.length})</span>
@@ -253,11 +251,9 @@ const UserDetailsModal = ({ user, isOpen, onClose }) => {
                        <svg className="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                        </svg>
-                       <span className="text-green-400 font-medium text-sm capitalize">
-                         {key.replace(/([A-Z])/g, ' $1').trim()}
-                       </span>
+                       <span className="text-green-400 font-medium text-sm capitalize">{key.replace(/([A-Z])/g, ' $1').trim()}</span>
                      </div>
-                     <p className="text-white text-sm">{value}</p>
+                     <p className="text-white text-sm">{value || '-'}</p>
                    </div>
                  ))}
                </div>
@@ -293,7 +289,7 @@ const UserDetailsModal = ({ user, isOpen, onClose }) => {
                      onClick={() => setShowImageModal(true)}
                      onError={(e) => {
                        e.target.style.display = 'none';
-                       e.target.nextSibling.style.display = 'flex';
+                       if (e.target.nextSibling) e.target.nextSibling.style.display = 'flex';
                      }}
                    />
                    <div className="hidden items-center justify-center w-full h-32 bg-emerald-500/10 rounded-lg border border-emerald-400/30">
@@ -357,12 +353,12 @@ const UserDetailsModal = ({ user, isOpen, onClose }) => {
             <div className="space-y-3">
               <div className="flex justify-between">
                 <span className="text-gray-400">User ID:</span>
-                <span className="text-white font-mono text-sm">{user.id}</span>
+                <span className="text-white font-mono text-sm">{safeField(user, 'id', '-')}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-400">Member Since:</span>
                 <span className="text-white font-medium">
-                  {user.createdAt ? format(new Date(user.createdAt), 'MMM dd, yyyy') : 'N/A'}
+                  {safeDate(user.createdAt)}
                 </span>
               </div>
               {user.avatar && (
@@ -372,6 +368,7 @@ const UserDetailsModal = ({ user, isOpen, onClose }) => {
                     src={user.avatar} 
                     alt={user.name} 
                     className="w-12 h-12 rounded-full object-cover border-2 border-white/20"
+                    onError={(e) => { e.target.style.display = 'none'; }}
                   />
                 </div>
               )}

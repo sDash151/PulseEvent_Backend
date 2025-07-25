@@ -741,6 +741,20 @@ const SubEventForm = ({ megaEventId, parentLocation, parentRsvpDeadline, parentS
     return '';
   };
 
+  // Compute form validity for disabling Add Sub-Event button
+  const isFormValid = (() => {
+    if (!title.trim() || !description.trim() || !startTime || !endTime || !maxAttendees) return false;
+    // Team size checks if team event
+    if (isTeamEvent && (!teamSize || (flexibleTeamSize && (!teamSizeMin || !teamSizeMax)))) return false;
+    // Custom fields check
+    if (!areAllFieldsComplete()) return false;
+    // Payment proof (QR code) check if payment is enabled
+    if (paymentEnabled && !qrPreview) return false;
+    // WhatsApp group link if enabled
+    if (whatsappGroupEnabled && (!whatsappGroupLink || whatsappGroupLink.trim() === '')) return false;
+    return true;
+  })();
+
   return (
     <form onSubmit={handleSubmit} className="w-full max-w-6xl mx-auto bg-gray-900 md:bg-white/5 md:backdrop-blur-md border border-gray-700 md:border-white/10 shadow-none md:shadow-lg rounded-2xl p-4 md:p-6 lg:p-8 space-y-6 md:space-y-8">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -1455,7 +1469,7 @@ const SubEventForm = ({ megaEventId, parentLocation, parentRsvpDeadline, parentS
           </div>
         </div>
       )}
-      <Button type="submit" disabled={loading} className="w-full bg-amber-500 text-white px-6 py-3 rounded-2xl font-bold shadow transition duration-300 hover:bg-amber-600 focus:outline-none focus:ring-2 focus:ring-amber-400/60 mt-8">
+      <Button type="submit" disabled={loading || !isFormValid} className="w-full bg-amber-500 text-white px-6 py-3 rounded-2xl font-bold shadow transition duration-300 hover:bg-amber-600 focus:outline-none focus:ring-2 focus:ring-amber-400/60 mt-8">
         {loading ? 'Adding...' : 'Add Sub-Event'}
       </Button>
     </form>

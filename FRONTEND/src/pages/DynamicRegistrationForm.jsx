@@ -577,6 +577,46 @@ const DynamicRegistrationForm = () => {
     );
   }
 
+  // Compute form validity for disabling submit button
+  const isFormValid = (() => {
+    if (!event) return false;
+    // Check required custom fields
+    if (customFields && customFields.length > 0) {
+      for (let idx = 0; idx < customFields.length; idx++) {
+        const field = customFields[idx];
+        const isIndividualField = field.isIndividual && event.teamSize;
+        if (field.required) {
+          if (isIndividualField) {
+            const participantCount = event.flexibleTeamSize ? selectedTeamSize : event.teamSize;
+            for (let participantIdx = 0; participantIdx < participantCount; participantIdx++) {
+              const fieldName = `field_${idx}_participant_${participantIdx}`;
+              if (!formData[fieldName] || formData[fieldName].trim() === '') {
+                return false;
+              }
+            }
+          } else {
+            const fieldName = `field_${idx}`;
+            if (!formData[fieldName] || formData[fieldName].trim() === '') {
+              return false;
+            }
+          }
+        }
+      }
+    }
+    // Check participants for team events if no custom fields
+    if ((!customFields || customFields.length === 0) && event.teamSize) {
+      const participantCount = event.flexibleTeamSize ? selectedTeamSize : event.teamSize;
+      if (participants.length !== participantCount) return false;
+      for (let p of participants) {
+        if (!p.name || !p.email || p.name.trim() === '' || p.email.trim() === '') return false;
+      }
+    }
+    // Check payment proof if payment is enabled
+    if (event.paymentEnabled && !uploadedPaymentProofUrl) return false;
+    // All checks passed
+    return true;
+  })();
+
   return (
     <PageContainer>
       
@@ -1043,7 +1083,7 @@ const DynamicRegistrationForm = () => {
           {/* Submit Button */}
           <Button 
             type="submit" 
-            disabled={submitting} 
+            disabled={submitting || !isFormValid} 
             variant="primary"
             className="w-full py-3 font-semibold"
           >

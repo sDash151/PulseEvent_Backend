@@ -555,14 +555,32 @@ const SubEventDetailsPage = () => {
                     ) : (
                       // Regular actions for unregistered users
                       <>
-                        {!registrationStatus.isRegistered && !isEventPast && !registrationClosedEarly && canRSVP && event.rsvps?.length < event.maxAttendees && (
+                        {registrationStatus.rejected ? (
+                          <div className="w-full">
+                            <Button
+                              disabled
+                              className="w-full bg-red-400/30 text-red-300 font-semibold cursor-not-allowed flex items-center gap-2"
+                              style={{ cursor: 'not-allowed' }}
+                              tabIndex={-1}
+                            >
+                              <svg className="w-5 h-5 text-red-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                              </svg>
+                              Rejected
+                            </Button>
+                            <div className="mt-2 text-xs text-gray-300 bg-white/10 rounded-lg p-3 border border-white/20 w-full">
+                              <span className="font-semibold text-amber-300">Do not worry!</span> You cannot register online, but you can do an <span className="font-semibold text-amber-300">on-spot registration at the venue before the RSVP deadline</span>.
+                            </div>
+                          </div>
+                        ) :
+                        (!registrationStatus.isRegistered && !isEventPast && !registrationClosedEarly && canRSVP && event.rsvps?.length < event.maxAttendees) ? (
                           <Button
                             onClick={handleRegister}
                             className="w-full bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-semibold"
                           >
                             Register Now
                           </Button>
-                        )}
+                        ) : null}
                         {!registrationStatus.isRegistered && !isEventPast && !canRSVP && event.rsvps?.length < event.maxAttendees && registrationClosedEarly && (
                           <div className="w-full">
                             <Button

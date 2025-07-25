@@ -450,22 +450,31 @@ router.get('/:eventId', authenticateToken, authorizeHost, async (req, res) => {
     // Add rejected candidates (waiting list with status 'rejected')
     const rejectedCandidates = event.waitingList
       .filter(waiting => waiting.status === 'rejected' && waiting.user)
-      .map(waiting => ({
-        id: waiting.user.id,
-        name: waiting.user.name,
-        email: waiting.user.email,
-        avatar: waiting.user.avatar,
-        registrationType: 'Waiting List',
-        registrationDate: waiting.createdAt,
-        checkedIn: false,
-        checkInDate: null,
-        teamName: waiting.teamName,
-        participants: waiting.participants || [],
-        responses: waiting.responses,
-        paymentProof: waiting.paymentProof,
-        createdAt: waiting.user.createdAt,
-        status: waiting.status
-      }));
+      .map(waiting => {
+        // Defensive: fallback for missing user fields
+        const user = waiting.user || {};
+        // Defensive: normalize responses (map 'Email ID' to 'email' if present)
+        let responses = waiting.responses || {};
+        if (responses['Email ID'] && !responses['email']) {
+          responses['email'] = responses['Email ID'];
+        }
+        return {
+          id: user.id || '-',
+          name: user.name || '-',
+          email: user.email || responses['email'] || '-',
+          avatar: user.avatar || null,
+          registrationType: 'Waiting List',
+          registrationDate: waiting.createdAt || null,
+          checkedIn: false,
+          checkInDate: null,
+          teamName: waiting.teamName || '-',
+          participants: waiting.participants || [],
+          responses,
+          paymentProof: waiting.paymentProof || null,
+          createdAt: user.createdAt || null,
+          status: waiting.status || 'rejected'
+        };
+      });
 
     // --- Attendance Data: Registered vs Feedback Users ---
     const attendanceData = [];
