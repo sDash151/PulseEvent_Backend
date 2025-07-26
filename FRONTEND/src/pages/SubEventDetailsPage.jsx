@@ -200,17 +200,14 @@ const SubEventDetailsPage = () => {
               </div>
 
               {/* Location */}
-              <div className="bg-white/5 backdrop-blur-md p-6 rounded-2xl border border-white/10">
+              <div className="bg-gradient-to-r from-amber-500/10 to-pink-500/10 backdrop-blur-md p-6 rounded-2xl border border-amber-400/20">
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 bg-blue-400/20 rounded-lg flex items-center justify-center">
-                    <svg className="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
+                  <div className="w-10 h-10 bg-amber-400/20 rounded-lg flex items-center justify-center">
+                    <span className="text-amber-400 text-xl">📍</span>
                   </div>
-                  <h3 className="text-lg font-semibold text-blue-400">Location</h3>
+                  <h3 className="text-lg font-semibold text-amber-400">Event Location</h3>
                 </div>
-                <p className="text-white font-medium">{event.location}</p>
+                <p className="text-white font-medium text-lg">{event.location}</p>
               </div>
 
               {/* College Information */}
@@ -218,9 +215,9 @@ const SubEventDetailsPage = () => {
                 <div className="bg-white/5 backdrop-blur-md p-6 rounded-2xl border border-white/10">
                   <div className="flex items-center gap-3 mb-4">
                     <div className="w-10 h-10 bg-purple-400/20 rounded-lg flex items-center justify-center">
-                      <span className="text-purple-400 text-xl">🎓</span>
+                      <span className="text-purple-400 text-xl">🏫</span>
                     </div>
-                    <h3 className="text-lg font-semibold text-purple-400">College</h3>
+                    <h3 className="text-lg font-semibold text-purple-400">Hosted at College</h3>
                   </div>
                   <p className="text-white font-medium">{event.college.name}</p>
                   {event.college.city && event.college.state && (

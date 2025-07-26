@@ -65,7 +65,7 @@ router.get('/users', authenticateToken, authorizeHost, async (req, res) => {
 
 // 📝 Register
 router.post('/register', registerLimiter, async (req, res) => {
-  const { name, email, password, role, collegeName, collegeState, collegeDistrict, degreeName, specializationName } = req.body;
+  const { name, email, password, role, collegeName, collegeState, collegeDistrict, degreeName, specializationName, gender, phoneNumber, graduationYear } = req.body;
 
   if (!name || !email || !password) {
     console.log('[REGISTER] Missing fields:', { name, email, password });
@@ -73,6 +73,11 @@ router.post('/register', registerLimiter, async (req, res) => {
   }
   if (!strongPasswordRegex.test(password)) {
     return res.status(400).json({ message: 'Password must be at least 8 characters and include uppercase, lowercase, number, and special character.' });
+  }
+
+  // Validate phone number if provided
+  if (phoneNumber && phoneNumber.length !== 10) {
+    return res.status(400).json({ message: 'Phone number must be exactly 10 digits.' });
   }
 
   // Block disposable emails
@@ -141,7 +146,10 @@ router.post('/register', registerLimiter, async (req, res) => {
         collegeState: collegeState || null,
         collegeDistrict: collegeDistrict || null,
         degreeName: degreeName || null,
-        specializationName: specializationName || null
+        specializationName: specializationName || null,
+        gender: gender || null,
+        phoneNumber: phoneNumber ? `+91${phoneNumber}` : null,
+        graduationYear: graduationYear ? parseInt(graduationYear) : null
       }
     });
 
@@ -298,7 +306,18 @@ router.get('/me', authenticateToken, async (req, res) => {
         email: true,
         role: true,
         avatar: true,
-        createdAt: true
+        createdAt: true,
+        // College information
+        collegeName: true,
+        collegeState: true,
+        collegeDistrict: true,
+        collegeDepartment: true,
+        degreeName: true,
+        specializationName: true,
+        // Additional information
+        gender: true,
+        phoneNumber: true,
+        graduationYear: true
       }
     });
     

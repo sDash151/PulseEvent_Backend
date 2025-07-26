@@ -199,9 +199,13 @@ const SubEventCard = ({ sub, parentEventId }) => {
           </p>
         </div>
         
-        <div>
-          <h4 className="text-sm font-semibold text-amber-400 mb-1">Location</h4>
-          <p className="text-white text-sm">{sub.location}</p>
+        {/* Location Section - Prominent Display */}
+        <div className="bg-gradient-to-r from-amber-500/10 to-pink-500/10 rounded-lg p-3 border border-amber-400/20">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-amber-400 text-lg">📍</span>
+            <h4 className="text-sm font-semibold text-amber-400">Event Location</h4>
+          </div>
+          <p className="text-white text-sm font-medium">{sub.location}</p>
         </div>
         
         <div>
@@ -226,7 +230,7 @@ const SubEventCard = ({ sub, parentEventId }) => {
         
         {sub.college && (
           <div>
-            <h4 className="text-sm font-semibold text-amber-400 mb-1">College</h4>
+            <h4 className="text-sm font-semibold text-amber-400 mb-1">🏫 Hosted at College</h4>
             <p className="text-white text-sm">
               {sub.college.name}
               {sub.college.city && `, ${sub.college.city}`}

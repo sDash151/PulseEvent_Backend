@@ -343,7 +343,6 @@ const EventDetailPage = () => {
             <BackButton to="/dashboard" variant="subtle" label="Dashboard" />
             <div>
               <h1 className="text-3xl font-bold">{event.title}</h1>
-              <p className="text-gray-300">{event.location}</p>
             </div>
           </div>
           <div className="flex gap-3">
@@ -358,6 +357,15 @@ const EventDetailPage = () => {
         {/* Glassmorphic Card */}
         <div className="bg-white/5 backdrop-blur-md p-6 rounded-2xl border border-white/10 shadow-[0_0_25px_rgba(255,255,255,0.05)] space-y-6">
           <FormattedContent content={event.description} />
+
+          {/* Location Section - Prominent Display */}
+          <div className="bg-gradient-to-r from-amber-500/10 to-pink-500/10 rounded-xl p-4 border border-amber-400/20">
+            <div className="flex items-center gap-3 mb-2">
+              <span className="text-amber-400 text-xl">📍</span>
+              <h3 className="text-lg font-semibold text-amber-400">Event Location</h3>
+            </div>
+            <p className="text-white text-lg font-medium">{event.location}</p>
+          </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
@@ -378,7 +386,7 @@ const EventDetailPage = () => {
             </div>
             {event.college && (
               <div>
-                <h3 className="text-sm font-semibold text-amber-400">College</h3>
+                <h3 className="text-sm font-semibold text-amber-400">🏫 Hosted at College</h3>
                 <p className="text-white">
                   {event.college.name}
                   {event.college.city && `, ${event.college.city}`}

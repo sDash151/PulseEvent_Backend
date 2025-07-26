@@ -1,6 +1,24 @@
 const { PrismaClient } = require('@prisma/client');
 const readline = require('readline');
 
+/**
+ * DELETE ALL DATA SCRIPT
+ * 
+ * This script deletes ALL user data and events while preserving reference data.
+ * 
+ * NEW USER FIELDS (v2.0):
+ * - gender: User's gender (Male, Female, Other, Prefer not to say)
+ * - phoneNumber: User's phone number with +91 prefix
+ * - graduationYear: Expected graduation year
+ * - collegeName, collegeState, collegeDistrict: College information
+ * - degreeName, specializationName: Academic information
+ * 
+ * PRESERVED REFERENCE DATA:
+ * - Colleges table (for dropdowns)
+ * - Degrees table (for dropdowns)  
+ * - Specializations table (for dropdowns)
+ */
+
 const prisma = new PrismaClient();
 
 // Create readline interface for user input
@@ -26,12 +44,13 @@ async function deleteAllData() {
     
     // Show what will be deleted
     console.log('\n📋 Data that will be deleted:');
-    console.log('   - All users and their accounts');
+    console.log('   - All users and their accounts (including new fields: gender, phone, graduation year)');
     console.log('   - All events (mega and sub-events)');
     console.log('   - All registrations and RSVPs');
     console.log('   - All feedback and invitations');
     console.log('   - All waiting list entries');
     console.log('   - All notifications and tokens');
+    console.log('   - All user academic information (college, degree, specialization)');
     
     console.log('\n🛡️  Data that will be preserved:');
     console.log('   - Colleges (reference data)');
@@ -113,7 +132,7 @@ async function deleteAllData() {
     console.log('🎉 Deleting events...');
     await prisma.event.deleteMany({});
     
-    console.log('👤 Deleting users...');
+    console.log('👤 Deleting users (including new fields: gender, phone, graduation year, academic info)...');
     await prisma.user.deleteMany({});
     
     // Verify reference data is preserved

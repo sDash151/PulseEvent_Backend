@@ -62,6 +62,10 @@ model User {
   collegeDepartment   String?      // <-- User's department
   degreeName         String? // User's degree program (for manual entry or denormalized)
   specializationName String? // User's specialization (for manual entry or denormalized)
+  // Additional user information
+  gender              String?      // User's gender (Male, Female, Other, Prefer not to say)
+  phoneNumber         String?      // User's phone number for WhatsApp/SMS notifications
+  graduationYear      Int?         // Expected graduation year
 }
 
 model Event {

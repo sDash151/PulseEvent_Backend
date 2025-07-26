@@ -1,6 +1,27 @@
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
+/**
+ * DELETE NON-HOST USERS SCRIPT
+ * 
+ * This script safely deletes non-host users while preserving hosts and reference data.
+ * 
+ * NEW USER FIELDS (v2.0):
+ * - gender: User's gender (Male, Female, Other, Prefer not to say)
+ * - phoneNumber: User's phone number with +91 prefix
+ * - graduationYear: Expected graduation year
+ * - collegeName, collegeState, collegeDistrict: College information
+ * - degreeName, specializationName: Academic information
+ * 
+ * PRESERVED DATA:
+ * - All hosts and their events
+ * - Colleges table (for dropdowns)
+ * - Degrees table (for dropdowns)
+ * - Specializations table (for dropdowns)
+ * 
+ * USAGE: node delete-users-script.js --confirm
+ */
+
 async function deleteNonHostUsers() {
   console.log('🚀 Starting safe deletion of non-host users...');
   console.log('🛡️  Reference data (colleges, degrees, specializations) will be preserved.');
@@ -39,7 +60,15 @@ async function deleteNonHostUsers() {
 
     console.log(`👥 Found ${nonHosts.length} non-host users to delete:`);
     nonHosts.forEach(user => {
-      console.log(`   - ${user.name} (${user.email})`);
+      const userInfo = [
+        user.name,
+        user.email,
+        user.gender && `Gender: ${user.gender}`,
+        user.phoneNumber && `Phone: ${user.phoneNumber}`,
+        user.graduationYear && `Grad Year: ${user.graduationYear}`,
+        user.collegeName && `College: ${user.collegeName}`
+      ].filter(Boolean).join(' | ');
+      console.log(`   - ${userInfo}`);
     });
 
     if (nonHosts.length === 0) {
@@ -68,7 +97,7 @@ async function deleteNonHostUsers() {
     console.log(`   - ${totalRejectionNotifications} rejection notifications`);
     console.log(`   - ${totalEmailTokens} email verification tokens`);
     console.log(`   - ${totalPasswordTokens} password reset tokens`);
-    console.log(`   - ${nonHosts.length} user accounts`);
+    console.log(`   - ${nonHosts.length} user accounts (including new fields: gender, phone, graduation year, academic info)`);
 
     console.log('\n🛡️  Data that will be preserved:');
     console.log('   - All hosts and their events');
@@ -162,7 +191,7 @@ async function deleteNonHostUsers() {
       where: { userId: { in: nonHostUserIds } }
     });
 
-    console.log('11. Deleting non-host users...');
+    console.log('11. Deleting non-host users (including new fields: gender, phone, graduation year, academic info)...');
     await prisma.user.deleteMany({
       where: { id: { in: nonHostUserIds } }
     });
@@ -186,7 +215,16 @@ async function deleteNonHostUsers() {
     console.log(`\n📊 Final user count: ${remainingUsers.length}`);
     console.log('👑 Remaining hosts:');
     remainingUsers.forEach(user => {
-      console.log(`   - ${user.name} (${user.email}) - ${user.events.length} events`);
+      const userInfo = [
+        user.name,
+        user.email,
+        user.gender && `Gender: ${user.gender}`,
+        user.phoneNumber && `Phone: ${user.phoneNumber}`,
+        user.graduationYear && `Grad Year: ${user.graduationYear}`,
+        user.collegeName && `College: ${user.collegeName}`,
+        `${user.events.length} events`
+      ].filter(Boolean).join(' | ');
+      console.log(`   - ${userInfo}`);
     });
 
     // Verify no orphaned data

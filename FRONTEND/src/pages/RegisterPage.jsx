@@ -47,6 +47,11 @@ const RegisterPage = () => {
   const [otherDegree, setOtherDegree] = useState('')
   const [otherSpecialization, setOtherSpecialization] = useState('')
   
+  // Additional user information states
+  const [gender, setGender] = useState('')
+  const [phoneNumber, setPhoneNumber] = useState('')
+  const [graduationYear, setGraduationYear] = useState('')
+  
   // Use the custom error handler hook - always call with same parameters
   const {
     error,
@@ -208,7 +213,10 @@ const RegisterPage = () => {
         selectedState, 
         selectedDistrict, 
         selectedDegree || otherDegree,
-        selectedSpecialization || otherSpecialization
+        selectedSpecialization || otherSpecialization,
+        gender,
+        phoneNumber,
+        graduationYear
       );
       console.log('[REGISTER] Backend response:', { message, token });
       if (token) {
@@ -642,6 +650,89 @@ const RegisterPage = () => {
                   />
                 </div>
               )}
+            </div>
+
+            {/* Additional Information Section */}
+            <div className="bg-white/5 rounded-2xl p-6 border border-white/10 overflow-visible">
+              <h3 className="text-lg font-semibold text-amber-300 mb-4 flex items-center gap-2">
+                <span className="text-xl">👤</span>
+                Additional Information
+              </h3>
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* Gender */}
+                <div>
+                  <label htmlFor="gender" className="block text-sm font-semibold text-gray-300 mb-2">
+                    Gender
+                  </label>
+                  <CustomDropdown
+                    options={[
+                      { value: 'male', label: 'Male' },
+                      { value: 'female', label: 'Female' },
+                      { value: 'other', label: 'Other' },
+                      { value: 'prefer_not_to_say', label: 'Prefer not to say' }
+                    ]}
+                    value={gender}
+                    onChange={setGender}
+                    placeholder="Select your gender"
+                    className="w-full"
+                    searchable={false}
+                  />
+                </div>
+
+                {/* Phone Number */}
+                <div>
+                  <label htmlFor="phoneNumber" className="block text-sm font-semibold text-gray-300 mb-2">
+                    Phone Number
+                  </label>
+                  <div className="relative">
+                    <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 font-medium">
+                      +91
+                    </div>
+                    <input
+                      type="tel"
+                      id="phoneNumber"
+                      value={phoneNumber}
+                      onChange={(e) => {
+                        // Only allow numbers and limit to 10 digits
+                        const value = e.target.value.replace(/\D/g, '').slice(0, 10);
+                        setPhoneNumber(value);
+                      }}
+                      className="w-full pl-12 pr-4 py-3 bg-white/10 text-white border border-white/20 rounded-xl placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-amber-400 transition-all duration-300 text-base"
+                      placeholder="98765 43210"
+                    />
+                  </div>
+                  <p className="text-xs text-gray-400 mt-1">
+                    Enter your 10-digit mobile number (without country code)
+                    {phoneNumber && phoneNumber.length === 10 && (
+                      <span className="block text-green-400 mt-1">
+                        ✓ Will be saved as: +91 {phoneNumber}
+                      </span>
+                    )}
+                  </p>
+                </div>
+
+                {/* Graduation Year */}
+                <div>
+                  <label htmlFor="graduationYear" className="block text-sm font-semibold text-gray-300 mb-2">
+                    Expected Graduation Year
+                  </label>
+                  <CustomDropdown
+                    options={(() => {
+                      const currentYear = new Date().getFullYear();
+                      const years = [];
+                      for (let i = currentYear; i <= currentYear + 6; i++) {
+                        years.push({ value: i.toString(), label: i.toString() });
+                      }
+                      return years;
+                    })()}
+                    value={graduationYear}
+                    onChange={setGraduationYear}
+                    placeholder="Select graduation year"
+                    className="w-full"
+                    searchable={false}
+                  />
+                </div>
+              </div>
             </div>
 
             {/* Submit Button Section */}
