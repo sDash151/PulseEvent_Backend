@@ -3,6 +3,7 @@ const prisma = new PrismaClient();
 
 async function deleteNonHostUsers() {
   console.log('🚀 Starting safe deletion of non-host users...');
+  console.log('🛡️  Reference data (colleges, degrees, specializations) will be preserved.');
   
   try {
     // Step 1: Get all users
@@ -15,7 +16,10 @@ async function deleteNonHostUsers() {
         waitingList: true,
         sentInvitations: true,
         receivedInvitations: true,
-        whatsAppNotifications: true
+        whatsAppNotifications: true,
+        rejectionNotifications: true,
+        emailVerificationTokens: true,
+        passwordResetTokens: true
       }
     });
 
@@ -51,8 +55,9 @@ async function deleteNonHostUsers() {
     const totalWaitingList = nonHosts.reduce((sum, user) => sum + user.waitingList.length, 0);
     const totalInvitations = nonHosts.reduce((sum, user) => sum + user.sentInvitations.length + user.receivedInvitations.length, 0);
     const totalWhatsAppNotifications = nonHosts.reduce((sum, user) => sum + user.whatsAppNotifications.length, 0);
-    // Count rejection notifications for non-hosts
-    const totalRejectionNotifications = await prisma.rejectionNotification.count({ where: { userId: { in: nonHostUserIds } } });
+    const totalRejectionNotifications = nonHosts.reduce((sum, user) => sum + user.rejectionNotifications.length, 0);
+    const totalEmailTokens = nonHosts.reduce((sum, user) => sum + user.emailVerificationTokens.length, 0);
+    const totalPasswordTokens = nonHosts.reduce((sum, user) => sum + user.passwordResetTokens.length, 0);
 
     console.log(`   - ${totalRSVPs} RSVPs`);
     console.log(`   - ${totalFeedbacks} feedbacks`);
@@ -61,6 +66,15 @@ async function deleteNonHostUsers() {
     console.log(`   - ${totalInvitations} invitations`);
     console.log(`   - ${totalWhatsAppNotifications} WhatsApp notifications`);
     console.log(`   - ${totalRejectionNotifications} rejection notifications`);
+    console.log(`   - ${totalEmailTokens} email verification tokens`);
+    console.log(`   - ${totalPasswordTokens} password reset tokens`);
+    console.log(`   - ${nonHosts.length} user accounts`);
+
+    console.log('\n🛡️  Data that will be preserved:');
+    console.log('   - All hosts and their events');
+    console.log('   - Colleges (reference data)');
+    console.log('   - Degrees (reference data)');
+    console.log('   - Specializations (reference data)');
 
     // Step 4: Confirmation prompt
     console.log('\n⚠️  WARNING: This action cannot be undone!');
@@ -78,6 +92,7 @@ async function deleteNonHostUsers() {
     console.log('\n🗑️  Proceeding with deletion...');
 
     // Step 5: Delete in correct order to maintain referential integrity
+    // PRESERVE: College, Degree, Specialization tables (reference data)
 
     // Delete in order of dependencies (child records first)
     console.log('1. Deleting WhatsApp notifications...');
@@ -85,19 +100,18 @@ async function deleteNonHostUsers() {
       where: { userId: { in: nonHostUserIds } }
     });
 
-    console.log('1b. Deleting rejection notifications...');
+    console.log('2. Deleting rejection notifications...');
     await prisma.rejectionNotification.deleteMany({
       where: { userId: { in: nonHostUserIds } }
     });
 
-    console.log('2. Deleting waiting list entries...');
+    console.log('3. Deleting waiting list entries...');
     await prisma.waitingList.deleteMany({
       where: { userId: { in: nonHostUserIds } }
     });
-    // NOTE: If waiting list participants ever become a relational model, add deletion here.
 
-    // --- Move participant deletion here, before registrations ---
-    console.log('3. Deleting participants (from registrations)...');
+    // Delete participants from registrations
+    console.log('4. Deleting participants (from registrations)...');
     // First get all registration IDs for non-host users
     const registrationIds = await prisma.registration.findMany({
       where: { userId: { in: nonHostUserIds } },
@@ -113,22 +127,22 @@ async function deleteNonHostUsers() {
       });
     }
 
-    console.log('4. Deleting registrations...');
+    console.log('5. Deleting registrations...');
     await prisma.registration.deleteMany({
       where: { userId: { in: nonHostUserIds } }
     });
 
-    console.log('5. Deleting feedbacks...');
+    console.log('6. Deleting feedbacks...');
     await prisma.feedback.deleteMany({
       where: { userId: { in: nonHostUserIds } }
     });
 
-    console.log('6. Deleting RSVPs...');
+    console.log('7. Deleting RSVPs...');
     await prisma.rsvp.deleteMany({
       where: { userId: { in: nonHostUserIds } }
     });
 
-    console.log('7. Deleting invitations...');
+    console.log('8. Deleting invitations...');
     await prisma.invitation.deleteMany({
       where: { 
         OR: [
@@ -138,17 +152,17 @@ async function deleteNonHostUsers() {
       }
     });
 
-    console.log('8. Deleting email verification tokens...');
+    console.log('9. Deleting email verification tokens...');
     await prisma.emailVerificationToken.deleteMany({
       where: { userId: { in: nonHostUserIds } }
     });
 
-    console.log('9. Deleting password reset tokens...');
+    console.log('10. Deleting password reset tokens...');
     await prisma.passwordResetToken.deleteMany({
       where: { userId: { in: nonHostUserIds } }
     });
 
-    console.log('10. Deleting non-host users...');
+    console.log('11. Deleting non-host users...');
     await prisma.user.deleteMany({
       where: { id: { in: nonHostUserIds } }
     });
@@ -186,6 +200,16 @@ async function deleteNonHostUsers() {
     console.log(`   - Feedbacks: ${orphanedFeedbacks} (should be 0)`);
     console.log(`   - Registrations: ${orphanedRegistrations} (should be 0)`);
     console.log(`   - Waiting list: ${orphanedWaitingList} (should be 0)`);
+
+    // Verify reference data is preserved
+    console.log('\n🛡️  Reference data preservation check:');
+    const collegeCount = await prisma.college.count();
+    const degreeCount = await prisma.degree.count();
+    const specializationCount = await prisma.specialization.count();
+    
+    console.log(`   - Colleges preserved: ${collegeCount}`);
+    console.log(`   - Degrees preserved: ${degreeCount}`);
+    console.log(`   - Specializations preserved: ${specializationCount}`);
 
     if (orphanedRSVPs === 0 && orphanedFeedbacks === 0 && 
         orphanedRegistrations === 0 && orphanedWaitingList === 0) {

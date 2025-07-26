@@ -2,6 +2,33 @@ const express = require('express');
 const router = express.Router();
 const prisma = require('../utils/db');
 
+// Get all colleges (for event creation form)
+router.get('/', async (req, res) => {
+  try {
+    const colleges = await prisma.college.findMany({
+      select: {
+        id: true,
+        collegeId: true,
+        name: true,
+        city: true,
+        district: true,
+        state: true,
+        addressLine1: true,
+        addressLine2: true,
+        pincode: true
+      },
+      orderBy: {
+        name: 'asc'
+      }
+    });
+    
+    res.json({ colleges });
+  } catch (error) {
+    console.error('Error fetching colleges:', error);
+    res.status(500).json({ error: 'Failed to fetch colleges' });
+  }
+});
+
 // Get all states
 router.get('/states', async (req, res) => {
   try {

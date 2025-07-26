@@ -541,7 +541,7 @@ const RegisterPage = () => {
                 </label>
                 <CustomDropdown
                   options={loadingDegrees ? [] : [
-                    ...degrees.map(degree => ({ value: degree.id, label: degree.name })),
+                    ...degrees.map(degree => ({ value: degree.name, label: degree.name })),
                     { value: 'other', label: 'Other (Not listed above)' }
                   ]}
                   value={selectedDegree}
@@ -555,7 +555,11 @@ const RegisterPage = () => {
                     } else {
                       setShowOtherDegree(false);
                       setOtherDegree('');
-                      fetchSpecializations(value);
+                      // Find the degree ID for fetching specializations
+                      const degree = degrees.find(d => d.name === value);
+                      if (degree) {
+                        fetchSpecializations(degree.id);
+                      }
                     }
                   }}
                   placeholder={loadingDegrees ? "Loading degrees..." : "Select your Degree Program"}
