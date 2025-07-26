@@ -1,14 +1,41 @@
+import { useState, useEffect } from 'react'
 import { useAuth } from '../hooks/useAuth'
 import BackButton from '../components/ui/BackButton'
 import Lottie from 'lottie-react';
 import avatarAnimation from '../assets/BOY2.json';
 
 const ProfilePage = () => {
-  const { currentUser } = useAuth()
-  // Profile is now read-only, no state management needed for editing
+  const { currentUser, refreshUserData } = useAuth()
+  const [refreshing, setRefreshing] = useState(false)
+  
+  // Refresh user data when component mounts to ensure we have the latest data
+  useEffect(() => {
+    const refreshData = async () => {
+      if (currentUser) {
+        setRefreshing(true)
+        try {
+          await refreshUserData()
+        } catch (error) {
+          console.error('Failed to refresh user data:', error)
+        } finally {
+          setRefreshing(false)
+        }
+      }
+    }
+    
+    refreshData()
+  }, [refreshUserData])
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#0f0c29] via-[#302b63] to-[#24243e] px-4 pt-24 pb-16">
+      {refreshing && (
+        <div className="fixed top-4 right-4 z-50 bg-amber-500/20 border border-amber-400/30 rounded-lg p-3 backdrop-blur-md">
+          <div className="flex items-center gap-2">
+            <div className="animate-spin rounded-full h-4 w-4 border-2 border-amber-400 border-t-transparent"></div>
+            <span className="text-amber-300 text-sm">Refreshing profile...</span>
+          </div>
+        </div>
+      )}
       <div className="max-w-4xl mx-auto relative z-10 bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl shadow-[0_0_25px_rgba(255,255,255,0.08)] p-8">
         {/* Ambient Glows */}
         <div className="absolute top-0 left-[25%] w-80 h-80 bg-amber-400/20 rounded-full blur-[150px] z-0"></div>

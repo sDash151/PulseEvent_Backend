@@ -1,6 +1,7 @@
 // frontend/src/context/AuthContext.jsx
 import React, { createContext, useContext, useState, useEffect } from 'react'
 import { jwtDecode } from 'jwt-decode'
+import { getCurrentUser } from '../services/auth'
 
 // ✅ Exporting AuthContext
 export const AuthContext = createContext(null)
@@ -29,14 +30,26 @@ export const AuthProvider = ({ children }) => {
           
           // Check for required fields
           if (decoded && decoded.id && decoded.email && decoded.name) {
-            setCurrentUser({ 
-              id: decoded.id, 
-              email: decoded.email, 
-              name: decoded.name,
-              role: decoded.role,
-              token
-            })
-            console.log('[AuthContext][Debug] Set currentUser with id:', decoded.id)
+            // Fetch complete user data from API instead of just using JWT data
+            try {
+              const userData = await getCurrentUser()
+              setCurrentUser({ 
+                ...userData,
+                token
+              })
+              console.log('[AuthContext][Debug] Set currentUser with complete data:', userData.id)
+            } catch (apiError) {
+              console.error('[AuthContext] Failed to fetch user data from API:', apiError)
+              // Fallback to JWT data if API fails
+              setCurrentUser({ 
+                id: decoded.id, 
+                email: decoded.email, 
+                name: decoded.name,
+                role: decoded.role,
+                token
+              })
+              console.log('[AuthContext][Debug] Fallback to JWT data for id:', decoded.id)
+            }
           } else {
             console.error('JWT missing required fields:', decoded)
             setCurrentUser(null)
@@ -65,14 +78,26 @@ export const AuthProvider = ({ children }) => {
       
       // Check for required fields
       if (decoded && decoded.id && decoded.email && decoded.name) {
-        setCurrentUser({ 
-          id: decoded.id, 
-          email: decoded.email, 
-          name: decoded.name,
-          role: decoded.role,
-          token
-        })
-        console.log('[AuthContext][Debug] Set currentUser with id (login):', decoded.id)
+        // Fetch complete user data from API instead of just using JWT data
+        try {
+          const userData = await getCurrentUser()
+          setCurrentUser({ 
+            ...userData,
+            token
+          })
+          console.log('[AuthContext][Debug] Set currentUser with complete data (login):', userData.id)
+        } catch (apiError) {
+          console.error('[AuthContext] Failed to fetch user data from API on login:', apiError)
+          // Fallback to JWT data if API fails
+          setCurrentUser({ 
+            id: decoded.id, 
+            email: decoded.email, 
+            name: decoded.name,
+            role: decoded.role,
+            token
+          })
+          console.log('[AuthContext][Debug] Fallback to JWT data for id (login):', decoded.id)
+        }
       } else {
         console.error('[AuthContext] Login failed - invalid token structure')
         localStorage.removeItem('token')
@@ -90,8 +115,26 @@ export const AuthProvider = ({ children }) => {
     setCurrentUser(null)
   }
 
+  const refreshUserData = async () => {
+    const token = localStorage.getItem('token')
+    if (token) {
+      try {
+        const userData = await getCurrentUser()
+        setCurrentUser({ 
+          ...userData,
+          token
+        })
+        console.log('[AuthContext][Debug] Refreshed user data:', userData.id)
+        return userData
+      } catch (error) {
+        console.error('[AuthContext] Failed to refresh user data:', error)
+        throw error
+      }
+    }
+  }
+
   return (
-    <AuthContext.Provider value={{ currentUser, login, logout, loading }}>
+    <AuthContext.Provider value={{ currentUser, login, logout, loading, refreshUserData }}>
       {children}
     </AuthContext.Provider>
   )
