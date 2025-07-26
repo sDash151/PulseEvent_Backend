@@ -213,6 +213,22 @@ const SubEventDetailsPage = () => {
                 <p className="text-white font-medium">{event.location}</p>
               </div>
 
+              {/* College Information */}
+              {event.college && (
+                <div className="bg-white/5 backdrop-blur-md p-6 rounded-2xl border border-white/10">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-10 h-10 bg-purple-400/20 rounded-lg flex items-center justify-center">
+                      <span className="text-purple-400 text-xl">🎓</span>
+                    </div>
+                    <h3 className="text-lg font-semibold text-purple-400">College</h3>
+                  </div>
+                  <p className="text-white font-medium">{event.college.name}</p>
+                  {event.college.city && event.college.state && (
+                    <p className="text-gray-300 text-sm">{event.college.city}, {event.college.state}</p>
+                  )}
+                </div>
+              )}
+
               {/* Attendees */}
               <div className="bg-white/5 backdrop-blur-md p-6 rounded-2xl border border-white/10">
                 <div className="flex items-center gap-3 mb-4">

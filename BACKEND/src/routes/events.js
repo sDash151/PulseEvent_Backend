@@ -19,6 +19,9 @@ router.get('/', authenticateToken, async (req, res) => {
         host: {
           select: { id: true, name: true, email: true }
         },
+        college: {
+          select: { id: true, name: true, city: true, state: true, district: true }
+        },
         rsvps: {
           select: { id: true, userId: true, checkedIn: true }
         },
@@ -38,6 +41,9 @@ router.get('/', authenticateToken, async (req, res) => {
             whatsappGroupEnabled: true,
             whatsappGroupLink: true,
             host: { select: { id: true, name: true, email: true } },
+            college: {
+              select: { id: true, name: true, city: true, state: true, district: true }
+            },
             rsvps: {
               select: {
                 userId: true,
@@ -74,6 +80,9 @@ async function getFeaturedEventsHandler(req, res) {
             name: true,
             email: true
           }
+        },
+        college: {
+          select: { id: true, name: true, city: true, state: true, district: true }
         },
         rsvps: userId
           ? {
@@ -212,7 +221,7 @@ router.post('/:id/sub-events', authenticateToken, async (req, res) => {
 // POST /events (standalone or mega)
 router.post('/', authenticateToken, async (req, res) => {
   const userId = req.user.id;
-  const { title, description, location, startTime, endTime, rsvpDeadline, maxAttendees, type } = req.body;
+  const { title, description, location, startTime, endTime, rsvpDeadline, maxAttendees, type, collegeId } = req.body;
 
   if (!title || !location || !startTime || !endTime || !rsvpDeadline || !maxAttendees || !type) {
     return res.status(400).json({ message: 'Missing required fields' });
@@ -236,7 +245,8 @@ router.post('/', authenticateToken, async (req, res) => {
         maxAttendees: parseInt(maxAttendees),
         hostId: userId,
         type,
-        parentEventId: null
+        parentEventId: null,
+        collegeId: collegeId && collegeId !== 'none' ? parseInt(collegeId) : null
       }
     });
     res.status(201).json(event);
@@ -254,7 +264,7 @@ router.post('/', authenticateToken, async (req, res) => {
 router.post('/:megaEventId/sub', authenticateToken, async (req, res) => {
   const megaEventId = parseInt(req.params.megaEventId);
   const userId = req.user.id;
-  const { title, description, location, startTime, endTime, rsvpDeadline, maxAttendees, teamSize, teamSizeMin, teamSizeMax, flexibleTeamSize, paymentEnabled, customFields, whatsappGroupEnabled, whatsappGroupLink, paymentProofRequired } = req.body;
+  const { title, description, location, startTime, endTime, rsvpDeadline, maxAttendees, teamSize, teamSizeMin, teamSizeMax, flexibleTeamSize, paymentEnabled, customFields, whatsappGroupEnabled, whatsappGroupLink, paymentProofRequired, collegeId } = req.body;
   
   console.log('=== [BACKEND] Creating sub-event with data ===');
   console.log('megaEventId:', megaEventId);
@@ -328,7 +338,8 @@ router.post('/:megaEventId/sub', authenticateToken, async (req, res) => {
         paymentProofRequired: paymentProofRequired !== undefined ? paymentProofRequired : false,
         customFields: customFields || null,
         whatsappGroupEnabled: !!whatsappGroupEnabled,
-        whatsappGroupLink: whatsappGroupEnabled ? whatsappGroupLink : null
+        whatsappGroupLink: whatsappGroupEnabled ? whatsappGroupLink : null,
+        collegeId: collegeId && collegeId !== 'none' ? parseInt(collegeId) : null
       },
       include: {
         host: { select: { id: true, name: true, email: true } }
@@ -354,7 +365,7 @@ router.put('/:subEventId/sub-event', authenticateToken, authorizeHost, async (re
   const {
     title, description, location, startTime, endTime, rsvpDeadline, maxAttendees,
     teamSize, teamSizeMin, teamSizeMax, flexibleTeamSize, paymentEnabled,
-    paymentProofRequired, customFields, qrCode, whatsappGroupEnabled, whatsappGroupLink
+    paymentProofRequired, customFields, qrCode, whatsappGroupEnabled, whatsappGroupLink, collegeId
   } = req.body;
 
   console.log('=== [BACKEND] Updating sub-event ===');
@@ -389,7 +400,8 @@ router.put('/:subEventId/sub-event', authenticateToken, authorizeHost, async (re
         customFields: customFields || null,
         qrCode: qrCode || null,
         whatsappGroupEnabled: !!whatsappGroupEnabled,
-        whatsappGroupLink: whatsappGroupEnabled ? whatsappGroupLink : null
+        whatsappGroupLink: whatsappGroupEnabled ? whatsappGroupLink : null,
+        collegeId: collegeId && collegeId !== 'none' ? parseInt(collegeId) : null
       }
     });
     console.log('=== [BACKEND] Sub-event updated ===');
@@ -432,6 +444,9 @@ router.get('/:id', authenticateToken, async (req, res) => {
       },
       include: {
         host: { select: { id: true, name: true, avatar: true } },
+        college: {
+          select: { id: true, name: true, city: true, state: true, district: true }
+        },
         feedbacks: {
           include: {
             user: { select: { id: true, name: true, avatar: true } }
@@ -442,6 +457,9 @@ router.get('/:id', authenticateToken, async (req, res) => {
         rsvps: true,
         subEvents: {
           include: {
+            college: {
+              select: { id: true, name: true, city: true, state: true, district: true }
+            },
             rsvps: {
               where: { userId: req.user.id },
               select: { checkedIn: true }
@@ -549,7 +567,7 @@ router.get('/:parentId/sub/:subId', authenticateToken, async (req, res) => {
 // Update event (host only)
 router.put('/:id', authenticateToken, authorizeHost, async (req, res) => {
   const eventId = parseInt(req.params.id);
-  const { title, description, location, startTime, endTime, rsvpDeadline, maxAttendees } = req.body;
+  const { title, description, location, startTime, endTime, rsvpDeadline, maxAttendees, collegeId } = req.body;
 
   if (isNaN(eventId)) {
     return res.status(400).json({ message: 'Invalid event ID' });
@@ -565,7 +583,8 @@ router.put('/:id', authenticateToken, authorizeHost, async (req, res) => {
         startTime: new Date(startTime),
         endTime: new Date(endTime),
         rsvpDeadline: new Date(rsvpDeadline),
-        maxAttendees: parseInt(maxAttendees)
+        maxAttendees: parseInt(maxAttendees),
+        collegeId: collegeId && collegeId !== 'none' ? parseInt(collegeId) : null
       },
       include: {
         host: {

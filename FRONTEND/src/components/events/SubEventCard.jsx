@@ -223,6 +223,17 @@ const SubEventCard = ({ sub, parentEventId }) => {
           <h4 className="text-sm font-semibold text-amber-400 mb-1">Host</h4>
           <p className="text-white text-sm">{sub.host?.name || 'Unknown Host'}</p>
         </div>
+        
+        {sub.college && (
+          <div>
+            <h4 className="text-sm font-semibold text-amber-400 mb-1">College</h4>
+            <p className="text-white text-sm">
+              {sub.college.name}
+              {sub.college.city && `, ${sub.college.city}`}
+              {sub.college.state && `, ${sub.college.state}`}
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Team Event Info or Solo Event Info */}

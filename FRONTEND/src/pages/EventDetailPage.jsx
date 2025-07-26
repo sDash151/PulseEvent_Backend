@@ -376,6 +376,16 @@ const EventDetailPage = () => {
               <h3 className="text-sm font-semibold text-amber-400">Host</h3>
               <p className="text-white">{event.host.name}</p>
             </div>
+            {event.college && (
+              <div>
+                <h3 className="text-sm font-semibold text-amber-400">College</h3>
+                <p className="text-white">
+                  {event.college.name}
+                  {event.college.city && `, ${event.college.city}`}
+                  {event.college.state && `, ${event.college.state}`}
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Sub-Events for Mega Event */}

@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import Button from '../components/ui/Button'
 import ErrorMessage from '../components/ui/ErrorMessage'
+import CustomDropdown from '../components/ui/CustomDropdown'
 import { registerUser } from '../services/auth'
 import { useAuth } from '../hooks/useAuth'
 import { useErrorHandler } from '../hooks/useErrorHandler'
@@ -164,62 +165,7 @@ const RegisterPage = () => {
   }
 
   // Handle state selection
-  const handleStateChange = (e) => {
-    const state = e.target.value
-    setSelectedState(state)
-    fetchDistricts(state)
-  }
 
-  // Handle district selection
-  const handleDistrictChange = (e) => {
-    const district = e.target.value
-    setSelectedDistrict(district)
-    fetchColleges(selectedState, district)
-  }
-
-  // Handle college selection
-  const handleCollegeChange = (e) => {
-    const collegeName = e.target.value
-    if (collegeName === 'other') {
-      setShowOtherCollege(true)
-      setSelectedCollege('')
-      setSelectedCollegeId('')
-    } else {
-      setShowOtherCollege(false)
-      setOtherCollege('')
-      setSelectedCollege(collegeName)
-      // Find the college ID for the selected college
-      const college = colleges.find(c => c.name === collegeName)
-      setSelectedCollegeId(college ? college.id : '')
-    }
-  }
-
-  // Handle degree selection
-  const handleDegreeChange = (e) => {
-    const degreeId = e.target.value
-    setSelectedDegree(degreeId)
-    if (degreeId === 'other') {
-      setShowOtherDegree(true)
-      setSelectedDegree('')
-    } else {
-      setShowOtherDegree(false)
-      setOtherDegree('')
-      fetchSpecializations(degreeId)
-    }
-  }
-
-  // Handle specialization selection
-  const handleSpecializationChange = (e) => {
-    const specializationName = e.target.value
-    if (specializationName === 'other') {
-      setShowOtherSpecialization(true)
-      setSelectedSpecialization('')
-    } else {
-      setShowOtherSpecialization(false)
-      setOtherSpecialization('')
-      setSelectedSpecialization(specializationName)
-    }
-  }
 
   useEffect(() => {
     const inviteInfo = localStorage.getItem('pendingInviteInfo')
@@ -341,7 +287,7 @@ const RegisterPage = () => {
       {/* Main Container - Much Wider and More Elegant */}
       <div className="max-w-4xl mx-auto relative z-10">
         {/* Registration Card - Professional Design */}
-        <div className="relative z-10 w-full bg-white/5 backdrop-blur-md border border-white/10 rounded-3xl shadow-[0_0_40px_rgba(255,255,255,0.1)] p-8 lg:p-12">
+        <div className="relative z-10 w-full bg-white/5 backdrop-blur-md border border-white/10 rounded-3xl shadow-[0_0_40px_rgba(255,255,255,0.1)] p-8 lg:p-12 overflow-visible">
         
           {/* Compact Invitation Banner */}
           {pendingInvite && (
@@ -490,86 +436,77 @@ const RegisterPage = () => {
             </div>
 
             {/* Location Section */}
-            <div className="bg-white/5 rounded-2xl p-6 border border-white/10">
+            <div className="bg-white/5 rounded-2xl p-6 border border-white/10 overflow-visible">
               <h3 className="text-lg font-semibold text-amber-300 mb-4 flex items-center gap-2">
                 <span className="text-xl">📍</span>
                 Location Information
               </h3>
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div>
-                  <label htmlFor="state" className="block text-sm font-semibold text-gray-300 mb-2">
-                    State
-                  </label>
-                  <select
-                    id="state"
-                    value={selectedState}
-                    onChange={handleStateChange}
-                    className="w-full px-4 py-3 bg-white/10 text-white border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-amber-400 transition-all duration-300 text-base"
-                    required
-                  >
-                    <option value="">Select a State</option>
-                    {loadingStates ? (
-                      <option value="">Loading states...</option>
-                    ) : (
-                      states.map((state) => (
-                        <option key={state} value={state}>
-                          {state}
-                        </option>
-                      ))
-                    )}
-                  </select>
-                </div>
+                              <div>
+                <label htmlFor="state" className="block text-sm font-semibold text-gray-300 mb-2">
+                  State
+                </label>
+                <CustomDropdown
+                  options={loadingStates ? [] : states.map(state => ({ value: state, label: state }))}
+                  value={selectedState}
+                  onChange={(value) => {
+                    setSelectedState(value);
+                    fetchDistricts(value);
+                  }}
+                  placeholder={loadingStates ? "Loading states..." : "Select a State"}
+                  disabled={loadingStates}
+                  className="w-full"
+                  searchable={true}
+                />
+              </div>
 
-                <div>
-                  <label htmlFor="district" className="block text-sm font-semibold text-gray-300 mb-2">
-                    District
-                  </label>
-                  <select
-                    id="district"
-                    value={selectedDistrict}
-                    onChange={handleDistrictChange}
-                    className="w-full px-4 py-3 bg-white/10 text-white border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-amber-400 transition-all duration-300 text-base"
-                    required
-                  >
-                    <option value="">Select a District</option>
-                    {loadingDistricts ? (
-                      <option value="">Loading districts...</option>
-                    ) : (
-                      districts.map((district) => (
-                        <option key={district} value={district}>
-                          {district}
-                        </option>
-                      ))
-                    )}
-                  </select>
-                </div>
+                              <div>
+                <label htmlFor="district" className="block text-sm font-semibold text-gray-300 mb-2">
+                  District
+                </label>
+                <CustomDropdown
+                  options={loadingDistricts ? [] : districts.map(district => ({ value: district, label: district }))}
+                  value={selectedDistrict}
+                  onChange={(value) => {
+                    setSelectedDistrict(value);
+                    fetchColleges(selectedState, value);
+                  }}
+                  placeholder={loadingDistricts ? "Loading districts..." : "Select a District"}
+                  disabled={loadingDistricts || !selectedState}
+                  className="w-full"
+                  searchable={true}
+                />
+              </div>
 
-                <div>
-                  <label htmlFor="college" className="block text-sm font-semibold text-gray-300 mb-2">
-                    College
-                  </label>
-                  <select
-                    id="college"
-                    value={selectedCollege}
-                    onChange={handleCollegeChange}
-                    className="w-full px-4 py-3 bg-white/10 text-white border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-amber-400 transition-all duration-300 text-base"
-                    required
-                  >
-                    <option value="">Select a College</option>
-                    {loadingColleges ? (
-                      <option value="">Loading colleges...</option>
-                    ) : (
-                      <>
-                        {colleges.map((college) => (
-                          <option key={college.id} value={college.name}>
-                            {college.name} {college.city && `(${college.city})`}
-                          </option>
-                        ))}
-                        <option value="other">Other (Not listed above)</option>
-                      </>
-                    )}
-                  </select>
-                </div>
+                              <div>
+                <label htmlFor="college" className="block text-sm font-semibold text-gray-300 mb-2">
+                  College
+                </label>
+                <CustomDropdown
+                  options={loadingColleges ? [] : [
+                    ...colleges.map(college => ({ 
+                      value: college.name, 
+                      label: `${college.name}${college.city ? ` (${college.city})` : ''}` 
+                    })),
+                    { value: 'other', label: 'Other (Not listed above)' }
+                  ]}
+                  value={selectedCollege}
+                  onChange={(value) => {
+                    setSelectedCollege(value);
+                    if (value === 'other') {
+                      setShowOtherCollege(true);
+                      setOtherCollege('');
+                    } else {
+                      setShowOtherCollege(false);
+                      setOtherCollege('');
+                    }
+                  }}
+                  placeholder={loadingColleges ? "Loading colleges..." : "Select a College"}
+                  disabled={loadingColleges || !selectedDistrict}
+                  className="w-full"
+                  searchable={true}
+                />
+              </div>
               </div>
 
               {/* Other College Input */}
@@ -592,68 +529,78 @@ const RegisterPage = () => {
             </div>
 
             {/* Academic Information Section */}
-            <div className="bg-white/5 rounded-2xl p-6 border border-white/10">
+            <div className="bg-white/5 rounded-2xl p-6 border border-white/10 overflow-visible">
               <h3 className="text-lg font-semibold text-amber-300 mb-4 flex items-center gap-2">
                 <span className="text-xl">🎓</span>
                 Academic Information
               </h3>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div>
-                  <label htmlFor="degree" className="block text-sm font-semibold text-gray-300 mb-2">
-                    Degree Program
-                  </label>
-                  <select
-                    id="degree"
-                    value={selectedDegree}
-                    onChange={handleDegreeChange}
-                    className="w-full px-4 py-3 bg-white/10 text-white border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-amber-400 transition-all duration-300 text-base"
-                    required
-                  >
-                    <option value="">Select your Degree Program</option>
-                    {loadingDegrees ? (
-                      <option value="">Loading degrees...</option>
-                    ) : (
-                      <>
-                        {degrees.map((degree) => (
-                          <option key={degree.id} value={degree.id}>
-                            {degree.name}
-                          </option>
-                        ))}
-                        <option value="other">Other (Not listed above)</option>
-                      </>
-                    )}
-                  </select>
-                </div>
+                              <div>
+                <label htmlFor="degree" className="block text-sm font-semibold text-gray-300 mb-2">
+                  Degree Program
+                </label>
+                <CustomDropdown
+                  options={loadingDegrees ? [] : [
+                    ...degrees.map(degree => ({ value: degree.id, label: degree.name })),
+                    { value: 'other', label: 'Other (Not listed above)' }
+                  ]}
+                  value={selectedDegree}
+                  onChange={(value) => {
+                    setSelectedDegree(value);
+                    if (value === 'other') {
+                      setShowOtherDegree(true);
+                      setOtherDegree('');
+                      setSelectedSpecialization('');
+                      setSpecializations([]);
+                    } else {
+                      setShowOtherDegree(false);
+                      setOtherDegree('');
+                      fetchSpecializations(value);
+                    }
+                  }}
+                  placeholder={loadingDegrees ? "Loading degrees..." : "Select your Degree Program"}
+                  disabled={loadingDegrees}
+                  className="w-full"
+                  searchable={true}
+                />
+              </div>
 
-                <div>
-                  <label htmlFor="specialization" className="block text-sm font-semibold text-gray-300 mb-2">
-                    Specialization
-                  </label>
-                  <select
-                    id="specialization"
-                    value={selectedSpecialization}
-                    onChange={handleSpecializationChange}
-                    className="w-full px-4 py-3 bg-white/10 text-white border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-amber-400 transition-all duration-300 text-base"
-                    required
-                    disabled={!selectedDegree && !otherDegree}
-                  >
-                    <option value="">Select your Specialization</option>
-                    {!selectedDegree && !otherDegree ? (
-                      <option value="">Please select a degree first</option>
-                    ) : loadingSpecializations ? (
-                      <option value="">Loading specializations...</option>
-                    ) : (
-                      <>
-                        {specializations.map((specialization) => (
-                          <option key={specialization.id} value={specialization.name}>
-                            {specialization.name}
-                          </option>
-                        ))}
-                        <option value="other">Other (Not listed above)</option>
-                      </>
-                    )}
-                  </select>
-                </div>
+                              <div>
+                <label htmlFor="specialization" className="block text-sm font-semibold text-gray-300 mb-2">
+                  Specialization
+                </label>
+                <CustomDropdown
+                  options={
+                    !selectedDegree && !otherDegree ? [] :
+                    loadingSpecializations ? [] : [
+                      ...specializations.map(specialization => ({ 
+                        value: specialization.name, 
+                        label: specialization.name 
+                      })),
+                      { value: 'other', label: 'Other (Not listed above)' }
+                    ]
+                  }
+                  value={selectedSpecialization}
+                  onChange={(value) => {
+                    setSelectedSpecialization(value);
+                    if (value === 'other') {
+                      setShowOtherSpecialization(true);
+                      setOtherSpecialization('');
+                    } else {
+                      setShowOtherSpecialization(false);
+                      setOtherSpecialization('');
+                    }
+                  }}
+                  placeholder={
+                    !selectedDegree && !otherDegree ? "Please select a degree first" :
+                    loadingSpecializations ? "Loading specializations..." : 
+                    "Select your Specialization"
+                  }
+                  disabled={!selectedDegree && !otherDegree || loadingSpecializations}
+                  className="w-full"
+                  searchable={true}
+                />
+              </div>
               </div>
 
               {/* Other Degree Input */}

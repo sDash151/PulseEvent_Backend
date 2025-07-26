@@ -64,6 +64,16 @@ const EventCard = ({ event }) => {
               <MapPinIcon className="h-4 w-4 mr-1 text-amber-400" />
               <span className="truncate">{event.location}</span>
             </div>
+            
+            {event.college && (
+              <div className="flex items-center col-span-2">
+                <span className="text-amber-400 mr-1">🎓</span>
+                <span className="truncate text-sm">
+                  {event.college.name}
+                  {event.college.city && `, ${event.college.city}`}
+                </span>
+              </div>
+            )}
           </div>
 
           {/* Show sub-events for MEGA events (only real sub-events added by host) */}

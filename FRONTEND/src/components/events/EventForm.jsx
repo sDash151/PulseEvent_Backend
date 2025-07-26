@@ -1,9 +1,13 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import Button from '../ui/Button'
+import CustomDropdown from '../ui/CustomDropdown'
+import api from '../../services/api'
+import { useAuth } from '../../hooks/useAuth'
 
 const EventForm = ({ event, initialData, onSubmit, loading, submitText = 'Save Event' }) => {
   // Use either event or initialData prop
   const eventData = event || initialData;
+  const { currentUser } = useAuth();
   
   const [formData, setFormData] = useState({
     title: eventData?.title || '',
@@ -13,7 +17,43 @@ const EventForm = ({ event, initialData, onSubmit, loading, submitText = 'Save E
     endTime: eventData ? new Date(eventData.endTime).toISOString().slice(0, 16) : '',
     rsvpDeadline: eventData ? new Date(eventData.rsvpDeadline).toISOString().slice(0, 16) : '',
     maxAttendees: eventData?.maxAttendees || 50,
+    collegeId: eventData?.collegeId || null,
   })
+
+  // College data state
+  const [colleges, setColleges] = useState([])
+  const [loadingColleges, setLoadingColleges] = useState(false)
+  const [selectedCollege, setSelectedCollege] = useState(null)
+
+  // Fetch colleges on component mount
+  useEffect(() => {
+    fetchColleges()
+  }, [])
+
+  // Auto-fill college from user profile if available
+  useEffect(() => {
+    if (currentUser?.collegeName && colleges.length > 0) {
+      const userCollege = colleges.find(college => 
+        college.name.toLowerCase() === currentUser.collegeName.toLowerCase()
+      )
+      if (userCollege && !selectedCollege) {
+        setSelectedCollege(userCollege.id)
+        setFormData(prev => ({ ...prev, collegeId: userCollege.id }))
+      }
+    }
+  }, [colleges, currentUser, selectedCollege])
+
+  const fetchColleges = async () => {
+    setLoadingColleges(true)
+    try {
+      const response = await api.get('/api/colleges')
+      setColleges(response.data.colleges || [])
+    } catch (error) {
+      console.error('Error fetching colleges:', error)
+    } finally {
+      setLoadingColleges(false)
+    }
+  }
 
   // Reset form data when event prop changes
   React.useEffect(() => {
@@ -25,12 +65,19 @@ const EventForm = ({ event, initialData, onSubmit, loading, submitText = 'Save E
       endTime: eventData ? new Date(eventData.endTime).toISOString().slice(0, 16) : '',
       rsvpDeadline: eventData ? new Date(eventData.rsvpDeadline).toISOString().slice(0, 16) : '',
       maxAttendees: eventData?.maxAttendees || 50,
+      collegeId: eventData?.collegeId || null,
     })
+    setSelectedCollege(eventData?.collegeId || null)
   }, [eventData])
 
   const handleChange = (e) => {
     const { name, value } = e.target
     setFormData(prev => ({ ...prev, [name]: value }))
+  }
+
+  const handleCollegeChange = (collegeId) => {
+    setSelectedCollege(collegeId)
+    setFormData(prev => ({ ...prev, collegeId }))
   }
 
   const handleSubmit = (e) => {
@@ -44,6 +91,15 @@ const EventForm = ({ event, initialData, onSubmit, loading, submitText = 'Save E
       rsvpDeadline: toISOString(formData.rsvpDeadline),
     });
   }
+
+  // Prepare college options for dropdown
+  const collegeOptions = [
+    { value: 'none', label: 'Not College-Specific' },
+    ...colleges.map(college => ({
+      value: college.id,
+      label: `${college.name}${college.city ? ` (${college.city})` : ''}`
+    }))
+  ]
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6 text-gray-200">
@@ -80,6 +136,31 @@ const EventForm = ({ event, initialData, onSubmit, loading, submitText = 'Save E
             required
           />
         </div>
+      </div>
+
+      {/* College Field */}
+      <div>
+        <label htmlFor="college" className="block text-sm font-medium text-amber-300 mb-1">
+          College (Optional)
+        </label>
+        <div className="flex items-center gap-2 mb-2">
+          <span className="text-xs text-gray-400">🎓</span>
+          <span className="text-xs text-gray-400">
+            {currentUser?.collegeName ? 
+              `Auto-filled from your profile: ${currentUser.collegeName}` : 
+              'Select a college or choose "Not College-Specific"'
+            }
+          </span>
+        </div>
+        <CustomDropdown
+          options={loadingColleges ? [] : collegeOptions}
+          value={selectedCollege || 'none'}
+          onChange={handleCollegeChange}
+          placeholder={loadingColleges ? "Loading colleges..." : "Select a College (Optional)"}
+          disabled={loadingColleges}
+          className="w-full"
+          searchable={true}
+        />
       </div>
 
       <div>
