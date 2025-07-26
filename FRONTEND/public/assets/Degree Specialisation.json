@@ -1,0 +1,898 @@
+[
+  {
+    "Degree Program": "B.Tech",
+    "Specialization": "Software Engineering"
+  },
+  {
+    "Degree Program": "B.Tech",
+    "Specialization": "Artificial Intelligence"
+  },
+  {
+    "Degree Program": "B.Tech",
+    "Specialization": "Machine Learning"
+  },
+  {
+    "Degree Program": "B.Tech",
+    "Specialization": "Cybersecurity"
+  },
+  {
+    "Degree Program": "B.Tech",
+    "Specialization": "Data Science"
+  },
+  {
+    "Degree Program": "B.Tech",
+    "Specialization": "Embedded Systems"
+  },
+  {
+    "Degree Program": "B.Tech",
+    "Specialization": "VLSI Design"
+  },
+  {
+    "Degree Program": "B.Tech",
+    "Specialization": "Communication Systems"
+  },
+  {
+    "Degree Program": "B.Tech",
+    "Specialization": "Power Systems"
+  },
+  {
+    "Degree Program": "B.Tech",
+    "Specialization": "Renewable Energy"
+  },
+  {
+    "Degree Program": "B.Tech",
+    "Specialization": "Civil Engineering"
+  },
+  {
+    "Degree Program": "B.Tech",
+    "Specialization": "Mechanical Engineering"
+  },
+  {
+    "Degree Program": "B.Tech",
+    "Specialization": "Electrical Engineering"
+  },
+  {
+    "Degree Program": "B.Tech",
+    "Specialization": "Aerospace Engineering"
+  },
+  {
+    "Degree Program": "B.Tech",
+    "Specialization": "Automobile Engineering"
+  },
+  {
+    "Degree Program": "B.Tech",
+    "Specialization": "Biotechnology"
+  },
+  {
+    "Degree Program": "B.Tech",
+    "Specialization": "Chemical Engineering"
+  },
+  {
+    "Degree Program": "B.Tech",
+    "Specialization": "Environmental Engineering"
+  },
+  {
+    "Degree Program": "B.Tech",
+    "Specialization": "Biomedical Engineering"
+  },
+  {
+    "Degree Program": "B.Tech",
+    "Specialization": "Robotics"
+  },
+  {
+    "Degree Program": "B.Tech",
+    "Specialization": "Structural Engineering"
+  },
+  {
+    "Degree Program": "B.Tech",
+    "Specialization": "Geotechnical Engineering"
+  },
+  {
+    "Degree Program": "B.Tech",
+    "Specialization": "Construction Management"
+  },
+  {
+    "Degree Program": "B.Tech",
+    "Specialization": "Instrumentation Engineering"
+  },
+  {
+    "Degree Program": "B.Tech",
+    "Specialization": "Computer Science and Engineering"
+  },
+  {
+    "Degree Program": "B.Tech",
+    "Specialization": "Information Technology"
+  },
+  {
+    "Degree Program": "B.Tech",
+    "Specialization": "Agricultural Engineering"
+  },
+  {
+    "Degree Program": "B.Tech",
+    "Specialization": "Marine Engineering"
+  },
+  {
+    "Degree Program": "B.Tech",
+    "Specialization": "Mining Engineering"
+  },
+  {
+    "Degree Program": "MCA",
+    "Specialization": "Data Science"
+  },
+  {
+    "Degree Program": "MCA",
+    "Specialization": "Cybersecurity"
+  },
+  {
+    "Degree Program": "MCA",
+    "Specialization": "Cloud Computing"
+  },
+  {
+    "Degree Program": "MCA",
+    "Specialization": "Mobile Application Development"
+  },
+  {
+    "Degree Program": "MCA",
+    "Specialization": "Software Engineering"
+  },
+  {
+    "Degree Program": "MCA",
+    "Specialization": "Artificial Intelligence"
+  },
+  {
+    "Degree Program": "MCA",
+    "Specialization": "Big Data Analytics"
+  },
+  {
+    "Degree Program": "MCA",
+    "Specialization": "Internet of Things (IoT)"
+  },
+  {
+    "Degree Program": "MCA",
+    "Specialization": "Enterprise Resource Planning (ERP)"
+  },
+  {
+    "Degree Program": "MCA",
+    "Specialization": "Business Analytics"
+  },
+  {
+    "Degree Program": "MCA",
+    "Specialization": "Networking"
+  },
+  {
+    "Degree Program": "MCA",
+    "Specialization": "Digital Marketing"
+  },
+  {
+    "Degree Program": "MCA",
+    "Specialization": "Web Development"
+  },
+  {
+    "Degree Program": "MCA",
+    "Specialization": "Blockchain Technology"
+  },
+  {
+    "Degree Program": "BCA",
+    "Specialization": "Software Development"
+  },
+  {
+    "Degree Program": "BCA",
+    "Specialization": "Database Management Systems"
+  },
+  {
+    "Degree Program": "BCA",
+    "Specialization": "Web Development"
+  },
+  {
+    "Degree Program": "BCA",
+    "Specialization": "Mobile Computing"
+  },
+  {
+    "Degree Program": "BCA",
+    "Specialization": "Networking"
+  },
+  {
+    "Degree Program": "BCA",
+    "Specialization": "Cloud Computing"
+  },
+  {
+    "Degree Program": "BCA",
+    "Specialization": "Information Systems Management"
+  },
+  {
+    "Degree Program": "BCA",
+    "Specialization": "Cyber Security"
+  },
+  {
+    "Degree Program": "BCA",
+    "Specialization": "Digital Marketing"
+  },
+  {
+    "Degree Program": "BCA",
+    "Specialization": "Data Analytics"
+  },
+  {
+    "Degree Program": "BCA",
+    "Specialization": "Artificial Intelligence"
+  },
+  {
+    "Degree Program": "BCA",
+    "Specialization": "Computer Graphics"
+  },
+  {
+    "Degree Program": "BCA",
+    "Specialization": "Game Development"
+  },
+  {
+    "Degree Program": "MBA",
+    "Specialization": "Finance"
+  },
+  {
+    "Degree Program": "MBA",
+    "Specialization": "Marketing"
+  },
+  {
+    "Degree Program": "MBA",
+    "Specialization": "Human Resource Management"
+  },
+  {
+    "Degree Program": "MBA",
+    "Specialization": "Operations Management"
+  },
+  {
+    "Degree Program": "MBA",
+    "Specialization": "Business Analytics"
+  },
+  {
+    "Degree Program": "MBA",
+    "Specialization": "International Business"
+  },
+  {
+    "Degree Program": "MBA",
+    "Specialization": "Entrepreneurship"
+  },
+  {
+    "Degree Program": "MBA",
+    "Specialization": "Retail Management"
+  },
+  {
+    "Degree Program": "MBA",
+    "Specialization": "Supply Chain Management"
+  },
+  {
+    "Degree Program": "MBA",
+    "Specialization": "Information Technology Management"
+  },
+  {
+    "Degree Program": "MBA",
+    "Specialization": "Healthcare Management"
+  },
+  {
+    "Degree Program": "MBA",
+    "Specialization": "Hospitality Management"
+  },
+  {
+    "Degree Program": "MBA",
+    "Specialization": "Tourism Management"
+  },
+  {
+    "Degree Program": "MBA",
+    "Specialization": "Project Management"
+  },
+  {
+    "Degree Program": "MBA",
+    "Specialization": "Logistics Management"
+  },
+  {
+    "Degree Program": "MBA",
+    "Specialization": "Agri-business Management"
+  },
+  {
+    "Degree Program": "MBA",
+    "Specialization": "Real Estate Management"
+  },
+  {
+    "Degree Program": "MBA",
+    "Specialization": "Sustainability Management"
+  },
+  {
+    "Degree Program": "MBA",
+    "Specialization": "Strategic Management"
+  },
+  {
+    "Degree Program": "MBA",
+    "Specialization": "Public Policy"
+  },
+  {
+    "Degree Program": "M.Tech",
+    "Specialization": "Computer Science and Engineering"
+  },
+  {
+    "Degree Program": "M.Tech",
+    "Specialization": "Software Engineering"
+  },
+  {
+    "Degree Program": "M.Tech",
+    "Specialization": "Data Science"
+  },
+  {
+    "Degree Program": "M.Tech",
+    "Specialization": "Artificial Intelligence"
+  },
+  {
+    "Degree Program": "M.Tech",
+    "Specialization": "Machine Learning"
+  },
+  {
+    "Degree Program": "M.Tech",
+    "Specialization": "Cybersecurity"
+  },
+  {
+    "Degree Program": "M.Tech",
+    "Specialization": "Embedded Systems"
+  },
+  {
+    "Degree Program": "M.Tech",
+    "Specialization": "VLSI Design"
+  },
+  {
+    "Degree Program": "M.Tech",
+    "Specialization": "Structural Engineering"
+  },
+  {
+    "Degree Program": "M.Tech",
+    "Specialization": "Power Systems"
+  },
+  {
+    "Degree Program": "M.Tech",
+    "Specialization": "Energy Systems"
+  },
+  {
+    "Degree Program": "M.Tech",
+    "Specialization": "Communication Systems"
+  },
+  {
+    "Degree Program": "M.Tech",
+    "Specialization": "Wireless Communication"
+  },
+  {
+    "Degree Program": "M.Tech",
+    "Specialization": "Civil Engineering"
+  },
+  {
+    "Degree Program": "M.Tech",
+    "Specialization": "Mechanical Engineering"
+  },
+  {
+    "Degree Program": "M.Tech",
+    "Specialization": "Robotics"
+  },
+  {
+    "Degree Program": "M.Tech",
+    "Specialization": "Automobile Engineering"
+  },
+  {
+    "Degree Program": "M.Tech",
+    "Specialization": "Nanotechnology"
+  },
+  {
+    "Degree Program": "M.Tech",
+    "Specialization": "Geotechnical Engineering"
+  },
+  {
+    "Degree Program": "M.Tech",
+    "Specialization": "Engineering Design"
+  },
+  {
+    "Degree Program": "M.Tech",
+    "Specialization": "Biotechnology"
+  },
+  {
+    "Degree Program": "M.Tech",
+    "Specialization": "Environmental Engineering"
+  },
+  {
+    "Degree Program": "M.Tech",
+    "Specialization": "Engineering Management"
+  },
+  {
+    "Degree Program": "M.Tech",
+    "Specialization": "Biomedical Engineering"
+  },
+  {
+    "Degree Program": "B.Sc",
+    "Specialization": "Physics"
+  },
+  {
+    "Degree Program": "B.Sc",
+    "Specialization": "Chemistry"
+  },
+  {
+    "Degree Program": "B.Sc",
+    "Specialization": "Mathematics"
+  },
+  {
+    "Degree Program": "B.Sc",
+    "Specialization": "Biology"
+  },
+  {
+    "Degree Program": "B.Sc",
+    "Specialization": "Biotechnology"
+  },
+  {
+    "Degree Program": "B.Sc",
+    "Specialization": "Botany"
+  },
+  {
+    "Degree Program": "B.Sc",
+    "Specialization": "Zoology"
+  },
+  {
+    "Degree Program": "B.Sc",
+    "Specialization": "Microbiology"
+  },
+  {
+    "Degree Program": "B.Sc",
+    "Specialization": "Environmental Science"
+  },
+  {
+    "Degree Program": "B.Sc",
+    "Specialization": "Agricultural Science"
+  },
+  {
+    "Degree Program": "B.Sc",
+    "Specialization": "Forensic Science"
+  },
+  {
+    "Degree Program": "B.Sc",
+    "Specialization": "Computer Science"
+  },
+  {
+    "Degree Program": "B.Sc",
+    "Specialization": "Geology"
+  },
+  {
+    "Degree Program": "B.Sc",
+    "Specialization": "Psychology"
+  },
+  {
+    "Degree Program": "B.Sc",
+    "Specialization": "Statistics"
+  },
+  {
+    "Degree Program": "B.Sc",
+    "Specialization": "Nursing"
+  },
+  {
+    "Degree Program": "B.Sc",
+    "Specialization": "Home Science"
+  },
+  {
+    "Degree Program": "B.Sc",
+    "Specialization": "Food Technology"
+  },
+  {
+    "Degree Program": "B.Sc",
+    "Specialization": "Marine Biology"
+  },
+  {
+    "Degree Program": "B.Sc",
+    "Specialization": "Physics and Electronics"
+  },
+  {
+    "Degree Program": "M.Sc",
+    "Specialization": "Physics"
+  },
+  {
+    "Degree Program": "M.Sc",
+    "Specialization": "Chemistry"
+  },
+  {
+    "Degree Program": "M.Sc",
+    "Specialization": "Biology"
+  },
+  {
+    "Degree Program": "M.Sc",
+    "Specialization": "Mathematics"
+  },
+  {
+    "Degree Program": "M.Sc",
+    "Specialization": "Applied Mathematics"
+  },
+  {
+    "Degree Program": "M.Sc",
+    "Specialization": "Biotechnology"
+  },
+  {
+    "Degree Program": "M.Sc",
+    "Specialization": "Microbiology"
+  },
+  {
+    "Degree Program": "M.Sc",
+    "Specialization": "Environmental Science"
+  },
+  {
+    "Degree Program": "M.Sc",
+    "Specialization": "Computer Science"
+  },
+  {
+    "Degree Program": "M.Sc",
+    "Specialization": "Geology"
+  },
+  {
+    "Degree Program": "M.Sc",
+    "Specialization": "Food Technology"
+  },
+  {
+    "Degree Program": "M.Sc",
+    "Specialization": "Bioinformatics"
+  },
+  {
+    "Degree Program": "M.Sc",
+    "Specialization": "Agriculture"
+  },
+  {
+    "Degree Program": "M.Sc",
+    "Specialization": "Botany"
+  },
+  {
+    "Degree Program": "M.Sc",
+    "Specialization": "Zoology"
+  },
+  {
+    "Degree Program": "M.Sc",
+    "Specialization": "Psychology"
+  },
+  {
+    "Degree Program": "M.Sc",
+    "Specialization": "Genetics"
+  },
+  {
+    "Degree Program": "M.Sc",
+    "Specialization": "Applied Physics"
+  },
+  {
+    "Degree Program": "M.Sc",
+    "Specialization": "Data Science"
+  },
+  {
+    "Degree Program": "M.Sc",
+    "Specialization": "Clinical Research"
+  },
+  {
+    "Degree Program": "M.Sc",
+    "Specialization": "Medical Laboratory Technology"
+  },
+  {
+    "Degree Program": "M.Sc",
+    "Specialization": "Artificial Intelligence"
+  },
+  {
+    "Degree Program": "M.Sc",
+    "Specialization": "Astrophysics"
+  },
+  {
+    "Degree Program": "BA",
+    "Specialization": "English Literature"
+  },
+  {
+    "Degree Program": "BA",
+    "Specialization": "Political Science"
+  },
+  {
+    "Degree Program": "BA",
+    "Specialization": "History"
+  },
+  {
+    "Degree Program": "BA",
+    "Specialization": "Economics"
+  },
+  {
+    "Degree Program": "BA",
+    "Specialization": "Sociology"
+  },
+  {
+    "Degree Program": "BA",
+    "Specialization": "Philosophy"
+  },
+  {
+    "Degree Program": "BA",
+    "Specialization": "Psychology"
+  },
+  {
+    "Degree Program": "BA",
+    "Specialization": "Geography"
+  },
+  {
+    "Degree Program": "BA",
+    "Specialization": "Public Administration"
+  },
+  {
+    "Degree Program": "BA",
+    "Specialization": "Journalism"
+  },
+  {
+    "Degree Program": "BA",
+    "Specialization": "Mass Communication"
+  },
+  {
+    "Degree Program": "BA",
+    "Specialization": "Anthropology"
+  },
+  {
+    "Degree Program": "BA",
+    "Specialization": "Education"
+  },
+  {
+    "Degree Program": "BA",
+    "Specialization": "Music"
+  },
+  {
+    "Degree Program": "BA",
+    "Specialization": "Fine Arts"
+  },
+  {
+    "Degree Program": "BA",
+    "Specialization": "Performing Arts"
+  },
+  {
+    "Degree Program": "BA",
+    "Specialization": "Theater Studies"
+  },
+  {
+    "Degree Program": "BA",
+    "Specialization": "Religious Studies"
+  },
+  {
+    "Degree Program": "BA",
+    "Specialization": "Women’s Studies"
+  },
+  {
+    "Degree Program": "BA",
+    "Specialization": "Linguistics"
+  },
+  {
+    "Degree Program": "MA",
+    "Specialization": "English Literature"
+  },
+  {
+    "Degree Program": "MA",
+    "Specialization": "Political Science"
+  },
+  {
+    "Degree Program": "MA",
+    "Specialization": "History"
+  },
+  {
+    "Degree Program": "MA",
+    "Specialization": "Economics"
+  },
+  {
+    "Degree Program": "MA",
+    "Specialization": "Sociology"
+  },
+  {
+    "Degree Program": "MA",
+    "Specialization": "Philosophy"
+  },
+  {
+    "Degree Program": "MA",
+    "Specialization": "Psychology"
+  },
+  {
+    "Degree Program": "MA",
+    "Specialization": "Public Administration"
+  },
+  {
+    "Degree Program": "MA",
+    "Specialization": "Journalism and Mass Communication"
+  },
+  {
+    "Degree Program": "MA",
+    "Specialization": "Linguistics"
+  },
+  {
+    "Degree Program": "MA",
+    "Specialization": "Anthropology"
+  },
+  {
+    "Degree Program": "MA",
+    "Specialization": "Social Work"
+  },
+  {
+    "Degree Program": "MA",
+    "Specialization": "International Relations"
+  },
+  {
+    "Degree Program": "MA",
+    "Specialization": "Theater Arts"
+  },
+  {
+    "Degree Program": "MA",
+    "Specialization": "Women’s Studies"
+  },
+  {
+    "Degree Program": "MA",
+    "Specialization": "Fine Arts"
+  },
+  {
+    "Degree Program": "MA",
+    "Specialization": "Performing Arts"
+  },
+  {
+    "Degree Program": "B.Com",
+    "Specialization": "General Commerce"
+  },
+  {
+    "Degree Program": "B.Com",
+    "Specialization": "Accounting and Finance"
+  },
+  {
+    "Degree Program": "B.Com",
+    "Specialization": "Marketing Management"
+  },
+  {
+    "Degree Program": "B.Com",
+    "Specialization": "Human Resource Management"
+  },
+  {
+    "Degree Program": "B.Com",
+    "Specialization": "Banking and Insurance"
+  },
+  {
+    "Degree Program": "B.Com",
+    "Specialization": "Taxation"
+  },
+  {
+    "Degree Program": "B.Com",
+    "Specialization": "E-Commerce"
+  },
+  {
+    "Degree Program": "B.Com",
+    "Specialization": "International Business"
+  },
+  {
+    "Degree Program": "B.Com",
+    "Specialization": "Logistics and Supply Chain Management"
+  },
+  {
+    "Degree Program": "B.Com",
+    "Specialization": "Business Analytics"
+  },
+  {
+    "Degree Program": "M.Com",
+    "Specialization": "Accountancy"
+  },
+  {
+    "Degree Program": "M.Com",
+    "Specialization": "Finance"
+  },
+  {
+    "Degree Program": "M.Com",
+    "Specialization": "Marketing"
+  },
+  {
+    "Degree Program": "M.Com",
+    "Specialization": "Banking"
+  },
+  {
+    "Degree Program": "M.Com",
+    "Specialization": "International Business"
+  },
+  {
+    "Degree Program": "M.Com",
+    "Specialization": "Taxation"
+  },
+  {
+    "Degree Program": "M.Com",
+    "Specialization": "Human Resource Management"
+  },
+  {
+    "Degree Program": "M.Com",
+    "Specialization": "E-Commerce"
+  },
+  {
+    "Degree Program": "M.Com",
+    "Specialization": "Business Analytics"
+  },
+  {
+    "Degree Program": "M.Com",
+    "Specialization": "Investment Management"
+  },
+  {
+    "Degree Program": "M.Com",
+    "Specialization": "Retail Management"
+  },
+  {
+    "Degree Program": "BDS",
+    "Specialization": "Orthodontics"
+  },
+  {
+    "Degree Program": "BDS",
+    "Specialization": "Periodontics"
+  },
+  {
+    "Degree Program": "BDS",
+    "Specialization": "Oral and Maxillofacial Surgery"
+  },
+  {
+    "Degree Program": "BDS",
+    "Specialization": "Pediatric Dentistry"
+  },
+  {
+    "Degree Program": "BDS",
+    "Specialization": "Prosthodontics"
+  },
+  {
+    "Degree Program": "BDS",
+    "Specialization": "Oral Pathology"
+  },
+  {
+    "Degree Program": "BDS",
+    "Specialization": "Conservative Dentistry"
+  },
+  {
+    "Degree Program": "BDS",
+    "Specialization": "Preventive Dentistry"
+  },
+  {
+    "Degree Program": "MBBS",
+    "Specialization": "General Medicine"
+  },
+  {
+    "Degree Program": "MBBS",
+    "Specialization": "Surgery"
+  },
+  {
+    "Degree Program": "MBBS",
+    "Specialization": "Pediatrics"
+  },
+  {
+    "Degree Program": "MBBS",
+    "Specialization": "Orthopedics"
+  },
+  {
+    "Degree Program": "MBBS",
+    "Specialization": "Dermatology"
+  },
+  {
+    "Degree Program": "MBBS",
+    "Specialization": "Ophthalmology"
+  },
+  {
+    "Degree Program": "MBBS",
+    "Specialization": "Gynecology and Obstetrics"
+  },
+  {
+    "Degree Program": "MBBS",
+    "Specialization": "Psychiatry"
+  },
+  {
+    "Degree Program": "MBBS",
+    "Specialization": "Cardiology"
+  },
+  {
+    "Degree Program": "MBBS",
+    "Specialization": "Neurology"
+  },
+  {
+    "Degree Program": "MBBS",
+    "Specialization": "Radiology"
+  },
+  {
+    "Degree Program": "MBBS",
+    "Specialization": "Anesthesia"
+  },
+  {
+    "Degree Program": "MBBS",
+    "Specialization": "Pathology"
+  },
+  {
+    "Degree Program": "MBBS",
+    "Specialization": "Forensic Medicine"
+  },
+  {
+    "Degree Program": "MBBS",
+    "Specialization": "Pulmonology"
+  }
+]

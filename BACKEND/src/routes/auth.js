@@ -65,7 +65,7 @@ router.get('/users', authenticateToken, authorizeHost, async (req, res) => {
 
 // 📝 Register
 router.post('/register', registerLimiter, async (req, res) => {
-  const { name, email, password, role } = req.body;
+  const { name, email, password, role, collegeName, collegeState, collegeDistrict, degreeName, specializationName } = req.body;
 
   if (!name || !email || !password) {
     console.log('[REGISTER] Missing fields:', { name, email, password });
@@ -136,7 +136,12 @@ router.post('/register', registerLimiter, async (req, res) => {
         email,
         password: hashedPassword,
         role: role || 'attendee',
-        verified: false
+        verified: false,
+        collegeName: collegeName || null,
+        collegeState: collegeState || null,
+        collegeDistrict: collegeDistrict || null,
+        degreeName: degreeName || null,
+        specializationName: specializationName || null
       }
     });
 

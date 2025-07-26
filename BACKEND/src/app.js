@@ -10,6 +10,7 @@ const feedbackRoutes = require('./routes/feedback.js')
 const analyticsRoutes = require('./routes/analytics.js')
 const { authenticateToken } = require('./middleware/auth.js')
 const invitationRouter = require('./routes/invitation.js')
+const collegeRoutes = require('./routes/colleges.js')
 const path = require('path')    
 
 const app = express()
@@ -34,10 +35,12 @@ console.log('Loading routes...')
 
 // Public routes (no authentication required)
 app.use('/api/auth', authRoutes)
+app.use('/api/colleges', collegeRoutes)
 // Register the featured events handler as a public route
 app.get('/api/events/featured', getFeaturedEventsHandler);
 console.log('✓ Featured events route loaded at /api/events/featured (PUBLIC)')
 console.log('✓ Auth routes loaded at /api/auth')
+console.log('✓ College routes loaded at /api/colleges (PUBLIC)')
 
 // Protected routes (authentication required)
 app.use('/api/events', authenticateToken, eventRoutes)

@@ -5,6 +5,7 @@ import ErrorMessage from '../components/ui/ErrorMessage'
 import { registerUser } from '../services/auth'
 import { useAuth } from '../hooks/useAuth'
 import { useErrorHandler } from '../hooks/useErrorHandler'
+import api from '../services/api'
 
 const RegisterPage = () => {
   const [name, setName] = useState('')
@@ -16,6 +17,34 @@ const RegisterPage = () => {
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [passwordStrength, setPasswordStrength] = useState('')
+  
+  // College dropdown states
+  const [states, setStates] = useState([])
+  const [districts, setDistricts] = useState([])
+  const [colleges, setColleges] = useState([])
+  const [selectedState, setSelectedState] = useState('')
+  const [selectedDistrict, setSelectedDistrict] = useState('')
+  const [selectedCollege, setSelectedCollege] = useState('')
+  const [selectedCollegeId, setSelectedCollegeId] = useState('')
+  const [loadingStates, setLoadingStates] = useState(false)
+  const [loadingDistricts, setLoadingDistricts] = useState(false)
+  const [loadingColleges, setLoadingColleges] = useState(false)
+  
+  // Degree and specialization dropdown states
+  const [degrees, setDegrees] = useState([])
+  const [specializations, setSpecializations] = useState([])
+  const [selectedDegree, setSelectedDegree] = useState('')
+  const [selectedSpecialization, setSelectedSpecialization] = useState('')
+  const [loadingDegrees, setLoadingDegrees] = useState(false)
+  const [loadingSpecializations, setLoadingSpecializations] = useState(false)
+  
+  // "Other" option states
+  const [showOtherCollege, setShowOtherCollege] = useState(false)
+  const [showOtherDegree, setShowOtherDegree] = useState(false)
+  const [showOtherSpecialization, setShowOtherSpecialization] = useState(false)
+  const [otherCollege, setOtherCollege] = useState('')
+  const [otherDegree, setOtherDegree] = useState('')
+  const [otherSpecialization, setOtherSpecialization] = useState('')
   
   // Use the custom error handler hook - always call with same parameters
   const {
@@ -31,6 +60,166 @@ const RegisterPage = () => {
   const { login, currentUser } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
+
+  // Fetch states and degrees on component mount
+  useEffect(() => {
+    fetchStates()
+    fetchDegrees()
+  }, [])
+
+  // Fetch states from API
+  const fetchStates = async () => {
+    setLoadingStates(true)
+    try {
+      const response = await api.get('/api/colleges/states')
+      setStates(response.data.states || [])
+    } catch (error) {
+      console.error('Error fetching states:', error)
+      setSmartError('Failed to load states. Please try again.')
+    } finally {
+      setLoadingStates(false)
+    }
+  }
+
+  // Fetch districts when state changes
+  const fetchDistricts = async (state) => {
+    if (!state) {
+      setDistricts([])
+      setSelectedDistrict('')
+      setColleges([])
+      setSelectedCollege('')
+      return
+    }
+    
+    setLoadingDistricts(true)
+    try {
+      const response = await api.get(`/api/colleges/districts/${encodeURIComponent(state)}`)
+      setDistricts(response.data.districts || [])
+      setSelectedDistrict('')
+      setColleges([])
+      setSelectedCollege('')
+    } catch (error) {
+      console.error('Error fetching districts:', error)
+      setSmartError('Failed to load districts. Please try again.')
+    } finally {
+      setLoadingDistricts(false)
+    }
+  }
+
+  // Fetch colleges when district changes
+  const fetchColleges = async (state, district) => {
+    if (!state || !district) {
+      setColleges([])
+      setSelectedCollege('')
+      setSelectedCollegeId('')
+      return
+    }
+    
+    setLoadingColleges(true)
+    try {
+      const response = await api.get(`/api/colleges/colleges/${encodeURIComponent(state)}/${encodeURIComponent(district)}`)
+      setColleges(response.data.colleges || [])
+      setSelectedCollege('')
+    } catch (error) {
+      console.error('Error fetching colleges:', error)
+      setSmartError('Failed to load colleges. Please try again.')
+    } finally {
+      setLoadingColleges(false)
+    }
+  }
+
+  // Fetch degrees from API
+  const fetchDegrees = async () => {
+    setLoadingDegrees(true)
+    try {
+      const response = await api.get('/api/colleges/degrees')
+      setDegrees(response.data.degrees || [])
+    } catch (error) {
+      console.error('Error fetching degrees:', error)
+      setSmartError('Failed to load degrees. Please try again.')
+    } finally {
+      setLoadingDegrees(false)
+    }
+  }
+
+  // Fetch specializations when degree changes
+  const fetchSpecializations = async (degreeId) => {
+    if (!degreeId) {
+      setSpecializations([])
+      setSelectedSpecialization('')
+      return
+    }
+    
+    setLoadingSpecializations(true)
+    try {
+      const response = await api.get(`/api/colleges/specializations/${degreeId}`)
+      setSpecializations(response.data.specializations || [])
+      setSelectedSpecialization('')
+    } catch (error) {
+      console.error('Error fetching specializations:', error)
+      setSmartError('Failed to load specializations. Please try again.')
+    } finally {
+      setLoadingSpecializations(false)
+    }
+  }
+
+  // Handle state selection
+  const handleStateChange = (e) => {
+    const state = e.target.value
+    setSelectedState(state)
+    fetchDistricts(state)
+  }
+
+  // Handle district selection
+  const handleDistrictChange = (e) => {
+    const district = e.target.value
+    setSelectedDistrict(district)
+    fetchColleges(selectedState, district)
+  }
+
+  // Handle college selection
+  const handleCollegeChange = (e) => {
+    const collegeName = e.target.value
+    if (collegeName === 'other') {
+      setShowOtherCollege(true)
+      setSelectedCollege('')
+      setSelectedCollegeId('')
+    } else {
+      setShowOtherCollege(false)
+      setOtherCollege('')
+      setSelectedCollege(collegeName)
+      // Find the college ID for the selected college
+      const college = colleges.find(c => c.name === collegeName)
+      setSelectedCollegeId(college ? college.id : '')
+    }
+  }
+
+  // Handle degree selection
+  const handleDegreeChange = (e) => {
+    const degreeId = e.target.value
+    setSelectedDegree(degreeId)
+    if (degreeId === 'other') {
+      setShowOtherDegree(true)
+      setSelectedDegree('')
+    } else {
+      setShowOtherDegree(false)
+      setOtherDegree('')
+      fetchSpecializations(degreeId)
+    }
+  }
+
+  // Handle specialization selection
+  const handleSpecializationChange = (e) => {
+    const specializationName = e.target.value
+    if (specializationName === 'other') {
+      setShowOtherSpecialization(true)
+      setSelectedSpecialization('')
+    } else {
+      setShowOtherSpecialization(false)
+      setOtherSpecialization('')
+      setSelectedSpecialization(specializationName)
+    }
+  }
 
   useEffect(() => {
     const inviteInfo = localStorage.getItem('pendingInviteInfo')
@@ -49,10 +238,32 @@ const RegisterPage = () => {
       setSmartError('Passwords do not match');
       return;
     }
+    if (!selectedCollege && !otherCollege) {
+      setSmartError('Please select your college or enter a custom one');
+      return;
+    }
+    if (!selectedDegree && !otherDegree) {
+      setSmartError('Please select your degree program or enter a custom one');
+      return;
+    }
+    if (!selectedSpecialization && !otherSpecialization) {
+      setSmartError('Please select your specialization or enter a custom one');
+      return;
+    }
     clearError();
     setLoading(true);
     try {
-      const { message, token } = await registerUser(name, email, password);
+      const { message, token } = await registerUser(
+        name, 
+        email, 
+        password, 
+        undefined, 
+        selectedCollege || otherCollege, 
+        selectedState, 
+        selectedDistrict, 
+        selectedDegree || otherDegree,
+        selectedSpecialization || otherSpecialization
+      );
       console.log('[REGISTER] Backend response:', { message, token });
       if (token) {
         login(token);
@@ -122,190 +333,425 @@ const RegisterPage = () => {
 
   return (
     <div className="min-h-screen w-full overflow-y-auto bg-gradient-to-br from-[#0f0c29] via-[#302b63] to-[#24243e] px-4 py-8">
-     <div className="max-w-md mx-auto relative z-10 bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl shadow-[0_0_25px_rgba(255,255,255,0.08)] p-6">
-      {/* Ambient Glow Spotlights */}
-      <div className="absolute top-0 left-[25%] w-96 h-96 bg-amber-400/20 rounded-full blur-[150px] z-0"></div>
-      <div className="absolute bottom-0 right-[20%] w-72 h-72 bg-pink-500/10 rounded-full blur-[100px] z-0"></div>
-      <div className="absolute bottom-10 left-[10%] w-60 h-60 bg-blue-500/10 rounded-full blur-[120px] z-0"></div>
+      {/* Enhanced Ambient Glow Spotlights */}
+      <div className="absolute top-0 left-[15%] w-[500px] h-[500px] bg-amber-400/15 rounded-full blur-[200px] z-0 animate-pulse-slow"></div>
+      <div className="absolute bottom-0 right-[10%] w-[400px] h-[400px] bg-pink-500/10 rounded-full blur-[180px] z-0 animate-pulse-slow animation-delay-1000"></div>
+      <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-blue-500/5 rounded-full blur-[250px] z-0 animate-pulse-slow animation-delay-2000"></div>
 
-      {/* Registration Card - Compact Design */}
-      <div className="relative z-10 w-full max-w-md bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl shadow-[0_0_25px_rgba(255,255,255,0.06)] p-6">
+      {/* Main Container - Much Wider and More Elegant */}
+      <div className="max-w-4xl mx-auto relative z-10">
+        {/* Registration Card - Professional Design */}
+        <div className="relative z-10 w-full bg-white/5 backdrop-blur-md border border-white/10 rounded-3xl shadow-[0_0_40px_rgba(255,255,255,0.1)] p-8 lg:p-12">
         
-        {/* Compact Invitation Banner */}
-        {pendingInvite && (
-          <div className="mb-4 p-3 bg-amber-400/10 border-l-4 border-amber-500 text-amber-200 rounded-lg shadow animate-fade-in">
-            <div className="flex items-start gap-2">
-              <span className="text-lg">🎉</span>
-              <div>
-                <div className="font-medium text-amber-300 text-sm">
-                  You've been invited to <b>{pendingInvite.eventTitle}</b> by <b>{pendingInvite.hostName}</b>!
-                </div>
-                <div className="text-xs text-amber-400 mt-1">
-                  After creating your account,{' '}
-                  <a href={`/invitation/${pendingInvite.token}`} className="underline font-medium hover:text-amber-300">
-                    click here to accept your invitation
-                  </a>.
+          {/* Compact Invitation Banner */}
+          {pendingInvite && (
+            <div className="mb-4 p-3 bg-amber-400/10 border-l-4 border-amber-500 text-amber-200 rounded-lg shadow animate-fade-in">
+              <div className="flex items-start gap-2">
+                <span className="text-lg">🎉</span>
+                <div>
+                  <div className="font-medium text-amber-300 text-sm">
+                    You've been invited to <b>{pendingInvite.eventTitle}</b> by <b>{pendingInvite.hostName}</b>!
+                  </div>
+                  <div className="text-xs text-amber-400 mt-1">
+                    After creating your account,{' '}
+                    <a href={`/invitation/${pendingInvite.token}`} className="underline font-medium hover:text-amber-300">
+                      click here to accept your invitation
+                    </a>.
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
 
-        <div className="text-center mb-6">
-          <h2 className="text-2xl font-bold text-white">Create Your Account</h2>
-          <p className="text-gray-300 text-sm mt-1">Join thousands of event organizers using EventPulse</p>
-        </div>
-
-        {/* Compact Error Message Component */}
-        <ErrorMessage
-          error={error}
-          type={errorType}
-          errorId={errorId}
-          onDismiss={dismissError}
-        />
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label htmlFor="name" className="block text-sm font-medium text-gray-300 mb-1">
-              Full Name
-            </label>
-            <input
-              type="text"
-              id="name"
-              value={name}
-              onChange={handleNameChange}
-              className="w-full px-3 py-2.5 bg-white/10 text-white border border-white/20 rounded-lg placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-amber-400 transition-all duration-200 text-sm"
-              placeholder="John Doe"
-              required
-            />
-          </div>
-
-          <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-1">
-              Email Address
-            </label>
-            <input
-              type="email"
-              id="email"
-              value={email}
-              onChange={handleEmailChange}
-              className="w-full px-3 py-2.5 bg-white/10 text-white border border-white/20 rounded-lg placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-amber-400 transition-all duration-200 text-sm"
-              placeholder="you@example.com"
-              required
-            />
-          </div>
-
-          <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-1">
-              Password
-            </label>
-            <div className="relative">
-              <input
-                type={showPassword ? "text" : "password"}
-                id="password"
-                value={password}
-                onChange={handlePasswordChange}
-                className="w-full px-3 py-2.5 bg-white/10 text-white border border-white/20 rounded-lg placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-amber-400 transition-all duration-200 text-sm"
-                placeholder="••••••••"
-                required
-              />
-              <button
-                type="button"
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-amber-300 text-xs"
-                onClick={() => setShowPassword((prev) => !prev)}
-                tabIndex={-1}
-                aria-label={showPassword ? "Hide password" : "Show password"}
-              >
-                {showPassword ? "Hide" : "Show"}
-              </button>
+          <div className="text-center mb-8">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-amber-400/20 to-pink-400/20 rounded-2xl mb-4">
+              <span className="text-2xl">🚀</span>
             </div>
-            {/* Password strength indicator */}
-            {password && (
-              <div className={`mt-1 text-xs font-semibold ${passwordStrength === 'Strong' ? 'text-green-400' : passwordStrength === 'Medium' ? 'text-amber-300' : 'text-red-400'}`}>Strength: {passwordStrength}</div>
-            )}
-            {/* Password requirements */}
-            <ul className="mt-1 text-xs text-gray-300 space-y-0.5">
-              <li className={password.length >= 8 ? 'text-green-400' : ''}>• At least 8 characters</li>
-              <li className={/[A-Z]/.test(password) ? 'text-green-400' : ''}>• At least 1 uppercase letter</li>
-              <li className={/[a-z]/.test(password) ? 'text-green-400' : ''}>• At least 1 lowercase letter</li>
-              <li className={/\d/.test(password) ? 'text-green-400' : ''}>• At least 1 number</li>
-              <li className={/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password) ? 'text-green-400' : ''}>• At least 1 special character</li>
-            </ul>
-          </div>
-
-          <div>
-            <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-300 mb-1">
-              Confirm Password
-            </label>
-            <div className="relative">
-              <input
-                type={showConfirmPassword ? "text" : "password"}
-                id="confirmPassword"
-                value={confirmPassword}
-                onChange={handleConfirmPasswordChange}
-                className="w-full px-3 py-2.5 bg-white/10 text-white border border-white/20 rounded-lg placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-amber-400 transition-all duration-200 text-sm"
-                placeholder="••••••••"
-                required
-              />
-              <button
-                type="button"
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-amber-300 text-xs"
-                onClick={() => setShowConfirmPassword((prev) => !prev)}
-                tabIndex={-1}
-                aria-label={showConfirmPassword ? "Hide password" : "Show password"}
-              >
-                {showConfirmPassword ? "Hide" : "Show"}
-              </button>
-            </div>
-            {confirmPassword && confirmPassword !== password && (
-              <div className="mt-1 text-xs text-red-400">Passwords do not match.</div>
-            )}
-          </div>
-
-          <Button 
-            type="submit" 
-            className="w-full justify-center mt-6"
-            disabled={loading || passwordStrength !== 'Strong' || password !== confirmPassword}
-          >
-            {loading ? 'Creating Account...' : 'Create Account'}
-          </Button>
-        </form>
-
-        <div className="mt-4 text-center text-xs text-gray-400">
-          Already have an account?{' '}
-          <Link to="/login" className="font-medium text-amber-400 hover:text-amber-300">
-            Sign in
-          </Link>
-        </div>
-
-        {/* Compact guidance for existing users - only show for account exists errors */}
-        {errorType === 'success' && error && (
-          <div className="mt-3 p-3 bg-gradient-to-r from-green-400/10 to-blue-400/10 border border-green-400/20 rounded-lg animate-fade-in">
-            <div className="flex items-center gap-2 mb-1">
-              <div className="w-5 h-5 bg-green-400/20 rounded-full flex items-center justify-center">
-                <svg className="w-3 h-3 text-green-400" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                </svg>
-              </div>
-              <p className="text-green-300 font-medium text-xs">Welcome back!</p>
-            </div>
-            <p className="text-green-200 text-xs leading-tight mb-2">
-              Great to see you again! Your account is already set up and ready to go.
+            <h2 className="text-3xl lg:text-4xl font-bold bg-gradient-to-r from-amber-300 via-pink-300 to-blue-300 bg-clip-text text-transparent mb-3">
+              Create Your Account
+            </h2>
+            <p className="text-gray-300 text-lg max-w-2xl mx-auto">
+              Join thousands of event organizers using EventPulse to create amazing experiences
             </p>
-            <Link 
-              to="/login" 
-              className="inline-flex items-center gap-1 text-green-300 hover:text-green-200 font-medium text-xs"
-            >
-              <span>Sign In Now</span>
-              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </Link>
           </div>
-        )}
+
+          {/* Compact Error Message Component */}
+          <ErrorMessage
+            error={error}
+            type={errorType}
+            errorId={errorId}
+            onDismiss={dismissError}
+          />
+
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Personal Information Section */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div>
+                <label htmlFor="name" className="block text-sm font-semibold text-gray-300 mb-2">
+                  Full Name
+                </label>
+                <input
+                  type="text"
+                  id="name"
+                  value={name}
+                  onChange={handleNameChange}
+                  className="w-full px-4 py-3 bg-white/10 text-white border border-white/20 rounded-xl placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-amber-400 transition-all duration-300 text-base"
+                  placeholder="John Doe"
+                  required
+                />
+              </div>
+
+              <div>
+                <label htmlFor="email" className="block text-sm font-semibold text-gray-300 mb-2">
+                  Email Address
+                </label>
+                <input
+                  type="email"
+                  id="email"
+                  value={email}
+                  onChange={handleEmailChange}
+                  className="w-full px-4 py-3 bg-white/10 text-white border border-white/20 rounded-xl placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-amber-400 transition-all duration-300 text-base"
+                  placeholder="you@example.com"
+                  required
+                />
+              </div>
+            </div>
+
+            {/* Password Section */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div>
+                <label htmlFor="password" className="block text-sm font-semibold text-gray-300 mb-2">
+                  Password
+                </label>
+                <div className="relative">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    id="password"
+                    value={password}
+                    onChange={handlePasswordChange}
+                    className="w-full px-4 py-3 bg-white/10 text-white border border-white/20 rounded-xl placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-amber-400 transition-all duration-300 text-base pr-12"
+                    placeholder="••••••••"
+                    required
+                  />
+                  <button
+                    type="button"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-amber-300 hover:text-amber-200 transition-colors duration-200 text-sm font-medium"
+                    onClick={() => setShowPassword((prev) => !prev)}
+                    tabIndex={-1}
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                  >
+                    {showPassword ? "Hide" : "Show"}
+                  </button>
+                </div>
+                {/* Password strength indicator */}
+                {password && (
+                  <div className={`mt-2 text-sm font-semibold ${passwordStrength === 'Strong' ? 'text-green-400' : passwordStrength === 'Medium' ? 'text-amber-300' : 'text-red-400'}`}>
+                    Strength: {passwordStrength}
+                  </div>
+                )}
+                {/* Password requirements */}
+                <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-1">
+                  <div className={`text-xs ${password.length >= 8 ? 'text-green-400' : 'text-gray-400'}`}>✓ At least 8 characters</div>
+                  <div className={`text-xs ${/[A-Z]/.test(password) ? 'text-green-400' : 'text-gray-400'}`}>✓ At least 1 uppercase letter</div>
+                  <div className={`text-xs ${/[a-z]/.test(password) ? 'text-green-400' : 'text-gray-400'}`}>✓ At least 1 lowercase letter</div>
+                  <div className={`text-xs ${/\d/.test(password) ? 'text-green-400' : 'text-gray-400'}`}>✓ At least 1 number</div>
+                  <div className={`text-xs ${/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password) ? 'text-green-400' : 'text-gray-400'}`}>✓ At least 1 special character</div>
+                </div>
+              </div>
+
+              <div>
+                <label htmlFor="confirmPassword" className="block text-sm font-semibold text-gray-300 mb-2">
+                  Confirm Password
+                </label>
+                <div className="relative">
+                  <input
+                    type={showConfirmPassword ? "text" : "password"}
+                    id="confirmPassword"
+                    value={confirmPassword}
+                    onChange={handleConfirmPasswordChange}
+                    className="w-full px-4 py-3 bg-white/10 text-white border border-white/20 rounded-xl placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-amber-400 transition-all duration-300 text-base pr-12"
+                    placeholder="••••••••"
+                    required
+                  />
+                  <button
+                    type="button"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-amber-300 hover:text-amber-200 transition-colors duration-200 text-sm font-medium"
+                    onClick={() => setShowConfirmPassword((prev) => !prev)}
+                    tabIndex={-1}
+                    aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                  >
+                    {showConfirmPassword ? "Hide" : "Show"}
+                  </button>
+                </div>
+                {confirmPassword && confirmPassword !== password && (
+                  <div className="mt-2 text-xs text-red-400">Passwords do not match.</div>
+                )}
+              </div>
+            </div>
+
+            {/* Location Section */}
+            <div className="bg-white/5 rounded-2xl p-6 border border-white/10">
+              <h3 className="text-lg font-semibold text-amber-300 mb-4 flex items-center gap-2">
+                <span className="text-xl">📍</span>
+                Location Information
+              </h3>
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div>
+                  <label htmlFor="state" className="block text-sm font-semibold text-gray-300 mb-2">
+                    State
+                  </label>
+                  <select
+                    id="state"
+                    value={selectedState}
+                    onChange={handleStateChange}
+                    className="w-full px-4 py-3 bg-white/10 text-white border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-amber-400 transition-all duration-300 text-base"
+                    required
+                  >
+                    <option value="">Select a State</option>
+                    {loadingStates ? (
+                      <option value="">Loading states...</option>
+                    ) : (
+                      states.map((state) => (
+                        <option key={state} value={state}>
+                          {state}
+                        </option>
+                      ))
+                    )}
+                  </select>
+                </div>
+
+                <div>
+                  <label htmlFor="district" className="block text-sm font-semibold text-gray-300 mb-2">
+                    District
+                  </label>
+                  <select
+                    id="district"
+                    value={selectedDistrict}
+                    onChange={handleDistrictChange}
+                    className="w-full px-4 py-3 bg-white/10 text-white border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-amber-400 transition-all duration-300 text-base"
+                    required
+                  >
+                    <option value="">Select a District</option>
+                    {loadingDistricts ? (
+                      <option value="">Loading districts...</option>
+                    ) : (
+                      districts.map((district) => (
+                        <option key={district} value={district}>
+                          {district}
+                        </option>
+                      ))
+                    )}
+                  </select>
+                </div>
+
+                <div>
+                  <label htmlFor="college" className="block text-sm font-semibold text-gray-300 mb-2">
+                    College
+                  </label>
+                  <select
+                    id="college"
+                    value={selectedCollege}
+                    onChange={handleCollegeChange}
+                    className="w-full px-4 py-3 bg-white/10 text-white border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-amber-400 transition-all duration-300 text-base"
+                    required
+                  >
+                    <option value="">Select a College</option>
+                    {loadingColleges ? (
+                      <option value="">Loading colleges...</option>
+                    ) : (
+                      <>
+                        {colleges.map((college) => (
+                          <option key={college.id} value={college.name}>
+                            {college.name} {college.city && `(${college.city})`}
+                          </option>
+                        ))}
+                        <option value="other">Other (Not listed above)</option>
+                      </>
+                    )}
+                  </select>
+                </div>
+              </div>
+
+              {/* Other College Input */}
+              {showOtherCollege && (
+                <div className="mt-4 animate-fade-in">
+                  <label htmlFor="otherCollege" className="block text-sm font-semibold text-gray-300 mb-2">
+                    Enter College Name
+                  </label>
+                  <input
+                    type="text"
+                    id="otherCollege"
+                    value={otherCollege}
+                    onChange={(e) => setOtherCollege(e.target.value)}
+                    className="w-full px-4 py-3 bg-white/10 text-white border border-white/20 rounded-xl placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-amber-400 transition-all duration-300 text-base"
+                    placeholder="Enter your college name"
+                    required
+                  />
+                </div>
+              )}
+            </div>
+
+            {/* Academic Information Section */}
+            <div className="bg-white/5 rounded-2xl p-6 border border-white/10">
+              <h3 className="text-lg font-semibold text-amber-300 mb-4 flex items-center gap-2">
+                <span className="text-xl">🎓</span>
+                Academic Information
+              </h3>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div>
+                  <label htmlFor="degree" className="block text-sm font-semibold text-gray-300 mb-2">
+                    Degree Program
+                  </label>
+                  <select
+                    id="degree"
+                    value={selectedDegree}
+                    onChange={handleDegreeChange}
+                    className="w-full px-4 py-3 bg-white/10 text-white border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-amber-400 transition-all duration-300 text-base"
+                    required
+                  >
+                    <option value="">Select your Degree Program</option>
+                    {loadingDegrees ? (
+                      <option value="">Loading degrees...</option>
+                    ) : (
+                      <>
+                        {degrees.map((degree) => (
+                          <option key={degree.id} value={degree.id}>
+                            {degree.name}
+                          </option>
+                        ))}
+                        <option value="other">Other (Not listed above)</option>
+                      </>
+                    )}
+                  </select>
+                </div>
+
+                <div>
+                  <label htmlFor="specialization" className="block text-sm font-semibold text-gray-300 mb-2">
+                    Specialization
+                  </label>
+                  <select
+                    id="specialization"
+                    value={selectedSpecialization}
+                    onChange={handleSpecializationChange}
+                    className="w-full px-4 py-3 bg-white/10 text-white border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-amber-400 transition-all duration-300 text-base"
+                    required
+                    disabled={!selectedDegree && !otherDegree}
+                  >
+                    <option value="">Select your Specialization</option>
+                    {!selectedDegree && !otherDegree ? (
+                      <option value="">Please select a degree first</option>
+                    ) : loadingSpecializations ? (
+                      <option value="">Loading specializations...</option>
+                    ) : (
+                      <>
+                        {specializations.map((specialization) => (
+                          <option key={specialization.id} value={specialization.name}>
+                            {specialization.name}
+                          </option>
+                        ))}
+                        <option value="other">Other (Not listed above)</option>
+                      </>
+                    )}
+                  </select>
+                </div>
+              </div>
+
+              {/* Other Degree Input */}
+              {showOtherDegree && (
+                <div className="mt-4 animate-fade-in">
+                  <label htmlFor="otherDegree" className="block text-sm font-semibold text-gray-300 mb-2">
+                    Enter Degree Program
+                  </label>
+                  <input
+                    type="text"
+                    id="otherDegree"
+                    value={otherDegree}
+                    onChange={(e) => setOtherDegree(e.target.value)}
+                    className="w-full px-4 py-3 bg-white/10 text-white border border-white/20 rounded-xl placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-amber-400 transition-all duration-300 text-base"
+                    placeholder="Enter your degree program"
+                    required
+                  />
+                </div>
+              )}
+
+              {/* Other Specialization Input */}
+              {showOtherSpecialization && (
+                <div className="mt-4 animate-fade-in">
+                  <label htmlFor="otherSpecialization" className="block text-sm font-semibold text-gray-300 mb-2">
+                    Enter Specialization
+                  </label>
+                  <input
+                    type="text"
+                    id="otherSpecialization"
+                    value={otherSpecialization}
+                    onChange={(e) => setOtherSpecialization(e.target.value)}
+                    className="w-full px-4 py-3 bg-white/10 text-white border border-white/20 rounded-xl placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-amber-400 transition-all duration-300 text-base"
+                    placeholder="Enter your specialization"
+                    required
+                  />
+                </div>
+              )}
+            </div>
+
+            {/* Submit Button Section */}
+            <div className="text-center">
+              <Button 
+                type="submit" 
+                className="w-full max-w-md mx-auto justify-center py-4 px-8 text-lg font-semibold bg-gradient-to-r from-amber-500 to-pink-500 hover:from-amber-600 hover:to-pink-600 text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+                disabled={loading || passwordStrength !== 'Strong' || password !== confirmPassword || (!selectedCollege && !otherCollege) || (!selectedDegree && !otherDegree) || (!selectedSpecialization && !otherSpecialization)}
+              >
+                {loading ? (
+                  <div className="flex items-center gap-2">
+                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                    Creating Account...
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <span>🚀</span>
+                    Create Account
+                  </div>
+                )}
+              </Button>
+            </div>
+          </form>
+
+          <div className="mt-8 text-center">
+            <p className="text-gray-300 text-base">
+              Already have an account?{' '}
+              <Link to="/login" className="font-semibold text-amber-400 hover:text-amber-300 transition-colors duration-200">
+                Sign in here
+              </Link>
+            </p>
+          </div>
+
+          {/* Compact guidance for existing users - only show for account exists errors */}
+          {errorType === 'success' && error && (
+            <div className="mt-3 p-3 bg-gradient-to-r from-green-400/10 to-blue-400/10 border border-green-400/20 rounded-lg animate-fade-in">
+              <div className="flex items-center gap-2 mb-1">
+                <div className="w-5 h-5 bg-green-400/20 rounded-full flex items-center justify-center">
+                  <svg className="w-3 h-3 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <p className="text-green-300 font-medium text-xs">Welcome back!</p>
+              </div>
+              <p className="text-green-200 text-xs leading-tight mb-2">
+                Great to see you again! Your account is already set up and ready to go.
+              </p>
+              <Link 
+                to="/login" 
+                className="inline-flex items-center gap-1 text-green-300 hover:text-green-200 font-medium text-xs"
+              >
+                <span>Sign In Now</span>
+                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </Link>
+            </div>
+          )}
+        </div>
       </div>
     </div>
-  </div>
   );
 };
 

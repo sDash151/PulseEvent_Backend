@@ -13,6 +13,26 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model College {
+  id            Int      @id @default(autoincrement())
+  collegeId     Int?     // Original college ID from JSON
+  name          String
+  addressLine1  String?  // Address Line 1 from JSON
+  addressLine2  String?  // Address Line 2 from JSON
+  city          String?
+  district      String
+  state         String
+  pincode       Int?     // Pincode from JSON
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  events        Event[]  // Events hosted at this college
+
+  @@index([state])
+  @@index([district])
+  @@index([state, district])
+  @@index([collegeId])
+}
+
 model User {
   id                  Int          @id @default(autoincrement())
   name                String
@@ -35,6 +55,13 @@ model User {
   emailVerificationTokens EmailVerificationToken[] // <-- Added for relation
   passwordResetTokens PasswordResetToken[] // <-- Added for password reset relation
   passwordChangedAt DateTime? // <-- Used for session invalidation after password reset
+  // User's college details
+  collegeName         String?      // <-- User's college name
+  collegeState        String?      // <-- User's college state
+  collegeDistrict     String?      // <-- User's college district
+  collegeDepartment   String?      // <-- User's department
+  degreeName         String? // User's degree program (for manual entry or denormalized)
+  specializationName String? // User's specialization (for manual entry or denormalized)
 }
 
 model Event {
@@ -60,6 +87,8 @@ model Event {
   waitingList   WaitingList[]
   whatsAppNotifications WhatsAppNotification[]
   rejectionNotifications RejectionNotification[]
+  collegeId     Int?         // <-- College where event is hosted
+  college       College?     @relation(fields: [collegeId], references: [id])
 
   type           EventType @default(STANDALONE)
   paymentEnabled Boolean   @default(false) // Optional: for future payment integration
@@ -75,6 +104,7 @@ model Event {
 
   @@index([hostId])
   @@index([parentEventId])
+  @@index([collegeId])
 }
 
 model Rsvp {
@@ -224,4 +254,19 @@ model RejectionNotification {
   @@unique([userId, eventId])
   @@index([userId])
   @@index([eventId])
+}
+
+model Degree {
+  id        Int    @id @default(autoincrement())
+  name      String @unique
+  specializations Specialization[]
+}
+
+model Specialization {
+  id        Int    @id @default(autoincrement())
+  name      String
+  degreeId  Int
+  degree    Degree @relation(fields: [degreeId], references: [id])
+
+  @@unique([name, degreeId])
 }
