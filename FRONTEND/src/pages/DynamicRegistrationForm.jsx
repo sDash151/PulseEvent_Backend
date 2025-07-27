@@ -681,6 +681,63 @@ const DynamicRegistrationForm = () => {
           <h2 className="text-3xl font-bold mb-2 text-center text-amber-400">Register for Event</h2>
           <h3 className="text-xl text-center text-gray-300 mb-6">{event.title}</h3>
           
+          {/* Step Indicator for Team Events */}
+          {event.teamSize && (
+            <div className="mb-6">
+              <div className="flex items-center justify-center space-x-4">
+                <div className={`flex items-center space-x-2 ${event.flexibleTeamSize && !selectedTeamSize ? 'text-amber-400' : 'text-green-400'}`}>
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
+                    event.flexibleTeamSize && !selectedTeamSize 
+                      ? 'bg-amber-500/20 border-2 border-amber-400' 
+                      : 'bg-green-500/20 border-2 border-green-400'
+                  }`}>
+                    1
+                  </div>
+                  <span className="text-sm font-medium">Choose Team Size</span>
+                </div>
+                <div className="w-8 h-1 bg-gray-600"></div>
+                <div className={`flex items-center space-x-2 ${event.flexibleTeamSize && !selectedTeamSize ? 'text-gray-400' : 'text-blue-400'}`}>
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
+                    event.flexibleTeamSize && !selectedTeamSize 
+                      ? 'bg-gray-500/20 border-2 border-gray-400' 
+                      : 'bg-blue-500/20 border-2 border-blue-400'
+                  }`}>
+                    2
+                  </div>
+                  <span className="text-sm font-medium">Fill Details</span>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          {/* Registration Process Info */}
+          <Card variant="info" className="mb-6 p-4">
+            <div className="flex items-start space-x-3">
+              <div className="w-6 h-6 bg-blue-500/20 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                <span className="text-blue-300 text-sm">ℹ️</span>
+              </div>
+              <div>
+                <h4 className="text-blue-300 font-medium mb-1">Registration Process</h4>
+                <div className="text-sm text-gray-300 space-y-1">
+                  {event.teamSize ? (
+                    <>
+                      <p>• <span className="text-amber-300">Team fields</span> (🏆) are filled once for the entire team</p>
+                      <p>• <span className="text-blue-300">Individual fields</span> (👤) are filled for each team member</p>
+                      {event.flexibleTeamSize && (
+                        <p>• <span className="text-green-300">Select your team size first</span> to see all participant fields</p>
+                      )}
+                    </>
+                  ) : (
+                    <p>• All fields are filled once for individual participation</p>
+                  )}
+                  {event.paymentEnabled && (
+                    <p>• <span className="text-amber-300">Payment proof required</span> - upload screenshot after payment</p>
+                  )}
+                </div>
+              </div>
+            </div>
+          </Card>
+          
           {error && (
             <div className="mb-6 p-4 bg-red-600/10 text-red-400 border border-red-400/30 rounded-lg text-center">
               {error}
@@ -713,11 +770,25 @@ const DynamicRegistrationForm = () => {
                       ✅ Selected: {selectedTeamSize} participant{selectedTeamSize > 1 ? 's' : ''}
                     </p>
                   )}
+                  {!selectedTeamSize && (
+                    <div className="mt-4 p-3 bg-amber-500/10 border border-amber-500/30 rounded-lg">
+                      <p className="text-amber-300 text-sm font-medium">
+                        ⚠️ Please select a team size above to see participant fields
+                      </p>
+                    </div>
+                  )}
                 </div>
               ) : (
-                <p className="text-blue-300 text-center font-medium">
-                  🏆 Fixed Team Event: {event.teamSize} participant{parseInt(event.teamSize) > 1 ? 's' : ''} per team
-                </p>
+                <div className="text-center">
+                  <p className="text-blue-300 font-medium mb-3">
+                    🏆 Fixed Team Event: {event.teamSize} participant{parseInt(event.teamSize) > 1 ? 's' : ''} per team
+                  </p>
+                  <div className="mt-4 p-3 bg-green-500/10 border border-green-500/30 rounded-lg">
+                    <p className="text-green-300 text-sm font-medium">
+                      ✅ Team size is fixed - participant fields will appear below
+                    </p>
+                  </div>
+                </div>
               )}
             </Card>
           ) : (
@@ -741,6 +812,28 @@ const DynamicRegistrationForm = () => {
           {customFields && customFields.length > 0 && customFields.map((field, idx) => {
             const isIndividualField = field.isIndividual && event.teamSize;
             const participantCount = isIndividualField ? (event.flexibleTeamSize ? selectedTeamSize : event.teamSize) : 1;
+            
+            // Don't render individual fields if team size not selected for flexible teams
+            if (isIndividualField && event.flexibleTeamSize && !selectedTeamSize) {
+              return (
+                <div key={idx} className="mb-6">
+                  <div className="flex items-center gap-2 mb-3">
+                    <h3 className="text-lg font-bold text-gray-400">
+                      {field.label}
+                      {field.required && <span className="text-red-400 ml-1">*</span>}
+                    </h3>
+                    <span className="px-2 py-1 bg-gray-400/20 border border-gray-400/30 rounded-lg text-gray-400 text-xs font-medium">
+                      👤 Individual Field (will appear after team size selection)
+                    </span>
+                  </div>
+                  <div className="p-4 bg-gray-500/10 border border-gray-500/30 rounded-lg">
+                    <p className="text-gray-400 text-center text-sm">
+                      Select a team size above to see participant fields for "{field.label}"
+                    </p>
+                  </div>
+                </div>
+              );
+            }
             
             return (
               <div key={idx} className="mb-6">
@@ -798,7 +891,6 @@ const DynamicRegistrationForm = () => {
                           placeholder={`Enter ${field.label.toLowerCase()}${participantLabel}`}
                           {...(field.type === 'number' && { min: 0 })}
                           {...(field.type === 'whatsapp' && { pattern: '[0-9]{10}', title: 'Please enter a 10-digit phone number' })}
-                          {...(field.type === 'usn' && { pattern: '[0-9]{1}[A-Z]{2}[0-9]{2}[A-Z]{2}[0-9]{3}', title: 'Please enter a valid USN format (e.g., 1MS20CS001)' })}
                         />
                       )}
                     </div>
@@ -821,33 +913,45 @@ const DynamicRegistrationForm = () => {
                   </span>
                 )}
               </div>
-              {participants.map((p, idx) => (
-                <div key={idx} className="flex gap-2 mb-2">
-                  <Input
-                    type="text"
-                    placeholder="Name"
-                    value={p.name || ''}
-                    onChange={e => handleParticipantChange(idx, 'name', e.target.value)}
-                    required
-                  />
-                  <Input
-                    type="email"
-                    placeholder="Email"
-                    value={p.email || ''}
-                    onChange={e => handleParticipantChange(idx, 'email', e.target.value)}
-                    required
-                  />
+              
+              {/* Show placeholder for flexible team events when team size not selected */}
+              {event.teamSize && event.flexibleTeamSize && !selectedTeamSize ? (
+                <div className="p-4 bg-gray-500/10 border border-gray-500/30 rounded-lg">
+                  <p className="text-gray-400 text-center text-sm">
+                    Select a team size above to see participant fields
+                  </p>
                 </div>
-              ))}
-              {event.teamSize && participants.length < (event.flexibleTeamSize ? selectedTeamSize : event.teamSize) && (
-                <Button
-                  type="button"
-                  onClick={addParticipant}
-                  variant="ghost"
-                  className="text-sm"
-                >
-                  + Add Participant
-                </Button>
+              ) : (
+                <>
+                  {participants.map((p, idx) => (
+                    <div key={idx} className="flex gap-2 mb-2">
+                      <Input
+                        type="text"
+                        placeholder="Name"
+                        value={p.name || ''}
+                        onChange={e => handleParticipantChange(idx, 'name', e.target.value)}
+                        required
+                      />
+                      <Input
+                        type="email"
+                        placeholder="Email"
+                        value={p.email || ''}
+                        onChange={e => handleParticipantChange(idx, 'email', e.target.value)}
+                        required
+                      />
+                    </div>
+                  ))}
+                  {event.teamSize && participants.length < (event.flexibleTeamSize ? selectedTeamSize : event.teamSize) && (
+                    <Button
+                      type="button"
+                      onClick={addParticipant}
+                      variant="ghost"
+                      className="text-sm"
+                    >
+                      + Add Participant
+                    </Button>
+                  )}
+                </>
               )}
             </div>
           )}

@@ -86,17 +86,20 @@ export const AuthProvider = ({ children }) => {
             token
           })
           console.log('[AuthContext][Debug] Set currentUser with complete data (login):', userData.id)
+          return userData // Return user data for confirmation
         } catch (apiError) {
           console.error('[AuthContext] Failed to fetch user data from API on login:', apiError)
           // Fallback to JWT data if API fails
-          setCurrentUser({ 
+          const fallbackUser = { 
             id: decoded.id, 
             email: decoded.email, 
             name: decoded.name,
             role: decoded.role,
             token
-          })
+          }
+          setCurrentUser(fallbackUser)
           console.log('[AuthContext][Debug] Fallback to JWT data for id (login):', decoded.id)
+          return fallbackUser // Return fallback data
         }
       } else {
         console.error('[AuthContext] Login failed - invalid token structure')

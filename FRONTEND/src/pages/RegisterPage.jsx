@@ -7,6 +7,7 @@ import { registerUser } from '../services/auth'
 import { useAuth } from '../hooks/useAuth'
 import { useErrorHandler } from '../hooks/useErrorHandler'
 import api from '../services/api'
+import { getSafeRedirectUrl } from '../utils/redirectValidation'
 
 const RegisterPage = () => {
   const [name, setName] = useState('')
@@ -66,6 +67,8 @@ const RegisterPage = () => {
   const { login, currentUser } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
+  const params = new URLSearchParams(location.search)
+  const redirectPath = params.get('redirect')
 
   // Fetch states and degrees on component mount
   useEffect(() => {
@@ -221,24 +224,29 @@ const RegisterPage = () => {
       console.log('[REGISTER] Backend response:', { message, token });
       if (token) {
         login(token);
-        // Secure redirect logic
-        const params = new URLSearchParams(location.search);
-        const redirect = params.get('redirect');
-        if (redirect && redirect.startsWith('/')) {
-          console.log('[REGISTER] Navigating to redirect:', redirect);
-          navigate(redirect);
-        } else {
-          console.log('[REGISTER] Navigating to dashboard');
-          navigate('/dashboard');
-        }
+        // Secure redirect logic with validation
+        const safeRedirectUrl = getSafeRedirectUrl(redirectPath, '/');
+        console.log('[REGISTER] Navigating to:', safeRedirectUrl);
+        navigate(safeRedirectUrl);
       } else {
         // No token means verification required or already sent
         if (message && message.includes('already been sent')) {
           console.log('[REGISTER] Navigating to /check-email with alreadySent: true');
-          navigate('/check-email', { state: { email, alreadySent: true } });
+          navigate('/check-email', { 
+            state: { 
+              email, 
+              alreadySent: true,
+              redirectPath // Preserve redirect for email verification
+            } 
+          });
         } else {
           console.log('[REGISTER] Navigating to /check-email with only email');
-          navigate('/check-email', { state: { email } });
+          navigate('/check-email', { 
+            state: { 
+              email,
+              redirectPath // Preserve redirect for email verification
+            } 
+          });
         }
       }
     } catch (err) {

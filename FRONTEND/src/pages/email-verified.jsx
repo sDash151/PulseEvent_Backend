@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Button from '../components/ui/Button';
 import { CheckCircleIcon, ExclamationTriangleIcon, EnvelopeIcon, ArrowPathIcon, SparklesIcon, FaceSmileIcon, XCircleIcon } from '@heroicons/react/24/outline';
@@ -12,7 +12,7 @@ const statusConfig = {
       </span>
     ),
     title: 'Congratulations! Your Email is Verified 🎊',
-    message: 'Welcome aboard! Your email has been successfully verified. You can now log in and start exploring all the features we have to offer. We’re excited to have you with us!',
+    message: 'Welcome aboard! Your email has been successfully verified. You can now log in and start exploring all the features we have to offer. We\'re excited to have you with us!',
     action: 'login',
     actionLabel: 'Log In & Explore',
   },
@@ -48,7 +48,7 @@ const statusConfig = {
       </span>
     ),
     title: 'Something Went Wrong',
-    message: 'There was a problem verifying your email. Please try again or request a new link. We’re here to help!',
+    message: 'There was a problem verifying your email. Please try again or request a new link. We\'re here to help!',
     action: 'resend',
     actionLabel: 'Resend Verification Email',
   },
@@ -60,10 +60,39 @@ const EmailVerifiedPage = () => {
   const params = new URLSearchParams(location.search);
   const status = params.get('status') || 'error';
   const config = statusConfig[status] || statusConfig.error;
+  
+  // Get redirect path from location state (passed from registration)
+  const redirectPath = location.state?.redirectPath;
+  const [countdown, setCountdown] = useState(5);
+  const [isRedirecting, setIsRedirecting] = useState(false);
+
+  // Auto-redirect countdown for success status
+  useEffect(() => {
+    if (status === 'success' && redirectPath) {
+      const timer = setInterval(() => {
+        setCountdown((prev) => {
+          if (prev <= 1) {
+            setIsRedirecting(true);
+            // Navigate to the original event page
+            navigate(redirectPath);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+
+      return () => clearInterval(timer);
+    }
+  }, [status, redirectPath, navigate]);
 
   const handleAction = () => {
     if (config.action === 'login') {
-      navigate('/login');
+      // If we have a redirect path, go to login with redirect parameter
+      if (redirectPath) {
+        navigate(`/login?redirect=${encodeURIComponent(redirectPath)}`);
+      } else {
+        navigate('/login');
+      }
     } else if (config.action === 'resend') {
       navigate('/login?resend=1');
     }
@@ -80,14 +109,37 @@ const EmailVerifiedPage = () => {
         <div className="mb-4">{config.icon}</div>
         <h2 className="text-3xl font-extrabold text-white mb-3 drop-shadow-lg animate-fade-in-up">{config.title}</h2>
         <p className="text-gray-200 text-lg mb-8 animate-fade-in-up delay-100">{config.message}</p>
+        
+        {/* Auto-redirect countdown for success with redirect */}
+        {status === 'success' && redirectPath && (
+          <div className="mb-6 p-4 bg-gradient-to-r from-green-400/10 to-blue-400/10 border border-green-400/20 rounded-xl">
+            <div className="flex items-center justify-center gap-3">
+              <div className="w-6 h-6 bg-green-400/20 rounded-full flex items-center justify-center">
+                <svg className="w-3 h-3 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.293l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L9 9.414V13a1 1 0 102 0V9.414l1.293 1.293a1 1 0 001.414-1.414z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div>
+                <p className="text-green-300 text-sm font-medium mb-1">
+                  Redirecting to Event
+                </p>
+                <p className="text-green-200 text-xs">
+                  You'll be automatically redirected in {countdown} second{countdown !== 1 ? 's' : ''}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+        
         <Button
           onClick={handleAction}
           className="w-full justify-center text-lg py-3 font-bold shadow-xl animate-pop-in"
           variant={config.action === 'login' ? 'gradient' : 'primary'}
           icon={config.action === 'login' ? <EnvelopeIcon className="w-5 h-5" /> : <ArrowPathIcon className="w-5 h-5" />}
           iconPosition="left"
+          disabled={isRedirecting}
         >
-          {config.actionLabel}
+          {isRedirecting ? 'Redirecting...' : config.actionLabel}
         </Button>
         {status === 'success' && (
           <div className="mt-6 flex flex-col items-center animate-fade-in-up delay-200">
