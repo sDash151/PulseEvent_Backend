@@ -432,8 +432,14 @@ const LoginPage = () => {
               Join thousands of event organizers and attendees. Create amazing events, discover new opportunities, and connect with like-minded people.
             </p>
             <Button 
-              as={Link} 
-              to="/register" 
+              onClick={() => {
+                // Pass redirect parameter to registration page
+                if (redirectPath) {
+                  navigate('/register', { state: { redirectPath } });
+                } else {
+                  navigate('/register');
+                }
+              }}
               className="w-full justify-center py-3 text-base font-semibold bg-white/10 hover:bg-white/20 border border-white/20 hover:border-white/30 transition-all duration-200 transform hover:scale-[1.02]"
             >
               <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -459,8 +465,16 @@ const LoginPage = () => {
                   Create your account to start organizing and attending amazing events.
                 </p>
                 <Link 
-                  to="/register" 
-                  className="inline-flex items-center gap-1 text-blue-300 hover:text-blue-200 font-medium text-xs transition-colors"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    // Pass redirect parameter to registration page
+                    if (redirectPath) {
+                      navigate('/register', { state: { redirectPath } });
+                    } else {
+                      navigate('/register');
+                    }
+                  }}
+                  className="inline-flex items-center gap-1 text-blue-300 hover:text-blue-200 font-medium text-xs transition-colors cursor-pointer"
                 >
                   <span>Create Account</span>
                   <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">

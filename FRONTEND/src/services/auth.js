@@ -19,7 +19,7 @@ export const loginUser = async (email, password) => {
   }
 }
 
-export const registerUser = async (name, email, password, role, collegeName, collegeState, collegeDistrict, degreeName, specializationName, gender, phoneNumber, graduationYear) => {
+export const registerUser = async (name, email, password, role, collegeName, collegeState, collegeDistrict, degreeName, specializationName, gender, phoneNumber, graduationYear, redirectPath) => {
   try {
     const response = await api.post('/api/auth/register', { 
       name, 
@@ -33,7 +33,8 @@ export const registerUser = async (name, email, password, role, collegeName, col
       specializationName,
       gender,
       phoneNumber,
-      graduationYear
+      graduationYear,
+      redirectPath // Include redirect path in request
     })
     // Return both message and token for robust UI handling
     return { message: response.data.message, token: response.data.token };

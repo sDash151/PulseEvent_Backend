@@ -63,22 +63,37 @@ const EmailVerifiedPage = () => {
   const params = new URLSearchParams(location.search);
   const status = params.get('status') || 'error';
   const token = params.get('token');
+  const redirectFromUrl = params.get('redirect'); // Get redirect from URL parameter
   const config = statusConfig[status] || statusConfig.error;
   
-  // Get redirect path from location state (passed from registration) OR localStorage (from email verification)
-  const redirectPath = location.state?.redirectPath || localStorage.getItem('pendingRedirectPath');
+  // Get redirect path from URL parameter (from email verification link) OR location state OR localStorage
+  const redirectPath = redirectFromUrl || location.state?.redirectPath || localStorage.getItem('pendingRedirectPath');
   const [countdown, setCountdown] = useState(5);
   const [isRedirecting, setIsRedirecting] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  // Debug logging
+  useEffect(() => {
+    console.log('🔍 EmailVerifiedPage Debug:', {
+      status,
+      hasToken: !!token,
+      redirectPath,
+      redirectFromUrl,
+      locationState: location.state,
+      localStoragePath: localStorage.getItem('pendingRedirectPath')
+    });
+  }, [status, token, redirectPath, redirectFromUrl, location.state]);
 
   // Auto-login and redirect for success status
   useEffect(() => {
     if (status === 'success' && token) {
       const autoLogin = async () => {
         try {
+          console.log('🔄 Starting auto-login process...');
           // Auto-login with the token from backend
           await login(token);
           setIsLoggedIn(true);
+          console.log('✅ Auto-login successful');
           
           // Clear the stored redirect path since we're using it now
           localStorage.removeItem('pendingRedirectPath');
@@ -94,6 +109,9 @@ const EmailVerifiedPage = () => {
                 if (redirectPath) {
                   // User came from a specific event link, redirect there
                   targetPath = getSafeRedirectUrl(redirectPath, '/');
+                  console.log('🎯 Redirecting to event page:', targetPath);
+                } else {
+                  console.log('🏠 Redirecting to homepage (no redirect path)');
                 }
                 
                 navigate(targetPath);
@@ -105,7 +123,7 @@ const EmailVerifiedPage = () => {
 
           return () => clearInterval(timer);
         } catch (error) {
-          console.error('Auto-login failed:', error);
+          console.error('❌ Auto-login failed:', error);
           // Fallback to manual login
           navigate('/login');
         }

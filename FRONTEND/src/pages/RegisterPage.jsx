@@ -68,7 +68,18 @@ const RegisterPage = () => {
   const navigate = useNavigate()
   const location = useLocation()
   const params = new URLSearchParams(location.search)
-  const redirectPath = params.get('redirect')
+  // FIXED: Check both URL parameters and location state for redirect path
+  const redirectPath = params.get('redirect') || location.state?.redirectPath
+
+  // Debug logging for redirect path
+  useEffect(() => {
+    console.log('🔍 RegisterPage Debug:', {
+      redirectPath,
+      urlParam: params.get('redirect'),
+      locationState: location.state?.redirectPath,
+      hasRedirectPath: !!redirectPath
+    });
+  }, [redirectPath, params, location.state]);
 
   // Fetch states and degrees on component mount
   useEffect(() => {
@@ -219,16 +230,14 @@ const RegisterPage = () => {
         selectedSpecialization || otherSpecialization,
         gender,
         phoneNumber,
-        graduationYear
+        graduationYear,
+        redirectPath // Pass redirect path to backend
       );
       console.log('[REGISTER] Backend response:', { message });
       
       // FIXED: Backend never returns a token on registration - always requires email verification
-      // Store redirect path in localStorage for email verification flow
-      if (redirectPath) {
-        localStorage.setItem('pendingRedirectPath', redirectPath);
-        console.log('[REGISTER] Stored redirect path in localStorage:', redirectPath);
-      }
+      // Redirect path is now handled through the email verification link URL
+      console.log('[REGISTER] Redirect path will be included in email verification link:', redirectPath);
       
       // Check if this is a resend case (user already exists but not verified)
       if (message && message.includes('already been sent')) {

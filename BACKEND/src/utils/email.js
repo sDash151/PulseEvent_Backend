@@ -42,9 +42,11 @@ async function sendInvitationEmail({ to, eventTitle, eventId, hostName, invitati
   return transporter.sendMail(mailOptions)
 }
 
-async function sendVerificationEmail({ to, name, verificationToken }) {
+async function sendVerificationEmail({ to, name, verificationToken, redirectPath }) {
   const backendUrl = process.env.BACKEND_URL || 'https://pulseevent-backend.onrender.com';
-  const verifyLink = `${backendUrl}/api/auth/verify-email?token=${verificationToken}`;
+  // Include redirect path in the verification URL if provided
+  const redirectParam = redirectPath ? `&redirect=${encodeURIComponent(redirectPath)}` : '';
+  const verifyLink = `${backendUrl}/api/auth/verify-email?token=${verificationToken}${redirectParam}`;
   const mailOptions = {
     from: process.env.SMTP_FROM || 'noreply@eventpulse.com',
     to,

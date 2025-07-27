@@ -174,7 +174,11 @@ router.post('/register', registerLimiter, async (req, res) => {
         expiresAt
       }
     });
-    await sendVerificationEmail({ to: email, name, verificationToken: token });
+    
+    // Get redirect path from request if available (for frontend registration flow)
+    const redirectPath = req.body.redirectPath || null;
+    
+    await sendVerificationEmail({ to: email, name, verificationToken: token, redirectPath });
     console.log('[REGISTER] Sent verification email to new user:', email);
 
     res.status(201).json({ message: 'Registration successful. Please check your email to verify your account.' });
@@ -186,7 +190,7 @@ router.post('/register', registerLimiter, async (req, res) => {
 
 // Email verification endpoint
 router.get('/verify-email', async (req, res) => {
-  const { token } = req.query;
+  const { token, redirect } = req.query;
   const siteUrl = process.env.CLIENT_URL || 'https://eventpulse1.netlify.app';
   if (!token) {
     return res.redirect(`${siteUrl}/email-verified?status=error`);
@@ -223,8 +227,11 @@ router.get('/verify-email', async (req, res) => {
       { expiresIn: '24h' }
     );
     
-    // Redirect to frontend with success and token
-    res.redirect(`${siteUrl}/email-verified?status=success&token=${encodeURIComponent(jwtToken)}`);
+    // Include redirect parameter in the frontend URL if provided
+    const redirectParam = redirect ? `&redirect=${encodeURIComponent(redirect)}` : '';
+    
+    // Redirect to frontend with success, token, and redirect parameter
+    res.redirect(`${siteUrl}/email-verified?status=success&token=${encodeURIComponent(jwtToken)}${redirectParam}`);
   } catch (error) {
     console.error('Email verification error:', error);
     res.redirect(`${siteUrl}/email-verified?status=error`);
