@@ -36,6 +36,12 @@ export const updateSubEvent = async (subEventId, subEventData) => {
 // Fetch featured events for homepage (mega events only)
 export const getFeaturedEvents = async () => {
   try {
+    // Check if API_BASE_URL is available
+    if (!API_BASE_URL) {
+      console.warn('VITE_API_BASE_URL not set, skipping featured events fetch');
+      return [];
+    }
+
     // Get auth token from localStorage
     const token = localStorage.getItem('token');
     
@@ -58,7 +64,8 @@ export const getFeaturedEvents = async () => {
     if (!response.ok) {
       const errorText = await response.text();
       console.error('Featured events API error:', response.status, errorText);
-      throw new Error(`Failed to fetch featured events: ${response.status} ${errorText}`);
+      // Don't throw error, just return empty array
+      return [];
     }
 
     const data = await response.json();
