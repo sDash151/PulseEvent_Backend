@@ -207,7 +207,7 @@ const RegisterPage = () => {
     clearError();
     setLoading(true);
     try {
-      const { message, token } = await registerUser(
+      const { message } = await registerUser(
         name, 
         email, 
         password, 
@@ -221,33 +221,33 @@ const RegisterPage = () => {
         phoneNumber,
         graduationYear
       );
-      console.log('[REGISTER] Backend response:', { message, token });
-      if (token) {
-        login(token);
-        // Secure redirect logic with validation
-        const safeRedirectUrl = getSafeRedirectUrl(redirectPath, '/');
-        console.log('[REGISTER] Navigating to:', safeRedirectUrl);
-        navigate(safeRedirectUrl);
+      console.log('[REGISTER] Backend response:', { message });
+      
+      // FIXED: Backend never returns a token on registration - always requires email verification
+      // Store redirect path in localStorage for email verification flow
+      if (redirectPath) {
+        localStorage.setItem('pendingRedirectPath', redirectPath);
+        console.log('[REGISTER] Stored redirect path in localStorage:', redirectPath);
+      }
+      
+      // Check if this is a resend case (user already exists but not verified)
+      if (message && message.includes('already been sent')) {
+        console.log('[REGISTER] Navigating to /check-email with alreadySent: true');
+        navigate('/check-email', { 
+          state: { 
+            email, 
+            alreadySent: true,
+            redirectPath // Preserve redirect for email verification
+          } 
+        });
       } else {
-        // No token means verification required or already sent
-        if (message && message.includes('already been sent')) {
-          console.log('[REGISTER] Navigating to /check-email with alreadySent: true');
-          navigate('/check-email', { 
-            state: { 
-              email, 
-              alreadySent: true,
-              redirectPath // Preserve redirect for email verification
-            } 
-          });
-        } else {
-          console.log('[REGISTER] Navigating to /check-email with only email');
-          navigate('/check-email', { 
-            state: { 
-              email,
-              redirectPath // Preserve redirect for email verification
-            } 
-          });
-        }
+        console.log('[REGISTER] Navigating to /check-email with only email');
+        navigate('/check-email', { 
+          state: { 
+            email,
+            redirectPath // Preserve redirect for email verification
+          } 
+        });
       }
     } catch (err) {
       console.error('[REGISTER] Registration error:', err);

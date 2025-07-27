@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Button from '../components/ui/Button';
 import { CheckCircleIcon, ExclamationTriangleIcon, EnvelopeIcon, ArrowPathIcon, SparklesIcon, FaceSmileIcon, XCircleIcon } from '@heroicons/react/24/outline';
+import { useAuth } from '../hooks/useAuth';
+import { getSafeRedirectUrl } from '../utils/redirectValidation';
 
 const statusConfig = {
   success: {
@@ -12,9 +14,9 @@ const statusConfig = {
       </span>
     ),
     title: 'Congratulations! Your Email is Verified 🎊',
-    message: 'Welcome aboard! Your email has been successfully verified. You can now log in and start exploring all the features we have to offer. We\'re excited to have you with us!',
-    action: 'login',
-    actionLabel: 'Log In & Explore',
+    message: 'Welcome aboard! Your email has been successfully verified. You are now logged in and ready to explore!',
+    action: 'redirect',
+    actionLabel: 'Continue',
   },
   already: {
     icon: (
@@ -57,38 +59,75 @@ const statusConfig = {
 const EmailVerifiedPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { login } = useAuth();
   const params = new URLSearchParams(location.search);
   const status = params.get('status') || 'error';
+  const token = params.get('token');
   const config = statusConfig[status] || statusConfig.error;
   
-  // Get redirect path from location state (passed from registration)
-  const redirectPath = location.state?.redirectPath;
+  // Get redirect path from location state (passed from registration) OR localStorage (from email verification)
+  const redirectPath = location.state?.redirectPath || localStorage.getItem('pendingRedirectPath');
   const [countdown, setCountdown] = useState(5);
   const [isRedirecting, setIsRedirecting] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-  // Auto-redirect countdown for success status
+  // Auto-login and redirect for success status
   useEffect(() => {
-    if (status === 'success' && redirectPath) {
-      const timer = setInterval(() => {
-        setCountdown((prev) => {
-          if (prev <= 1) {
-            setIsRedirecting(true);
-            // Navigate to the original event page
-            navigate(redirectPath);
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
+    if (status === 'success' && token) {
+      const autoLogin = async () => {
+        try {
+          // Auto-login with the token from backend
+          await login(token);
+          setIsLoggedIn(true);
+          
+          // Clear the stored redirect path since we're using it now
+          localStorage.removeItem('pendingRedirectPath');
+          
+          // Start countdown for redirect
+          const timer = setInterval(() => {
+            setCountdown((prev) => {
+              if (prev <= 1) {
+                setIsRedirecting(true);
+                
+                // Determine where to redirect
+                let targetPath = '/';
+                if (redirectPath) {
+                  // User came from a specific event link, redirect there
+                  targetPath = getSafeRedirectUrl(redirectPath, '/');
+                }
+                
+                navigate(targetPath);
+                return 0;
+              }
+              return prev - 1;
+            });
+          }, 1000);
 
-      return () => clearInterval(timer);
+          return () => clearInterval(timer);
+        } catch (error) {
+          console.error('Auto-login failed:', error);
+          // Fallback to manual login
+          navigate('/login');
+        }
+      };
+      
+      autoLogin();
     }
-  }, [status, redirectPath, navigate]);
+  }, [status, token, login, redirectPath, navigate]);
 
   const handleAction = () => {
-    if (config.action === 'login') {
+    if (config.action === 'redirect' && isLoggedIn) {
+      // User is already logged in, redirect immediately
+      let targetPath = '/';
+      if (redirectPath) {
+        targetPath = getSafeRedirectUrl(redirectPath, '/');
+      }
+      navigate(targetPath);
+    } else if (config.action === 'login') {
       // If we have a redirect path, go to login with redirect parameter
       if (redirectPath) {
+        // Clear the stored redirect path since we're using it now
+        localStorage.removeItem('pendingRedirectPath');
         navigate(`/login?redirect=${encodeURIComponent(redirectPath)}`);
       } else {
         navigate('/login');
@@ -110,8 +149,8 @@ const EmailVerifiedPage = () => {
         <h2 className="text-3xl font-extrabold text-white mb-3 drop-shadow-lg animate-fade-in-up">{config.title}</h2>
         <p className="text-gray-200 text-lg mb-8 animate-fade-in-up delay-100">{config.message}</p>
         
-        {/* Auto-redirect countdown for success with redirect */}
-        {status === 'success' && redirectPath && (
+        {/* Auto-redirect countdown for success with automatic login */}
+        {status === 'success' && token && (
           <div className="mb-6 p-4 bg-gradient-to-r from-green-400/10 to-blue-400/10 border border-green-400/20 rounded-xl">
             <div className="flex items-center justify-center gap-3">
               <div className="w-6 h-6 bg-green-400/20 rounded-full flex items-center justify-center">
@@ -121,7 +160,7 @@ const EmailVerifiedPage = () => {
               </div>
               <div>
                 <p className="text-green-300 text-sm font-medium mb-1">
-                  Redirecting to Event
+                  {redirectPath ? 'Redirecting to Event' : 'Redirecting to Homepage'}
                 </p>
                 <p className="text-green-200 text-xs">
                   You'll be automatically redirected in {countdown} second{countdown !== 1 ? 's' : ''}
@@ -134,8 +173,8 @@ const EmailVerifiedPage = () => {
         <Button
           onClick={handleAction}
           className="w-full justify-center text-lg py-3 font-bold shadow-xl animate-pop-in"
-          variant={config.action === 'login' ? 'gradient' : 'primary'}
-          icon={config.action === 'login' ? <EnvelopeIcon className="w-5 h-5" /> : <ArrowPathIcon className="w-5 h-5" />}
+          variant={config.action === 'redirect' ? 'gradient' : 'primary'}
+          icon={config.action === 'redirect' ? <EnvelopeIcon className="w-5 h-5" /> : <ArrowPathIcon className="w-5 h-5" />}
           iconPosition="left"
           disabled={isRedirecting}
         >
@@ -158,13 +197,12 @@ const EmailVerifiedPage = () => {
           to { opacity: 1; transform: translateY(0); }
         }
         @keyframes pop-in {
-          0% { transform: scale(0.8); opacity: 0; }
-          80% { transform: scale(1.05); opacity: 1; }
-          100% { transform: scale(1); }
+          from { opacity: 0; transform: scale(0.9); }
+          to { opacity: 1; transform: scale(1); }
         }
-        .animate-fade-in { animation: fade-in 0.7s both; }
-        .animate-fade-in-up { animation: fade-in-up 0.8s both; }
-        .animate-pop-in { animation: pop-in 0.5s both; }
+        .animate-fade-in { animation: fade-in 0.6s ease-out; }
+        .animate-fade-in-up { animation: fade-in-up 0.8s ease-out; }
+        .animate-pop-in { animation: pop-in 0.3s ease-out; }
         .delay-100 { animation-delay: 0.1s; }
         .delay-200 { animation-delay: 0.2s; }
       `}</style>

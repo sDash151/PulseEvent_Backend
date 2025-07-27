@@ -205,12 +205,26 @@ router.get('/verify-email', async (req, res) => {
       await prisma.emailVerificationToken.delete({ where: { token } });
       return res.redirect(`${siteUrl}/email-verified?status=expired`);
     }
+    
     // Mark user as verified
     await prisma.user.update({ where: { id: record.userId }, data: { verified: true } });
     // Delete all tokens for this user
     await prisma.emailVerificationToken.deleteMany({ where: { userId: record.userId } });
-    // Redirect to frontend with success
-    res.redirect(`${siteUrl}/email-verified?status=success`);
+    
+    // Generate JWT token for automatic login
+    const jwtToken = jwt.sign(
+      {
+        id: record.user.id,
+        email: record.user.email,
+        name: record.user.name,
+        role: record.user.role
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: '24h' }
+    );
+    
+    // Redirect to frontend with success and token
+    res.redirect(`${siteUrl}/email-verified?status=success&token=${encodeURIComponent(jwtToken)}`);
   } catch (error) {
     console.error('Email verification error:', error);
     res.redirect(`${siteUrl}/email-verified?status=error`);
