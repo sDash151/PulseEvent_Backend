@@ -13,7 +13,7 @@ const transporter = nodemailer.createTransport({
 })
 
 async function sendInvitationEmail({ to, eventTitle, eventId, hostName, invitationToken }) {
-  const siteUrl = process.env.CLIENT_URL || 'https://eventpulse1.netlify.app'
+  const siteUrl = process.env.CLIENT_URL || 'https://eventpulse-five.vercel.app'
   // Always direct to login with redirect to invitation page
   const loginLink = invitationToken
     ? `${siteUrl}/login?redirect=/invitation/${invitationToken}`
@@ -70,7 +70,7 @@ async function sendVerificationEmail({ to, name, verificationToken, redirectPath
 }
 
 async function sendPasswordResetEmail({ to, name, resetToken }) {
-  const frontendUrl = process.env.CLIENT_URL || 'https://eventpulse1.netlify.app';
+  const frontendUrl = process.env.CLIENT_URL || 'https://eventpulse-five.vercel.app';
   const resetLink = `${frontendUrl}/reset-password?token=${resetToken}`;
   const mailOptions = {
     from: process.env.SMTP_FROM || 'noreply@eventpulse.com',
@@ -95,7 +95,7 @@ async function sendPasswordResetEmail({ to, name, resetToken }) {
 }
 
 async function sendPasswordChangeNotification({ to, name }) {
-  const frontendUrl = process.env.CLIENT_URL || 'https://eventpulse1.netlify.app';
+  const frontendUrl = process.env.CLIENT_URL || 'https://eventpulse-five.vercel.app';
   const mailOptions = {
     from: process.env.SMTP_FROM || 'noreply@eventpulse.com',
     to,

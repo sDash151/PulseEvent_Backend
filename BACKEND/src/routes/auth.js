@@ -191,7 +191,7 @@ router.post('/register', registerLimiter, async (req, res) => {
 // Email verification endpoint
 router.get('/verify-email', async (req, res) => {
   const { token, redirect } = req.query;
-  const siteUrl = process.env.CLIENT_URL || 'https://eventpulse1.netlify.app';
+  const siteUrl = process.env.CLIENT_URL || 'https://eventpulse-five.vercel.app';
   if (!token) {
     return res.redirect(`${siteUrl}/email-verified?status=error`);
   }
